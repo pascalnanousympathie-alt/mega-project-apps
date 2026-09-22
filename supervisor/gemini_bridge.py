@@ -188,7 +188,7 @@ def call_groq(prompt,model,key):
     return "\n".join(texts)
 
 def refresh_packet():
-    packet=refresh_packet()
+    packet=load_json(packet_path(),{})
     if not packet or packet.get("phase")!="P28":
         return packet
     head=subprocess.run(["git","rev-parse","HEAD"],cwd=ROOT,text=True,capture_output=True,timeout=15)
@@ -235,7 +235,7 @@ def existing_verdict(packet):
         return existing
 
 def run():
-    packet=load_json(packet_path(),{})
+    packet=refresh_packet()
     if not packet or packet.get("phase")!="P28":
         return {"status":"BLOCKED","reason":"p28-review-packet-missing-or-invalid"}
     existing=existing_verdict(packet)
