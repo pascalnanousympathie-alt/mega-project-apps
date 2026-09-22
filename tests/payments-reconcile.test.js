@@ -103,6 +103,8 @@ test('callback transitions a pending intent to succeeded exactly once', async (t
   assert.equal(first.outcome, 'applied');
   assert.equal(first.accepted, true);
   assert.equal(first.intent.status, 'succeeded');
+  assert.equal(layer.getWallet(intent.wallet_id).balance_milli, 25000);
+  assert.equal(layer.ledger.entriesByWallet(intent.wallet_id).filter((e) => e.idempotency_key === 'payment:settlement:' + intent.id).length, 1);
 
   const events = layer.payments.listEvents(intent.id);
   assert.deepEqual(events.map((e) => e.status), ['created', 'pending', 'succeeded']);
@@ -115,6 +117,7 @@ test('callback transitions a pending intent to succeeded exactly once', async (t
   assert.equal(redelivery.outcome, 'duplicate');
   assert.equal(redelivery.callback.id, first.callback.id);
   assert.equal(layer.payments.listEvents(intent.id).length, 3);
+  assert.equal(layer.getWallet(intent.wallet_id).balance_milli, 25000, 'duplicate callback never double-credits');
   assert.equal(layer.payments.verifyIntents().ok, true);
 
   const audit = layer.listAudit({ targetType: 'payment_intent', targetId: intent.id });
@@ -191,6 +194,8 @@ test('polling reconcileIntent advances pending state and records attempts', asyn
   assert.equal(applied.attempt.status_before, 'pending');
   assert.equal(applied.attempt.status_after, 'succeeded');
   assert.equal(applied.attempt.outcome, 'updated');
+  assert.equal(layer.getWallet(intent.wallet_id).balance_milli, 25000);
+  assert.equal(layer.ledger.entriesByWallet(intent.wallet_id).filter((e) => e.idempotency_key === 'payment:settlement:' + intent.id).length, 1);
 
   const afterTerminal = await layer.payments.reconcileIntent(intent.id);
   assert.equal(afterTerminal.outcome, 'terminal');

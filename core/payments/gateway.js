@@ -23,6 +23,7 @@ const {
   assertKnownStatus,
 } = require('./base');
 const { buildProviderRegistry } = require('./providers');
+const { appendWithinTx } = require('../ledger');
 const { stripSecrets, redactText, containsSecretLike } = require('./redact');
 const { createHttpTransport } = require('./transport');
 
@@ -376,6 +377,7 @@ function buildPaymentGateway(input = {}) {
   function applyStatusInternal(intentId, status, payload, providerRef) {
     assertKnownStatus(status);
     const current = getIntent(intentId);
+    let settlement = null;
     if (current.status === status) return current;
     if (!canTransition(current.status, status)) {
       throw new DataError(
@@ -391,6 +393,39 @@ function buildPaymentGateway(input = {}) {
         'UPDATE payment_intents SET status = ?, provider_ref = COALESCE(?, provider_ref), response_json = ?, updated_at = ? WHERE id = ?',
       ).run(status, providerRef || null, response_json, ts, intentId);
       appendEvent(current, 'status.changed', status, providerRef || current.provider_ref, payload);
+      if (status === 'succeeded' && current.status !== 'succeeded' && current.wallet_id) {
+        if (current.direction === 'payin') {
+          settlement = appendWithinTx(db, {
+            wallet_id: current.wallet_id,
+            idempotency_key: 'payment:settlement:' + current.id,
+            tx_type: 'deposit',
+            direction: 'credit',
+            amount_milli: current.amount_milli,
+            status: 'committed',
+            meta: {
+              kind: 'payment_settlement',
+              payment_intent_id: current.id,
+              provider: current.provider,
+              provider_ref: providerRef || current.provider_ref,
+            },
+          }).entry;
+        } else if (current.direction === 'payout') {
+          settlement = appendWithinTx(db, {
+            wallet_id: current.wallet_id,
+            idempotency_key: 'payment:settlement:' + current.id,
+            tx_type: 'withdraw',
+            direction: 'debit',
+            amount_milli: current.amount_milli,
+            status: 'committed',
+            meta: {
+              kind: 'payment_settlement',
+              payment_intent_id: current.id,
+              provider: current.provider,
+              provider_ref: providerRef || current.provider_ref,
+            },
+          }).entry;
+        }
+      }
       db.exec('COMMIT');
     } catch (err) {
       safeRollback(db);
@@ -398,6 +433,14 @@ function buildPaymentGateway(input = {}) {
     }
     const updated = getIntent(intentId);
     recordAudit('payment.intent.' + status, updated, { amount_milli: updated.amount_milli, currency: updated.currency });
+    if (settlement) {
+      recordAudit('payment.wallet.settled', updated, {
+        wallet_id: settlement.wallet_id,
+        ledger_entry_id: settlement.id,
+        amount_milli: settlement.amount_milli,
+        direction: settlement.direction,
+      });
+    }
     return updated;
   }
 
