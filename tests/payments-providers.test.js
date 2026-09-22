@@ -351,11 +351,12 @@ test('mvola getPayment polls with a correlation header and maps transaction stat
   const provider = createMvolaProvider();
   const transport = routeTransport([
     [
-      /merchantpay/,
+      /merchantpay\/1\.0\.0\/status\//,
       (spec) => {
         assert.equal(spec.method, 'GET');
         assert.equal(spec.headers['x-correlation-id'], 'mvola-ref-7');
-        return ok({ transactionStatus: 'success', serverCorrelationId: 'mvola-ref-7' });
+        assert.equal(spec.headers['cache-control'], 'no-cache');
+        return ok({ status: 'completed', serverCorrelationId: 'mvola-ref-7' });
       },
     ],
   ]);

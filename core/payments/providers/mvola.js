@@ -7,6 +7,7 @@ const { sendJson, requireCustomer } = require('./helpers');
 const MVOLA_STATUS_MAP = {
   pending: 'pending',
   success: 'succeeded',
+  completed: 'succeeded',
   succeeded: 'succeeded',
   failed: 'failed',
   failure: 'failed',
@@ -24,7 +25,7 @@ async function accessToken(ctx, credentials) {
       url: credentials.baseUrl + '/token',
       encoding: 'form',
       headers: { authorization: basicAuthHeader(credentials.consumerKey, credentials.consumerSecret) },
-      body: { grant_type: 'client_credentials' },
+      body: { grant_type: 'client_credentials', scope: 'EXT_INT_MVOLA_SCOPE' },
     },
     'mvola',
   );
@@ -67,6 +68,7 @@ function createMvolaProvider() {
             userlanguage: 'FR',
             useraccountidentifier: 'msisdn;' + credentials.merchantNumber,
             partnername: credentials.partnerName,
+            'cache-control': 'no-cache',
             ...(ctx.callbackUrl ? { 'x-callback-url': ctx.callbackUrl } : {}),
           },
           body: {
@@ -95,12 +97,24 @@ function createMvolaProvider() {
         ctx.transport,
         {
           method: 'GET',
-          url: credentials.baseUrl + '/mvola/mm/transactions/type/merchantpay/1.0.0/' + encodeURIComponent(providerRef),
-          headers: { authorization: 'Bearer ' + token, 'x-correlation-id': providerRef, version: '1.0' },
+          url: credentials.baseUrl + '/mvola/mm/transactions/type/merchantpay/1.0.0/status/' + encodeURIComponent(providerRef),
+          headers: {
+            authorization: 'Bearer ' + token,
+            'x-correlation-id': providerRef,
+            version: '1.0',
+            userlanguage: 'FR',
+            useraccountidentifier: 'msisdn;' + credentials.merchantNumber,
+            partnername: credentials.partnerName,
+            'cache-control': 'no-cache',
+          },
         },
         'mvola',
       );
-      return { status: normalizeStatus(data && (data.transactionStatus || data.status), MVOLA_STATUS_MAP), raw: data };
+      return {
+        status: normalizeStatus(data && (data.transactionStatus || data.status), MVOLA_STATUS_MAP),
+        provider_ref: (data && (data.serverCorrelationId || providerRef)),
+        raw: data,
+      };
     },
     parseCallback(payload, headers, ctx) {
       if (!payload || typeof payload !== 'object') throw new DataError('E_ARG', '[mvola] callback payload required');
