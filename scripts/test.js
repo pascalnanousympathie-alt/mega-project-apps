@@ -34,10 +34,10 @@ for (const file of files) {
     process.exit(typeof err.status === 'number' ? err.status : 1);
   }
   process.stdout.write(output);
-  const tests = Number((output.match(/ℹ tests (\d+)/) || [])[1] || 0);
-  const pass = Number((output.match(/ℹ pass (\d+)/) || [])[1] || 0);
-  const fail = Number((output.match(/ℹ fail (\d+)/) || [])[1] || 0);
-  const cancelled = Number((output.match(/ℹ cancelled (\d+)/) || [])[1] || 0);
+  const tests = Number((output.match(/(?:ℹ\s+|#\s*)tests\s+(\d+)/) || [])[1] || 0);
+  const pass = Number((output.match(/(?:ℹ\s+|#\s*)pass\s+(\d+)/) || [])[1] || 0);
+  const fail = Number((output.match(/(?:ℹ\s+|#\s*)fail\s+(\d+)/) || [])[1] || 0);
+  const cancelled = Number((output.match(/(?:ℹ\s+|#\s*)cancelled\s+(\d+)/) || [])[1] || 0);
   totalTests += tests;
   totalPass += pass;
   totalFail += fail;
