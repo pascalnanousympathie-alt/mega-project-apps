@@ -1,4 +1,7 @@
-runtime/
+runtime/*
+!runtime/recover-phase.sh
+!runtime/launch.sh
+!runtime/acep-watchdog.sh
 __pycache__/
 *.pyc
 .env
