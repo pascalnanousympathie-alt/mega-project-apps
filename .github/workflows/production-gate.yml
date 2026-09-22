@@ -23,5 +23,11 @@ jobs:
         run: npm ci
       - name: Verify release gates
         run: npm run ci:gate
+      - name: Verify payment production readiness
+        env:
+          ACEP_PRODUCTION_MODE: 'true'
+          ACEP_ENFORCE_PAYMENT_READINESS: '1'
+          ACEP_REQUIRED_PAYMENT_PROVIDERS: ${{ vars.ACEP_REQUIRED_PAYMENT_PROVIDERS }}
+        run: npm run payment:readiness
       - name: Deployment policy
         run: echo 'DEPLOYMENT_POLICY=MANUAL_APPROVAL_REQUIRED_NO_AUTO_DEPLOY'

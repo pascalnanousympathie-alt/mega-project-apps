@@ -8,7 +8,8 @@
     "test:coverage": "node scripts/test-coverage.js",
     "test:security": "node scripts/secret-scan.js",
     "ci:gate": "node scripts/ci-gate.js",
-    "evidence:p18": "node scripts/p18-evidence.js"
+    "evidence:p18": "node scripts/p18-evidence.js",
+    "payment:readiness": "node scripts/payment-readiness.js"
   },
   "keywords": [],
   "author": "",
