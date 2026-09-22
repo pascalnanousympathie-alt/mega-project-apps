@@ -65,6 +65,9 @@ function createMvolaProvider() {
             'x-correlation-id': reference,
             version: '1.0',
             userlanguage: 'FR',
+            useraccountidentifier: 'msisdn;' + credentials.merchantNumber,
+            partnername: credentials.partnerName,
+            ...(ctx.callbackUrl ? { 'x-callback-url': ctx.callbackUrl } : {}),
           },
           body: {
             amount: String(request.amount_milli),

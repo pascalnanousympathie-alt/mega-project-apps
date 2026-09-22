@@ -58,7 +58,10 @@ function createApp(options = {}) {
 
 if (require.main === module) {
   const port = Number(process.env.PORT) || 3000;
-  const app = createApp({ dataDir: process.env.ACEP_DATA_DIR });
+  const app = createApp({
+    dataDir: process.env.ACEP_DATA_DIR,
+    payments: { callbackUrl: process.env.ACEP_PAYMENT_CALLBACK_URL || null },
+  });
   app.listen(port).then((address) => {
     // eslint-disable-next-line no-console
     console.log(`LudoMada server listening on http://${address.address}:${address.port}`);
