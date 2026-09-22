@@ -8,6 +8,7 @@
 // literal secret pattern (the repository scan below must stay clean).
 const { test } = require('node:test');
 const assert = require('node:assert');
+const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -233,4 +234,33 @@ test('the repository tree itself is free of credential material', () => {
   const result = secretScan.scan();
   assert.deepEqual(result.violations, []);
   assert.equal(result.scanned_files > 50, true, 'expected the whole workspace to be scanned');
+});
+
+test('stored coverage report fails closed when stale or incomplete', (t) => {
+  const dir = cleanup(t, tmpTree('acep-p18-report-', {}));
+  const evidenceDir = path.join(dir, 'evidence');
+  fs.mkdirSync(evidenceDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(evidenceDir, 'P18-coverage.json'),
+    JSON.stringify({
+      phase: 'P18',
+      generated_at: 'fixture',
+      exit_code: 0,
+      summary: { tests: 289, pass: 289, fail: 0, cancelled: 0 },
+      workspace: { hash: '0'.repeat(64) },
+      coverage: { totals: { lines: 95, branches: 80, functions: 94 } },
+      violations: [],
+      status: 'PASS',
+    }),
+    'utf8',
+  );
+  const proc = spawnSync(
+    process.execPath,
+    [path.join(__dirname, '..', 'scripts', 'test-coverage.js'), '--report'],
+    { cwd: path.join(__dirname, '..'), env: { ...process.env, ACEP_EVIDENCE_DIR: evidenceDir }, encoding: 'utf8' },
+  );
+  assert.equal(proc.status, 1);
+  const output = (proc.stdout || '') + (proc.stderr || '');
+  assert.match(output, /status=STALE_OR_INCOMPLETE/);
+  assert.equal(output.includes('TypeError'), false);
 });

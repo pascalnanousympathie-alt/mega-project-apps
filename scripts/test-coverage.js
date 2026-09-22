@@ -254,9 +254,17 @@ function showLastReport() {
     return 1;
   }
   const artifact = JSON.parse(fs.readFileSync(file, 'utf8'));
-  printReport(artifact.coverage);
-  process.stdout.write(`status=${artifact.status} generated_at=${artifact.generated_at} tests=${artifact.summary.tests}\n`);
-  return artifact.status === 'PASS' ? 0 : 1;
+  const coverage = artifact.coverage && typeof artifact.coverage === 'object' ? artifact.coverage : {};
+  const files = Array.isArray(coverage.files) ? coverage.files : [];
+  const totals = coverage.totals || null;
+  printReport({ files, totals });
+  const currentHash = sourceHash().hash;
+  const storedHash = artifact.workspace && artifact.workspace.hash;
+  const complete = files.length > 0 && totals && typeof totals.lines === 'number' && typeof totals.branches === 'number' && typeof totals.functions === 'number';
+  const fresh = storedHash === currentHash;
+  const reportStatus = artifact.status === 'PASS' && artifact.exit_code === 0 && fresh && complete ? 'PASS' : 'STALE_OR_INCOMPLETE';
+  process.stdout.write(`status=${reportStatus} generated_at=${artifact.generated_at} tests=${artifact.summary.tests} workspace_hash=${storedHash || 'ABSENT'} current_workspace_hash=${currentHash}\n`);
+  return reportStatus === 'PASS' ? 0 : 1;
 }
 
 if (require.main === module) {
