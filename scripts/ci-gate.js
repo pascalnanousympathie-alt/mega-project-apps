@@ -9,10 +9,12 @@ function run(cmd, args, options = {}) {
 }
 function npmTest() {
   const output = run('npm', ['test']);
-  const matches = [...output.matchAll(/ℹ tests (\d+)\s+ℹ suites (\d+)\s+ℹ pass (\d+)\s+ℹ fail (\d+)/g)];
-  const match = matches.at(-1);
-  if (!match) throw new Error('npm test aggregate summary not found');
-  const summary = { tests: +match[1], suites: +match[2], pass: +match[3], fail: +match[4] };
+  const total = output.match(/ACEP_NODE_TESTS_TOTAL=(\d+)/);
+  const pass = output.match(/ACEP_NODE_TESTS_PASS=(\d+)/);
+  const fail = output.match(/ACEP_NODE_TESTS_FAIL=(\d+)/);
+  const cancelled = output.match(/ACEP_NODE_TESTS_CANCELLED=(\d+)/);
+  if (!total || !pass || !fail || !cancelled) throw new Error('npm test aggregate marker not found');
+  const summary = { tests: +total[1], suites: null, pass: +pass[1], fail: +fail[1], cancelled: +cancelled[1] };
   if (summary.fail !== 0 || summary.tests !== summary.pass || summary.tests <= 0) throw new Error('npm test aggregate failed');
   return summary;
 }

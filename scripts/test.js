@@ -48,6 +48,10 @@ for (const file of files) {
 }
 
 process.stdout.write(`\nℹ tests ${totalTests}\nℹ pass ${totalPass}\nℹ fail ${totalFail}\nℹ cancelled ${totalCancelled}\n`);
+process.stdout.write(`ACEP_NODE_TESTS_TOTAL=${totalTests}\n`);
+process.stdout.write(`ACEP_NODE_TESTS_PASS=${totalPass}\n`);
+process.stdout.write(`ACEP_NODE_TESTS_FAIL=${totalFail}\n`);
+process.stdout.write(`ACEP_NODE_TESTS_CANCELLED=${totalCancelled}\n`);
 
 
 // Supervisor/agent guard tests (unittest scripts in tests/*.py). They are run
