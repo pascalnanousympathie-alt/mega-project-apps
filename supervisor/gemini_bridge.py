@@ -11,7 +11,7 @@ ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUNTIME=os.path.join(ROOT,"runtime")
 KEY_NAMES=("GEMINI_API_KEY","GOOGLE_API_KEY")
 KEY_FILE=os.path.expanduser("~/.config/ludomada/gemini-api-key")
-DEFAULT_MODEL="gemini-2.5-pro"
+DEFAULT_MODEL="gemini-3.5-flash"
 ENDPOINT="https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 def now():
