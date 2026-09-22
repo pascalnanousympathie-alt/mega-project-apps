@@ -22,7 +22,10 @@ function npmTest() {
   const cancelled = output.match(/ACEP_NODE_TESTS_CANCELLED=(\d+)/);
   if (!total || !pass || !fail || !cancelled) throw new Error('npm test aggregate marker not found');
   const summary = { tests: +total[1], suites: null, pass: +pass[1], fail: +fail[1], cancelled: +cancelled[1] };
-  if (summary.fail !== 0 || summary.tests !== summary.pass || summary.tests <= 0) throw new Error('npm test aggregate failed');
+  if (summary.fail !== 0 || summary.tests !== summary.pass || summary.tests <= 0) {
+    process.stdout.write('npm test diagnostic output:\n' + (output.length > 30000 ? output.slice(-30000) : output));
+    throw new Error('npm test aggregate failed');
+  }
   return summary;
 }
 function gate(name, fn) {
