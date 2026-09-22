@@ -58,7 +58,7 @@ function archive() {
   return execFileSync(
     'git',
     ['archive', '--format=tar', '--prefix=release/', 'HEAD'],
-    { cwd: ROOT, encoding: null, stdio: ['ignore', 'pipe', 'pipe'] },
+    { cwd: ROOT, encoding: null, maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] },
   );
 }
 
