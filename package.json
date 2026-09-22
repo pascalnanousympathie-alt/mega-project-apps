@@ -7,6 +7,7 @@
     "test": "node scripts/test.js",
     "test:coverage": "node scripts/test-coverage.js",
     "test:security": "node scripts/secret-scan.js",
+    "ci:gate": "node scripts/ci-gate.js",
     "evidence:p18": "node scripts/p18-evidence.js"
   },
   "keywords": [],
