@@ -977,7 +977,7 @@ test('HTTP integration: manual and offline local records stay chained and idempo
 });
 
 test('HTTP integration: malformed and oversized bodies fail closed', async (t) => {
-  const { base, origin, layer } = await boot(t);
+  const { base, origin, layer, opsKey } = await boot(t);
 
   const notJson = await call(base, 'POST', '/auth/register', { body: 'not-json{' });
   assert.equal(notJson.status, 400);
@@ -996,6 +996,21 @@ test('HTTP integration: malformed and oversized bodies fail closed', async (t) =
   const emptyBody = await call(base, 'POST', '/auth/register', { body: '' });
   assert.equal(emptyBody.status, 400);
   assert.equal(emptyBody.error.code, 'E_VALIDATION');
+
+  const paymentUnknownField = await call(base, 'POST', '/payments/intents', {
+    idempotency: 'p20-validation-1',
+    body: { provider: 'mvola', amount_milli: 25000, consumerSecret: 'must-not-be-accepted' },
+  });
+  assert.equal(paymentUnknownField.status, 400);
+  assert.equal(paymentUnknownField.error.code, 'E_VALIDATION');
+
+  const reconcileUnknownField = await call(base, 'POST', '/payments/reconcile', {
+    serviceKey: opsKey,
+    idempotency: 'p20-validation-2',
+    body: { limit: 1, unknown: true },
+  });
+  assert.equal(reconcileUnknownField.status, 400);
+  assert.equal(reconcileUnknownField.error.code, 'E_VALIDATION');
 
   const wrongProvider = await call(base, 'POST', '/payments/callback/paypal', {
     idempotency: 'p18-bad-provider',

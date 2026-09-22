@@ -364,7 +364,11 @@ function buildAuth(db, repos) {
     return db
       .prepare('SELECT * FROM service_credentials ORDER BY created_at ASC LIMIT ? OFFSET ?')
       .all(limit, offset)
-      .map((r) => ({ ...r, scopes: parseScopes(r.scopes_json) }));
+      .map((r) => {
+        const { key_hash, scopes_json, ...safe } = r;
+        void key_hash;
+        return { ...safe, scopes: parseScopes(scopes_json) };
+      });
   }
 
   return {

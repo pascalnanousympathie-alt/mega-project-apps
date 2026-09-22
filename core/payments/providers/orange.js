@@ -97,11 +97,9 @@ function createOrangeProvider() {
     parseCallback(payload, headers, ctx) {
       if (!payload || typeof payload !== 'object') throw new DataError('E_ARG', '[orange] callback payload required');
       const secret = (ctx.credentials && ctx.credentials.callbackSecret) || null;
-      if (secret) {
-        const provided = headers && (headers['x-orange-signature'] || headers['X-Orange-Signature']);
-        if (!constantTimeEqual(secret, provided)) {
-          throw new DataError('E_PAYMENT_SIGNATURE', '[orange] callback signature rejected');
-        }
+      const provided = headers && (headers['x-orange-signature'] || headers['X-Orange-Signature']);
+      if (!secret || !constantTimeEqual(secret, provided)) {
+        throw new DataError('E_PAYMENT_SIGNATURE', '[orange] callback signature rejected');
       }
       return {
         provider_ref: payload.txnid || payload.order_id || payload.notif_token || null,

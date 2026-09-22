@@ -160,6 +160,8 @@ test('registers service credentials and authenticates by key and scope', (t) => 
   assert.deepEqual(credential.scopes, ['wallet:read', 'games:write']);
   const authed = layer.auth.authenticateService(key, 'wallet:read');
   assert.equal(authed.credential.id, credential.id);
+  const listed = layer.auth.listServices();
+  assert.equal(listed[0].key_hash, undefined);
   expectDataError(() => layer.auth.authenticateService(key, 'no_such_scope'), 'E_FORBIDDEN');
 });
 

@@ -163,6 +163,23 @@ test('callbacks reject amount mismatches and terminal conflicts', async (t) => {
   assert.equal(layer.payments.listCallbacks(intent.id).length, 3);
 });
 
+test('callbacks fail closed when the provider callback secret is not configured', async (t) => {
+  const credentials = { mvola: { ...CREDENTIALS.mvola, callbackSecret: undefined } };
+  const { layer } = makePaymentLayer(t, { credentials });
+  const intent = await makePendingIntent(layer, 'recon-key-no-secret', 25000);
+  expectDataError(
+    () => layer.payments.handleCallback(
+      'mvola',
+      callback({ serverCorrelationId: intent.provider_ref, amount: '25000' }),
+      {},
+    ),
+    'E_PAYMENT_SIGNATURE',
+  );
+  assert.equal(layer.payments.getIntent(intent.id).status, 'pending');
+  assert.equal(layer.getWallet(intent.wallet_id).balance_milli, 0);
+  assert.equal(layer.payments.listCallbacks(intent.id).length, 0);
+});
+
 test('unmatched callbacks and bad signatures never persist or mutate state', async (t) => {
   const { layer } = makePaymentLayer(t);
   await makePendingIntent(layer, 'recon-key-0004');

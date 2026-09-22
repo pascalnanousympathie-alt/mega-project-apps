@@ -91,11 +91,9 @@ function createBinanceProvider() {
     parseCallback(payload, headers, ctx) {
       if (!payload || typeof payload !== 'object') throw new DataError('E_ARG', '[binance] callback payload required');
       const secret = (ctx.credentials && ctx.credentials.callbackSecret) || null;
-      if (secret) {
-        const provided = headers && (headers['binancepay-signature'] || headers['BinancePay-Signature']);
-        if (!constantTimeEqual(secret, provided)) {
-          throw new DataError('E_PAYMENT_SIGNATURE', '[binance] callback signature rejected');
-        }
+      const provided = headers && (headers['binancepay-signature'] || headers['BinancePay-Signature']);
+      if (!secret || !constantTimeEqual(secret, provided)) {
+        throw new DataError('E_PAYMENT_SIGNATURE', '[binance] callback signature rejected');
       }
       const data = payload.data || {};
       const rawStatus = payload.bizStatus || data.bizStatus || data.status;

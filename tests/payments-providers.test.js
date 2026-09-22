@@ -135,15 +135,14 @@ test('airtel rejects a token response without access_token', async () => {
   );
 });
 
-test('airtel parseCallback enforces the optional signature and normalizes payloads', () => {
+test('airtel parseCallback requires the configured signature and normalizes payloads', () => {
   const provider = createAirtelProvider();
   expectDataError(() => provider.parseCallback(null, {}, { credentials: {} }), 'E_ARG');
 
-  const unsigned = provider.parseCallback({ transaction: { id: 'cb-1', status: 'ts', amount: 25000 } }, {}, { credentials: {} });
-  assert.equal(unsigned.provider_ref, 'cb-1');
-  assert.equal(unsigned.status, 'succeeded');
-  assert.equal(unsigned.amount_milli, 25000);
-  assert.equal(unsigned.currency, 'MGA');
+  expectDataError(
+    () => provider.parseCallback({ transaction: { id: 'cb-1', status: 'ts', amount: 25000 } }, {}, { credentials: {} }),
+    'E_PAYMENT_SIGNATURE',
+  );
 
   const ctx = { credentials: { callbackSecret: CALLBACK_SECRET } };
   expectDataError(() => provider.parseCallback({ transaction: { id: 'cb-1' } }, {}, ctx), 'E_PAYMENT_SIGNATURE');
@@ -244,9 +243,10 @@ test('orange parseCallback checks the signature and normalizes callback payloads
   assert.equal(notif.provider_ref, 'notif-1');
   assert.equal(notif.status, 'pending');
 
-  const unsigned = provider.parseCallback({ order_id: 'ORDER-10', status: 'success' }, {}, { credentials: {} });
-  assert.equal(unsigned.provider_ref, 'ORDER-10');
-  assert.equal(unsigned.status, 'succeeded');
+  expectDataError(
+    () => provider.parseCallback({ order_id: 'ORDER-10', status: 'success' }, {}, { credentials: {} }),
+    'E_PAYMENT_SIGNATURE',
+  );
 });
 
 test('binance getPayment signs the query and maps envelope codes', async () => {
@@ -321,12 +321,30 @@ test('binance parseCallback verifies the signature and maps biz status codes', (
   assert.equal(other.provider_ref, null);
   assert.equal(other.status, 'pending');
 
-  const unsigned = provider.parseCallback(
-    { bizStatus: 'PAY_SUCCESS', data: { prepayId: 'no-secret' } },
-    {},
-    { credentials: {} },
+  expectDataError(
+    () => provider.parseCallback(
+      { bizStatus: 'PAY_SUCCESS', data: { prepayId: 'no-secret' } },
+      {},
+      { credentials: {} },
+    ),
+    'E_PAYMENT_SIGNATURE',
   );
-  assert.equal(unsigned.status, 'succeeded');
+});
+
+test('mvola callback parsing fails closed without a configured signature', () => {
+  const provider = createMvolaProvider();
+  expectDataError(
+    () => provider.parseCallback({ serverCorrelationId: 'cb-mv-1', transactionStatus: 'success', amount: '25000' }, {}, { credentials: {} }),
+    'E_PAYMENT_SIGNATURE',
+  );
+  const signed = provider.parseCallback(
+    { serverCorrelationId: 'cb-mv-1', transactionStatus: 'success', amount: '25000' },
+    { 'x-content-signature': CALLBACK_SECRET },
+    { credentials: { callbackSecret: CALLBACK_SECRET } },
+  );
+  assert.equal(signed.provider_ref, 'cb-mv-1');
+  assert.equal(signed.status, 'succeeded');
+  assert.equal(signed.amount_milli, 25000);
 });
 
 test('mvola getPayment polls with a correlation header and maps transaction status', async () => {

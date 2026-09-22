@@ -50,6 +50,35 @@ test('rejects a debit that exceeds the balance', (t) => {
   );
 });
 
+test('rejects a wallet balance overflow before corrupting the ledger', (t) => {
+  const { layer } = makeDataLayer(t);
+  const wallet = seedWallet(layer);
+  const max = Number.MAX_SAFE_INTEGER;
+  const maxCredit = layer.ledger.append({
+    wallet_id: wallet.id,
+    idempotency_key: 'overflow-max-1',
+    tx_type: 'deposit',
+    direction: 'credit',
+    amount_milli: max,
+  });
+  assert.equal(maxCredit.entry.balance_after_milli, max);
+  assert.equal(layer.getWallet(wallet.id).balance_milli, max);
+  expectDataError(
+    () =>
+      layer.ledger.append({
+        wallet_id: wallet.id,
+        idempotency_key: 'overflow-max-2',
+        tx_type: 'deposit',
+        direction: 'credit',
+        amount_milli: 1,
+      }),
+    'E_BALANCE_OVERFLOW',
+  );
+  assert.equal(layer.getWallet(wallet.id).balance_milli, max);
+  assert.equal(layer.ledger.entriesByWallet(wallet.id).length, 1);
+  assert.equal(layer.ledger.verify().ok, true);
+});
+
 test('idempotency key replays return the original entry without double apply', (t) => {
   const { layer } = makeDataLayer(t);
   const wallet = seedWallet(layer);

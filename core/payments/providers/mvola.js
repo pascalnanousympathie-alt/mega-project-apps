@@ -102,11 +102,9 @@ function createMvolaProvider() {
     parseCallback(payload, headers, ctx) {
       if (!payload || typeof payload !== 'object') throw new DataError('E_ARG', '[mvola] callback payload required');
       const secret = (ctx.credentials && ctx.credentials.callbackSecret) || null;
-      if (secret) {
-        const provided = headers && (headers['x-content-signature'] || headers['X-Content-Signature']);
-        if (!constantTimeEqual(secret, provided)) {
-          throw new DataError('E_PAYMENT_SIGNATURE', '[mvola] callback signature rejected');
-        }
+      const provided = headers && (headers['x-content-signature'] || headers['X-Content-Signature']);
+      if (!secret || !constantTimeEqual(secret, provided)) {
+        throw new DataError('E_PAYMENT_SIGNATURE', '[mvola] callback signature rejected');
       }
       return {
         provider_ref: payload.serverCorrelationId || payload.transactionId || (payload.transaction && payload.transaction.transactionId) || null,

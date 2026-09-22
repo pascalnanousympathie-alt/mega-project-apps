@@ -1,6 +1,7 @@
 'use strict';
 const { DataError } = require('../../db');
 const { createProvider, normalizeStatus } = require('../base');
+const { constantTimeEqual } = require('../sign');
 const { sendJson, requireCustomer } = require('./helpers');
 
 const AIRTEL_STATUS_MAP = {
@@ -111,11 +112,9 @@ function createAirtelProvider() {
     parseCallback(payload, headers, ctx) {
       if (!payload || typeof payload !== 'object') throw new DataError('E_ARG', '[airtel] callback payload required');
       const secret = (ctx.credentials && ctx.credentials.callbackSecret) || null;
-      if (secret) {
-        const provided = headers && (headers['x-signature'] || headers['X-Signature']);
-        if (String(provided || '') !== String(secret)) {
-          throw new DataError('E_PAYMENT_SIGNATURE', '[airtel] callback signature rejected');
-        }
+      const provided = headers && (headers['x-signature'] || headers['X-Signature']);
+      if (!secret || !constantTimeEqual(secret, provided)) {
+        throw new DataError('E_PAYMENT_SIGNATURE', '[airtel] callback signature rejected');
       }
       const transaction = payload.transaction || (payload.data && payload.data.transaction) || {};
       return {

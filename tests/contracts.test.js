@@ -151,6 +151,25 @@ test('schema validation enforces types, required fields and bounds', () => {
   assert.equal(validateSchema(null, 'anything'), 'anything');
 });
 
+test('payment intent contract accepts supported fields and rejects credential-shaped extras', () => {
+  const route = routeById('payments.create');
+  const body = {
+    provider: 'mvola',
+    amount_milli: 25000,
+    currency: 'MGA',
+    reference: 'p20-ref-0001',
+    idempotency_key: 'p20-idem-0001',
+    customer: { msisdn: '0340123456' },
+    description: 'P20 security test',
+    return_url: 'https://example.test/return',
+    cancel_url: 'https://example.test/cancel',
+  };
+  assert.equal(validateSchema(route.body, body), body);
+  expectValidationError(() => validateSchema(route.body, { ...body, consumerSecret: 'should-not-enter-api' }));
+  expectValidationError(() => validateSchema(route.body, { ...body, return_url: 'javascript:alert(1)' }));
+  expectValidationError(() => validateSchema(route.body, { ...body, customer: { msisdn: '0340123456', apiKey: 'secret' } }));
+});
+
 test('websocket client events are validated against shared contracts', () => {
   assert.ok(WS_CLIENT_CONTRACTS['room:join']);
   assert.equal(validateClientEvent('gateway:ping'), true);

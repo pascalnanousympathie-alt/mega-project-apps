@@ -80,6 +80,7 @@ function appendWithinTx(db, input) {
     return { idempotent: true, entry: parseRow(existing) };
   }
   const before = wallet.balance_milli;
+  ok(Number.isSafeInteger(before) && before >= 0, 'E_BALANCE_OVERFLOW', 'wallet balance is outside the safe integer range');
   const applies = status === 'committed';
   let after = before;
   if (applies) {
@@ -91,6 +92,7 @@ function appendWithinTx(db, input) {
         throw new DataError('E_INSUFFICIENT_FUNDS', 'debit exceeds wallet balance');
       }
     }
+    ok(Number.isSafeInteger(after) && after >= 0, 'E_BALANCE_OVERFLOW', 'wallet balance would exceed the safe integer range');
   }
   const prevRow = db.prepare('SELECT hash FROM ledger_entries ORDER BY seq DESC LIMIT 1').get();
   const prev_hash = (prevRow && prevRow.hash) || GENESIS_HASH;
