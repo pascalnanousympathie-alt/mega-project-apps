@@ -12,7 +12,7 @@ const { verifyLedger } = require('../core/ledger');
 function runChild(dataDir, walletId, prefix, count) {
   const script = `
     const { openDataLayer } = require(${JSON.stringify(require.resolve('../core/db'))});
-    const { appendLedger, verifyLedger } = require(${JSON.stringify(require.resolve('../core/ledger'))});
+    const { appendLedger } = require(${JSON.stringify(require.resolve('../core/ledger'))});
     const db = openDataLayer(${JSON.stringify(dataDir)}, { verifyOnOpen: false });
     try {
       for (let i = 0; i < ${count}; i += 1) {
@@ -24,7 +24,6 @@ function runChild(dataDir, walletId, prefix, count) {
           amount_milli: 1,
         });
       }
-      if (!verifyLedger(db).ok) throw new Error('child ledger verification failed');
     } finally {
       if (db.isOpen) db.close();
     }
