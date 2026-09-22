@@ -14,6 +14,7 @@ function run(cmd, args, options = {}) {
   return execFileSync(cmd, args, {
     cwd: ROOT,
     encoding: options.encoding === undefined ? 'utf8' : options.encoding,
+    maxBuffer: 64 * 1024 * 1024,
     stdio: 'pipe',
   });
 }
