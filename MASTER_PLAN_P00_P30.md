@@ -140,7 +140,8 @@ P27 — Release candidate
 - Owner: PM; all four agents sign their domain review.
 
 P28 — Final independent judge
-- Gemini reviews only the evidence/diffs/results, not raw endless work.
+- Verified external judge reviews only the evidence/diffs/results, not raw endless work.
+- Gemini is preferred when available; verified free-tier Groq is the fallback.
 - Verdict: GO / CORRECT / BLOCK.
 - No verdict can bypass failed tests/security gates.
 

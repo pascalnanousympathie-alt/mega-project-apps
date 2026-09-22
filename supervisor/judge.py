@@ -22,8 +22,8 @@ def gemini_verdict(phase):
         with open(path,encoding="utf-8") as f: d=json.load(f)
     except Exception:
         return {"verdict":"WAITING_FOR_GEMINI","phase":phase,"error":"missing runtime/gemini-verdict.json"}
-    if d.get("phase")!=phase or d.get("source")!="gemini":
-        return {"verdict":"BLOCK","phase":phase,"error":"invalid Gemini verdict schema"}
+    if d.get("phase")!=phase or d.get("source") not in ("gemini","groq"):
+        return {"verdict":"BLOCK","phase":phase,"error":"invalid external judge verdict schema"}
     if d.get("verdict") not in ("GO","CORRECT","BLOCK"):
         return {"verdict":"BLOCK","phase":phase,"error":"invalid Gemini verdict value"}
     return d
@@ -32,13 +32,13 @@ def main():
     before=load(); phase=before.get("phase","P00")
     result=evidence_review()
     result["supervisor"]="evidence-collector"
-    result["gemini_mode"]=mode("gemini")
+    result["external_judge_mode"]=mode("gemini")
     result["checkpoint_before"]=before
     if phase=="P28":
-        result["checkpoint_kind"]="gemini-external"
-        result["gemini_bridge"]=run_gemini_bridge()
-        result["gemini_verdict"]=gemini_verdict(phase)
-        if result["gemini_verdict"].get("verdict") in ("GO","CORRECT","BLOCK"):
+        result["checkpoint_kind"]="external-judge"
+        result["external_judge"]=run_gemini_bridge()
+        result["external_verdict"]=gemini_verdict(phase)
+        if result["external_verdict"].get("verdict") in ("GO","CORRECT","BLOCK"):
             result["checkpoint_write"]="worker-only; judge does not mutate checkpoint state"
     else:
         result["checkpoint_kind"]="observe-only"

@@ -40,7 +40,7 @@ TASKS=[
 ("P25","Observability","DevOps + Security","Logs, health checks, metrics, audit trails and leakage checks."),
 ("P26","Production/payment readiness","PM + DevOps + Security","Provider readiness, environment separation and reconciliation."),
 ("P27","Release candidate","PM + all agents","Freeze candidate, regression and evidence pack."),
-("P28","Final independent judge","Gemini checkpoint","Evidence/diffs/results review; no gate bypass."),
+("P28","Final independent judge","External judge (Gemini/Groq)","Evidence/diffs/results review; no gate bypass."),
 ("P29","Launch & monitored rollout","DevOps + PM","Approved launch, smoke test, monitoring and rollback."),
 ("P30","Continuous operations","PM + DevOps","Long-running surveillance and controlled improvements."),
 ]
@@ -218,12 +218,12 @@ def main():
                 marker=None
         if phase=="P28" and not marker:
             bridge_result=run_gemini_bridge()
-            log(f"P28 GEMINI_BRIDGE status={bridge_result.get('status')} reason={bridge_result.get('reason','')}")
+            log(f"P28 EXTERNAL_JUDGE status={bridge_result.get('status')} source={bridge_result.get('source','')} reason={bridge_result.get('reason','')}")
             verdict_path=os.path.join(RT,"gemini-verdict.json")
             verdict=rg_load(verdict_path,{})
-            if verdict.get("phase")!="P28" or verdict.get("source")!="gemini":
-                waiting={"phase":"P28","task":name,"owner":owner_role,"status":"WAITING_FOR_GEMINI",
-                         "updated":now(),"reason":"external-Gemini-checkpoint-required",
+            if verdict.get("phase")!="P28" or verdict.get("source") not in ("gemini","groq"):
+                waiting={"phase":"P28","task":name,"owner":owner_role,"status":"WAITING_FOR_EXTERNAL_JUDGE",
+                         "updated":now(),"reason":"external-judge-checkpoint-required",
                          "state_authority":"worker","state_version":2}
                 save(waiting); checkpoint_sync(waiting); time.sleep(HEARTBEAT); continue
             if verdict.get("verdict")!="GO":
@@ -231,7 +231,7 @@ def main():
                          "updated":now(),"reason":"gemini-verdict-"+str(verdict.get("verdict")),
                          "gemini_verdict":verdict,"state_authority":"worker","state_version":2}
                 atomic_json(os.path.join(RT,"phase-P28-blocked.json"),blocked)
-                save(blocked); checkpoint_sync(blocked); log("P28 GEMINI_BLOCKED"); release_lock(); return 5
+                save(blocked); checkpoint_sync(blocked); log("P28 EXTERNAL_JUDGE_BLOCKED"); release_lock(); return 5
             packet=evidence()
             if not all(x["exit"]==0 for x in packet):
                 blocked={"phase":"P28","task":name,"owner":owner_role,"status":"BLOCKED",
@@ -239,10 +239,10 @@ def main():
                          "state_authority":"worker","state_version":2}
                 atomic_json(os.path.join(RT,"phase-P28-blocked.json"),blocked)
                 save(blocked); checkpoint_sync(blocked); return 5
-            marker={"phase":"P28","status":"PASS","completed":now(),"source":"gemini","verdict":verdict,
+            marker={"phase":"P28","status":"PASS","completed":now(),"source":verdict.get("source"),"verdict":verdict,
                     "local_evidence":packet}
             atomic_json(os.path.join(RT,"phase-P28-complete.json"),marker)
-            log("P28 REAL_PASS external-gemini")
+            log("P28 REAL_PASS external-"+str(verdict.get("source")))
             i+=1; continue
         if marker:
             ev=evidence()
