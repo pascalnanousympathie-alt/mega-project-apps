@@ -40,20 +40,17 @@ function sourceHash(files) {
   return hash.digest('hex');
 }
 
-function npmTest() {
-  const output = run('npm', ['test']);
-  const match = output.match(/ℹ tests (\d+)\s+ℹ suites (\d+)\s+ℹ pass (\d+)\s+ℹ fail (\d+)/);
-  if (!match) throw new Error('npm test summary not found');
-  const summary = {
-    tests: Number(match[1]),
-    suites: Number(match[2]),
-    pass: Number(match[3]),
-    fail: Number(match[4]),
-  };
-  if (summary.fail !== 0 || summary.tests !== summary.pass) {
-    throw new Error('npm test failed');
+function verifiedTestReport(commit, source_hash) {
+  const reportFile = path.join(ROOT, 'runtime', 'evidence', 'P23-build-test.json');
+  if (!fs.existsSync(reportFile)) throw new Error('P23 build test evidence is missing');
+  const report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+  if (report.status !== 'PASS') throw new Error('P23 build test evidence is not PASS');
+  if (report.git_commit !== commit) throw new Error('P23 build test evidence does not match HEAD');
+  if (report.source_hash !== source_hash) throw new Error('P23 build test evidence does not match source hash');
+  if (!report.summary || report.summary.fail !== 0 || report.summary.tests !== report.summary.pass) {
+    throw new Error('P23 build test evidence contains a failed test summary');
   }
-  return summary;
+  return report.summary;
 }
 
 function archive() {
@@ -81,7 +78,7 @@ function build() {
   const commit = run('git', ['rev-parse', 'HEAD']).trim();
   const files = trackedFiles();
   const source_hash = sourceHash(files);
-  const npm_test = npmTest();
+  const npm_test = verifiedTestReport(commit, source_hash);
   const jsFiles = files.filter((file) => file.endsWith('.js'));
   for (const file of jsFiles) run(process.execPath, ['--check', file]);
 
