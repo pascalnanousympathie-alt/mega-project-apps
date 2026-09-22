@@ -19,6 +19,8 @@ function mvolaProjectEnv(project, field) {
     consumerKey: 'CONSUMER_KEY',
     consumerSecret: 'CONSUMER_SECRET',
     apiKey: 'API_KEY',
+    merchantNumber: 'PARTNER_MSISDN',
+    partnerName: 'PARTNER_NAME',
   }[field];
   if (!suffix) return null;
   return `${spec.prefix}_MVOLA_${suffix}`;
@@ -28,10 +30,12 @@ function resolveMvolaProjectCredentials(project, env = {}) {
   const key = normalizeMvolaProject(project);
   if (!key) return null;
   const out = { project: key };
-  for (const field of ['consumerKey', 'consumerSecret', 'apiKey']) {
+  for (const field of ['consumerKey', 'consumerSecret', 'apiKey', 'merchantNumber', 'partnerName']) {
     const envName = mvolaProjectEnv(key, field);
-    if (envName && Object.prototype.hasOwnProperty.call(env, envName)) out[field] = env[envName];
+    if (envName && Object.prototype.hasOwnProperty.call(env, envName) && String(env[envName] || '').trim()) out[field] = env[envName];
   }
+  if (!out.merchantNumber && Object.prototype.hasOwnProperty.call(env, 'MVOLA_PARTNER_MSISDN')) out.merchantNumber = env.MVOLA_PARTNER_MSISDN;
+  if (!out.partnerName) out.partnerName = MVOLA_PROJECTS[key].name;
   return out;
 }
 

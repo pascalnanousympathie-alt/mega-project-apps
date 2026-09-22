@@ -35,7 +35,7 @@ function makeTransport(options = {}) {
     }
     if (spec.url.includes('merchantpay')) {
       if (spec.method === 'GET') {
-        const ref = spec.headers && spec.headers['x-correlation-id'];
+        const ref = spec.headers && spec.headers['X-CorrelationID'];
         if (options.failRef && ref === options.failRef) {
           return { status: 500, ok: false, headers: {}, data: { message: 'provider down' } };
         }

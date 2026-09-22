@@ -23,13 +23,25 @@ function safeBaseUrl(value) {
   return { ok: true, normalized: url.toString() };
 }
 
+function missingForReadiness(provider, credentials) {
+  if (provider.name !== 'mvola') return missingCredentials(provider, credentials);
+  const source = credentials || {};
+  const missing = [];
+  const hasApiKey = String(source.apiKey || '').trim().length > 0;
+  const hasOAuthPair = String(source.consumerKey || '').trim().length > 0 && String(source.consumerSecret || '').trim().length > 0;
+  if (!hasApiKey && !hasOAuthPair) missing.push('MVOLA_API_KEY or MVOLA_CONSUMER_KEY+MVOLA_CONSUMER_SECRET');
+  if (!String(source.merchantNumber || '').trim()) missing.push('MVOLA_MERCHANT_NUMBER or MVOLA_PARTNER_MSISDN');
+  if (!String(source.partnerName || '').trim()) missing.push('MVOLA_PARTNER_NAME');
+  return missing;
+}
+
 function describeReadiness(provider, input = {}) {
   let credentials = resolveCredentials(provider, { credentials: input.credentials || {}, env: input.env || {} });
   if (provider.name === 'mvola' && input.project) {
     const project = normalizeMvolaProject(input.project);
     if (project) credentials = { ...credentials, ...(resolveMvolaProjectCredentials(project, input.env || {}) || {}) };
   }
-  const missing = missingCredentials(provider, credentials);
+  const missing = missingForReadiness(provider, credentials);
   const callbackReady = isPresent(credentials.callbackSecret);
   const url = safeBaseUrl(credentials.baseUrl || provider.defaultBaseUrl);
   const pollingReady = Boolean(provider.capabilities && provider.capabilities.polling);

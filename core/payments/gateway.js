@@ -86,6 +86,18 @@ function buildPaymentGateway(input = {}) {
     return provider;
   }
 
+  function missingProviderCredentials(provider, credentials) {
+    if (provider.name !== 'mvola') return missingCredentials(provider, credentials);
+    const source = credentials || {};
+    const missing = [];
+    const hasApiKey = String(source.apiKey || '').trim().length > 0;
+    const hasOAuthPair = String(source.consumerKey || '').trim().length > 0 && String(source.consumerSecret || '').trim().length > 0;
+    if (!hasApiKey && !hasOAuthPair) missing.push('MVOLA_API_KEY or MVOLA_CONSUMER_KEY+MVOLA_CONSUMER_SECRET');
+    if (!String(source.merchantNumber || '').trim()) missing.push('MVOLA_MERCHANT_NUMBER or MVOLA_PARTNER_MSISDN');
+    if (!String(source.partnerName || '').trim()) missing.push('MVOLA_PARTNER_NAME');
+    return missing;
+  }
+
   function credentialsFor(provider, project = null) {
     const scoped = providerCredentials && typeof providerCredentials === 'object' && !Array.isArray(providerCredentials)
       ? providerCredentials[provider.name] || {}
@@ -124,7 +136,7 @@ function buildPaymentGateway(input = {}) {
 
   function describeProvider(provider, project = null) {
     const credentials = credentialsFor(provider, project);
-    const missing = missingCredentials(provider, credentials);
+    const missing = missingProviderCredentials(provider, credentials);
     const config = providerConfigRow(provider.name);
     return {
       name: provider.name,
@@ -318,7 +330,7 @@ function buildPaymentGateway(input = {}) {
 
     const paymentProject = resolveRequestedMvolaProject(request);
     const credentials = credentialsFor(provider, paymentProject);
-    const missing = missingCredentials(provider, credentials);
+    const missing = missingProviderCredentials(provider, credentials);
     if (missing.length > 0) {
       throw new DataError(
         'E_PROVIDER_UNCONFIGURED',
@@ -725,7 +737,7 @@ function buildPaymentGateway(input = {}) {
     );
     const project = intentProject(intent);
     const credentials = credentialsFor(provider, project);
-    const missing = missingCredentials(provider, credentials);
+    const missing = missingProviderCredentials(provider, credentials);
     if (missing.length > 0) {
       throw new DataError(
         'E_PROVIDER_UNCONFIGURED',

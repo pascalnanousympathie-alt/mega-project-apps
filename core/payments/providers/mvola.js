@@ -17,6 +17,7 @@ const MVOLA_STATUS_MAP = {
 };
 
 async function accessToken(ctx, credentials) {
+  if (credentials.apiKey) return credentials.apiKey;
   if (credentials.accessToken) return credentials.accessToken;
   const data = await sendJson(
     ctx.transport,
@@ -44,8 +45,8 @@ function createMvolaProvider() {
     limits: { min_milli: 1000, max_milli: 2000000000 },
     statusMap: MVOLA_STATUS_MAP,
     credentialSpec: [
-      { key: 'consumerKey', env: 'MVOLA_CONSUMER_KEY', secret: true },
-      { key: 'consumerSecret', env: 'MVOLA_CONSUMER_SECRET', secret: true },
+      { key: 'consumerKey', env: 'MVOLA_CONSUMER_KEY', required: false, secret: true },
+      { key: 'consumerSecret', env: 'MVOLA_CONSUMER_SECRET', required: false, secret: true },
       { key: 'apiKey', env: 'MVOLA_API_KEY', required: false, secret: true },
       { key: 'merchantNumber', env: 'MVOLA_MERCHANT_NUMBER', secret: false },
       { key: 'partnerName', env: 'MVOLA_PARTNER_NAME', secret: false },
@@ -63,14 +64,16 @@ function createMvolaProvider() {
           method: 'POST',
           url: credentials.baseUrl + '/mvola/mm/transactions/type/merchantpay/1.0.0/',
           headers: {
-            authorization: 'Bearer ' + token,
-            'x-correlation-id': reference,
-            version: '1.0',
-            userlanguage: 'FR',
-            useraccountidentifier: 'msisdn;' + credentials.merchantNumber,
-            partnername: credentials.partnerName,
-            'cache-control': 'no-cache',
-            ...(ctx.callbackUrl ? { 'x-callback-url': ctx.callbackUrl } : {}),
+            ...(credentials.apiKey ? { apikey: token } : { authorization: 'Bearer ' + token }),
+            'X-CorrelationID': reference,
+            Version: '1.0',
+            UserLanguage: 'MG',
+            UserAccountIdentifier: 'msisdn;' + credentials.merchantNumber,
+            partnerName: credentials.partnerName,
+            'Cache-Control': 'no-cache',
+            Accept: 'application/json',
+            'Accept-Charset': 'UTF-8',
+            ...(ctx.callbackUrl ? { 'X-Callback-URL': ctx.callbackUrl } : {}),
           },
           body: {
             amount: String(request.amount_milli),
@@ -100,21 +103,58 @@ function createMvolaProvider() {
           method: 'GET',
           url: credentials.baseUrl + '/mvola/mm/transactions/type/merchantpay/1.0.0/status/' + encodeURIComponent(providerRef),
           headers: {
-            authorization: 'Bearer ' + token,
-            'x-correlation-id': providerRef,
-            version: '1.0',
-            userlanguage: 'FR',
-            useraccountidentifier: 'msisdn;' + credentials.merchantNumber,
-            partnername: credentials.partnerName,
-            'cache-control': 'no-cache',
+            ...(credentials.apiKey ? { apikey: token } : { authorization: 'Bearer ' + token }),
+            'X-CorrelationID': providerRef,
+            Version: '1.0',
+            UserLanguage: 'MG',
+            UserAccountIdentifier: 'msisdn;' + credentials.merchantNumber,
+            partnerName: credentials.partnerName,
+            'Cache-Control': 'no-cache',
+            Accept: 'application/json',
+            'Accept-Charset': 'UTF-8',
           },
         },
         'mvola',
       );
+      const status = normalizeStatus(data && (data.transactionStatus || data.status), MVOLA_STATUS_MAP);
+      let amountMilli = Number.isSafeInteger(Number(data && data.amount)) ? Number(data.amount) : null;
+      let currency = data && data.currency ? String(data.currency) : null;
+      let raw = data;
+      const transactionReference = data && (data.objectReference || data.transactionReference || data.transactionId);
+      if (status === 'succeeded' && transactionReference) {
+        const details = await sendJson(
+          ctx.transport,
+          {
+            method: 'GET',
+            url: credentials.baseUrl + '/mvola/mm/transactions/type/merchantpay/1.0.0/' + encodeURIComponent(transactionReference),
+            headers: {
+              ...(credentials.apiKey ? { apikey: token } : { authorization: 'Bearer ' + token }),
+              'X-CorrelationID': transactionReference,
+              Version: '1.0',
+              UserAccountIdentifier: 'msisdn;' + credentials.merchantNumber,
+              partnerName: credentials.partnerName,
+              'Cache-Control': 'no-cache',
+              Accept: 'application/json',
+              'Accept-Charset': 'UTF-8',
+            },
+          },
+          'mvola',
+        );
+        const detailAmount = Number(details && details.amount);
+        amountMilli = Number.isSafeInteger(detailAmount) ? detailAmount : amountMilli;
+        currency = details && details.currency ? String(details.currency) : currency;
+        const detailStatus = normalizeStatus(details && details.transactionStatus, MVOLA_STATUS_MAP);
+        if (detailStatus !== 'succeeded' || String(currency || '').toUpperCase() !== 'AR') {
+          return { status: 'pending', provider_ref: data.serverCorrelationId || providerRef, amount_milli: amountMilli, currency: currency ? 'MGA' : null, raw: { status: data, details } };
+        }
+        raw = { status: data, details };
+      }
       return {
-        status: normalizeStatus(data && (data.transactionStatus || data.status), MVOLA_STATUS_MAP),
+        status,
         provider_ref: (data && (data.serverCorrelationId || providerRef)),
-        raw: data,
+        amount_milli: amountMilli,
+        currency: currency ? (String(currency).toUpperCase() === 'AR' ? 'MGA' : String(currency).toUpperCase()) : null,
+        raw,
       };
     },
     parseCallback(payload, headers, ctx) {

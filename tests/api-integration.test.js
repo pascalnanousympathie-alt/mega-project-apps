@@ -475,7 +475,7 @@ test('HTTP integration: mvola deposit forwards the payer msisdn and stays idempo
   const posts = transport.merchantPayPosts();
   assert.equal(posts.length, 1, 'one provider call per intent');
   const posted = posts[0];
-  assert.equal(posted.headers['x-correlation-id'], created.data.intent.id);
+  assert.equal(posted.headers['X-CorrelationID'], created.data.intent.id);
   assert.deepEqual(posted.body.debitParty, [{ key: 'msisdn', value: '0340123456' }]);
   assert.equal(posted.body.creditParty[0].value, '0340000000');
   assert.equal(posted.body.amount, '25000');

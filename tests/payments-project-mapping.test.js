@@ -7,6 +7,7 @@ const { makeDataLayer } = require('./helpers');
 const SHARED = {
   MVOLA_MERCHANT_NUMBER: '0340000000',
   MVOLA_PARTNER_NAME: 'ACEP',
+  MVOLA_PARTNER_MSISDN: '0340000000',
   MVOLA_BASE_URL: 'https://api.mvola.example',
 };
 const APP_ENV = {
@@ -26,10 +27,6 @@ function ok(data) {
   return { status: 200, ok: true, headers: {}, data };
 }
 
-function basicPair(header) {
-  return Buffer.from(String(header).replace(/^Basic\s+/i, ''), 'base64').toString('utf8');
-}
-
 test('MVola project map resolves the three app credential sets without exposing values', () => {
   assert.deepEqual(Object.keys(MVOLA_PROJECTS), ['domino', 'loto', 'rami']);
   assert.equal(mvolaProjectEnv('domino', 'consumerKey'), 'DOMINOMADA_MVOLA_CONSUMER_KEY');
@@ -38,7 +35,7 @@ test('MVola project map resolves the three app credential sets without exposing 
   assert.equal(mvolaProjectEnv('unknown', 'apiKey'), null);
 
   const resolved = resolveMvolaProjectCredentials('domino', APP_ENV);
-  assert.deepEqual(Object.keys(resolved).sort(), ['apiKey', 'consumerKey', 'consumerSecret', 'project'].sort());
+  assert.deepEqual(Object.keys(resolved).sort(), ['apiKey', 'consumerKey', 'consumerSecret', 'merchantNumber', 'partnerName', 'project'].sort());
   assert.equal(resolved.project, 'domino');
   assert.equal(resolved.consumerKey, 'domino-consumer');
   assert.equal(resolved.consumerSecret, 'domino-secret');
@@ -52,10 +49,14 @@ test('MVola gateway selects Domino, Loto and Rami credentials independently and 
     calls.push(spec);
     if (/\/token$/.test(spec.url)) return ok({ access_token: 'shared-test-token' });
     if (/merchantpay\/1\.0\.0\/$/.test(spec.url)) {
-      return ok({ status: 'pending', serverCorrelationId: 'ref-' + spec.headers['x-correlation-id'] });
+      return ok({ status: 'pending', serverCorrelationId: 'ref-' + spec.headers['X-CorrelationID'] });
     }
     if (/\/status\//.test(spec.url)) {
-      return ok({ transactionStatus: 'success', serverCorrelationId: decodeURIComponent(spec.url.split('/status/')[1]) });
+      const correlation = decodeURIComponent(spec.url.split('/status/')[1]);
+      return ok({ transactionStatus: 'completed', serverCorrelationId: correlation, objectReference: 'tx-' + correlation });
+    }
+    if (/merchantpay\/1\.0\.0\/tx-/.test(spec.url)) {
+      return ok({ transactionStatus: 'completed', amount: '25000', currency: 'Ar' });
     }
     return { status: 404, ok: false, headers: {}, data: { message: 'unmatched test route' } };
   };
@@ -67,10 +68,10 @@ test('MVola gateway selects Domino, Loto and Rami credentials independently and 
     transport,
   });
 
-  const expectedPairs = {
-    domino: 'domino-consumer:domino-secret',
-    loto: 'loto-consumer:loto-secret',
-    rami: 'rami-consumer:rami-secret',
+  const expectedApiKeys = {
+    domino: 'domino-api-key',
+    loto: 'loto-api-key',
+    rami: 'rami-api-key',
   };
 
   for (const project of ['domino', 'loto', 'rami']) {
@@ -86,14 +87,19 @@ test('MVola gateway selects Domino, Loto and Rami credentials independently and 
     });
     assert.equal(result.intent.status, 'pending');
     assert.equal(JSON.parse(result.intent.request_json).project, project);
-    const beforePoll = calls[calls.length - 2];
-    assert.equal(basicPair(beforePoll.headers.authorization), expectedPairs[project]);
+    const createCalls = calls.filter((spec) => spec.method === 'POST' && /merchantpay\/1\.0\.0\/$/.test(spec.url));
+    const createCall = createCalls[createCalls.length - 1];
+    assert.equal(createCall.headers.apikey, expectedApiKeys[project]);
+    assert.equal(createCall.headers.UserAccountIdentifier, 'msisdn;0340000000');
+    assert.equal(createCall.headers.partnerName, project === 'domino' ? 'DominoMada' : project === 'loto' ? 'LotoMada' : 'RamiMada');
 
     const reconciled = await payments.reconcileIntent(result.intent.id);
     assert.equal(reconciled.outcome, 'updated');
     assert.equal(reconciled.intent.status, 'succeeded');
-    const tokenCalls = calls.filter((spec) => /\/token$/.test(spec.url));
-    assert.equal(basicPair(tokenCalls[tokenCalls.length - 1].headers.authorization), expectedPairs[project]);
+    const detailCalls = calls.filter((spec) => spec.method === 'GET' && /merchantpay\/1\.0\.0\/tx-/.test(spec.url));
+    const detailCall = detailCalls[detailCalls.length - 1];
+    assert.ok(detailCall, 'transaction details endpoint was called');
+    assert.equal(detailCall.headers.apikey, expectedApiKeys[project]);
   }
 });
 

@@ -354,8 +354,8 @@ test('mvola getPayment polls with a correlation header and maps transaction stat
       /merchantpay\/1\.0\.0\/status\//,
       (spec) => {
         assert.equal(spec.method, 'GET');
-        assert.equal(spec.headers['x-correlation-id'], 'mvola-ref-7');
-        assert.equal(spec.headers['cache-control'], 'no-cache');
+        assert.equal(spec.headers['X-CorrelationID'], 'mvola-ref-7');
+        assert.equal(spec.headers['Cache-Control'], 'no-cache');
         return ok({ status: 'completed', serverCorrelationId: 'mvola-ref-7' });
       },
     ],
