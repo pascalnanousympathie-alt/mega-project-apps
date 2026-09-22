@@ -104,7 +104,6 @@ def call_gemini(prompt,model,key):
     body=json.dumps({
         "contents":[{"parts":[{"text":prompt}]}],
         "generationConfig":{
-            "temperature":0,
             "responseMimeType":"application/json",
             "maxOutputTokens":1200
         }
@@ -115,8 +114,20 @@ def call_gemini(prompt,model,key):
         method="POST",
         headers={"Content-Type":"application/json","x-goog-api-key":key},
     )
-    with urllib.request.urlopen(req,timeout=90) as res:
-        payload=json.loads(res.read().decode())
+    last_error=None
+    for delay in (0,2,4):
+        if delay:
+            time.sleep(delay)
+        try:
+            with urllib.request.urlopen(req,timeout=90) as res:
+                payload=json.loads(res.read().decode())
+            break
+        except urllib.error.HTTPError as exc:
+            last_error=exc
+            if exc.code != 503 or delay == 4:
+                raise
+    else:
+        raise last_error
     texts=[]
     for candidate in payload.get("candidates",[]):
         for part in candidate.get("content",{}).get("parts",[]):
@@ -150,7 +161,14 @@ def run():
         return {"status":"VERDICT_WRITTEN","verdict":verdict["verdict"],
                 "commit":verdict["reviewed_commit"],"packet_digest":verdict["packet_digest"]}
     except urllib.error.HTTPError as e:
-        return {"status":"WAITING_FOR_GEMINI","reason":"gemini-http-"+str(e.code),
+        try:
+            body=e.read().decode(errors="replace")
+            payload=json.loads(body)
+            err=payload.get("error",{})
+            detail=str(err.get("status") or err.get("message") or "http-error")[:300]
+        except Exception:
+            detail="http-error"
+        return {"status":"WAITING_FOR_GEMINI","reason":"gemini-http-"+str(e.code)+":"+detail,
                 "key_set":True}
     except Exception as e:
         return {"status":"WAITING_FOR_GEMINI","reason":"gemini-error-"+str(e)[:300],
