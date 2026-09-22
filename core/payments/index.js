@@ -12,6 +12,7 @@ const {
 const { redact, stripSecrets, redactText, containsSecretLike } = require('./redact');
 const { createHttpTransport } = require('./transport');
 const { maskSecret, hmacSha256Hex, basicAuthHeader } = require('./sign');
+const { MVOLA_PROJECTS, normalizeMvolaProject, mvolaProjectEnv, resolveMvolaProjectCredentials } = require('./project-map');
 const {
   buildProviderRegistry,
   PROVIDER_FACTORIES,
@@ -43,6 +44,10 @@ module.exports = {
   maskSecret,
   hmacSha256Hex,
   basicAuthHeader,
+  MVOLA_PROJECTS,
+  normalizeMvolaProject,
+  mvolaProjectEnv,
+  resolveMvolaProjectCredentials,
   safeBaseUrl,
   describeReadiness,
   evaluatePaymentsReadiness,

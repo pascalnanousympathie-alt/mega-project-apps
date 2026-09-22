@@ -452,9 +452,11 @@ function openDataLayer(dataDir, options = {}) {
   fs.mkdirSync(dataDir, { recursive: true });
   const dbPath = path.join(dataDir, 'app.db');
   const db = new DatabaseSync(dbPath);
+  // Set the busy timeout before WAL negotiation so concurrent real processes
+  // opening the same store wait instead of failing during journal-mode setup.
+  db.exec('PRAGMA busy_timeout = 15000');
   db.exec('PRAGMA journal_mode = WAL');
   db.exec('PRAGMA foreign_keys = ON');
-  db.exec('PRAGMA busy_timeout = 5000');
   db.exec('PRAGMA synchronous = FULL');
   migrate(db);
   if (verifyOnOpen) {

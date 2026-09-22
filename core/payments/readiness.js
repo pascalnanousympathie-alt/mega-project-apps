@@ -1,5 +1,6 @@
 'use strict';
 const { missingCredentials, resolveCredentials } = require('./base');
+const { normalizeMvolaProject, resolveMvolaProjectCredentials } = require('./project-map');
 
 const UNSAFE_PRODUCTION_HOST_MARKERS = [
   'localhost', '127.0.0.1', '0.0.0.0', 'sandbox', 'test', 'devapi.', 'pre-api.',
@@ -23,7 +24,11 @@ function safeBaseUrl(value) {
 }
 
 function describeReadiness(provider, input = {}) {
-  const credentials = resolveCredentials(provider, { credentials: input.credentials || {}, env: input.env || {} });
+  let credentials = resolveCredentials(provider, { credentials: input.credentials || {}, env: input.env || {} });
+  if (provider.name === 'mvola' && input.project) {
+    const project = normalizeMvolaProject(input.project);
+    if (project) credentials = { ...credentials, ...(resolveMvolaProjectCredentials(project, input.env || {}) || {}) };
+  }
   const missing = missingCredentials(provider, credentials);
   const callbackReady = isPresent(credentials.callbackSecret);
   const url = safeBaseUrl(credentials.baseUrl || provider.defaultBaseUrl);

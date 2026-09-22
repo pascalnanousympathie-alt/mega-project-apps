@@ -46,6 +46,7 @@ function createMvolaProvider() {
     credentialSpec: [
       { key: 'consumerKey', env: 'MVOLA_CONSUMER_KEY', secret: true },
       { key: 'consumerSecret', env: 'MVOLA_CONSUMER_SECRET', secret: true },
+      { key: 'apiKey', env: 'MVOLA_API_KEY', required: false, secret: true },
       { key: 'merchantNumber', env: 'MVOLA_MERCHANT_NUMBER', secret: false },
       { key: 'partnerName', env: 'MVOLA_PARTNER_NAME', secret: false },
       { key: 'baseUrl', env: 'MVOLA_BASE_URL', required: false, secret: false },

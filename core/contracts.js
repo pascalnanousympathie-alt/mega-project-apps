@@ -70,6 +70,8 @@ const ERROR_STATUS = {
   E_PAYMENT_CALLBACK_UNMATCHED: 404,
   E_PAYMENT_RECONCILE: 502,
   E_PAYMENT_SECRET_LEAK: 500,
+  E_PAYMENT_PROJECT_REQUIRED: 400,
+  E_PAYMENT_PROJECT_INVALID: 400,
   E_NO_HOUSE_WALLET: 500,
   E_GAME_ECONOMY: 409,
   E_NO_TICKETS: 409,
@@ -429,7 +431,7 @@ const REST_ROUTES = [
     path: '/payments/providers',
     auth: 'bearer',
     idempotent: false,
-    query: { type: 'object' },
+    query: { type: 'object', properties: { project: { type: 'string', enum: ['domino', 'loto', 'rami'] } } },
     response: { type: 'array' },
   },
   {
@@ -444,6 +446,7 @@ const REST_ROUTES = [
       required: ['provider', 'amount_milli'],
       properties: {
         provider: { type: 'string', enum: ['mvola', 'airtel', 'orange', 'binance'] },
+        project: { type: 'string', enum: ['domino', 'loto', 'rami'] },
         direction: { type: 'string', enum: ['payin'] },
         amount_milli: { type: 'integer', minimum: 1 },
         currency: { type: 'string', enum: ['MGA', 'USDT'] },

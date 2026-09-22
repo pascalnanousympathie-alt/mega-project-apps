@@ -23,6 +23,7 @@ const {
   assertKnownStatus,
 } = require('./base');
 const { buildProviderRegistry } = require('./providers');
+const { normalizeMvolaProject, resolveMvolaProjectCredentials } = require('./project-map');
 const { appendWithinTx } = require('../ledger');
 const { stripSecrets, redactText, containsSecretLike } = require('./redact');
 const { createHttpTransport } = require('./transport');
@@ -85,15 +86,44 @@ function buildPaymentGateway(input = {}) {
     return provider;
   }
 
-  function credentialsFor(provider) {
+  function credentialsFor(provider, project = null) {
     const scoped = providerCredentials && typeof providerCredentials === 'object' && !Array.isArray(providerCredentials)
       ? providerCredentials[provider.name] || {}
       : {};
-    return resolveCredentials(provider, { credentials: scoped, env });
+    const resolved = resolveCredentials(provider, { credentials: scoped, env });
+    if (provider.name === 'mvola' && project) {
+      const projectCredentials = resolveMvolaProjectCredentials(project, env);
+      if (!projectCredentials) throw new DataError('E_PAYMENT_PROJECT_INVALID', 'unknown MVola project: ' + project);
+      Object.assign(resolved, projectCredentials);
+    }
+    return resolved;
   }
 
-  function describeProvider(provider) {
-    const credentials = credentialsFor(provider);
+  function resolveRequestedMvolaProject(request) {
+    if (!request || request.provider !== 'mvola') return null;
+    const project = normalizeMvolaProject(request.project);
+    const genericKey = (providerCredentials.mvola || {}).consumerKey || env.MVOLA_CONSUMER_KEY;
+    const appScopedConfigured = Object.keys(env).some((key) => /^(DOMINOMADA|LOTOMADA|RAMIMADA)_MVOLA_(CONSUMER_KEY|CONSUMER_SECRET|API_KEY)$/.test(key) && String(env[key] || '').length > 0);
+    if (!project && appScopedConfigured && !genericKey) {
+      throw new DataError('E_PAYMENT_PROJECT_REQUIRED', 'project is required for MVola app-scoped credentials');
+    }
+    if (request.project && !project) {
+      throw new DataError('E_PAYMENT_PROJECT_INVALID', 'unknown MVola project: ' + request.project);
+    }
+    return project;
+  }
+
+  function intentProject(intent) {
+    try {
+      const data = typeof intent.request_json === 'string' ? JSON.parse(intent.request_json) : intent.request_json;
+      return data && normalizeMvolaProject(data.project);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function describeProvider(provider, project = null) {
+    const credentials = credentialsFor(provider, project);
     const missing = missingCredentials(provider, credentials);
     const config = providerConfigRow(provider.name);
     return {
@@ -109,8 +139,10 @@ function buildPaymentGateway(input = {}) {
     };
   }
 
-  function listProviders() {
-    return [...providers.values()].map(describeProvider);
+  function listProviders(options = {}) {
+    const project = options && options.project ? normalizeMvolaProject(options.project) : null;
+    if (options && options.project && !project) throw new DataError('E_PAYMENT_PROJECT_INVALID', 'unknown MVola project: ' + options.project);
+    return [...providers.values()].map((provider) => describeProvider(provider, provider.name === 'mvola' ? project : null));
   }
 
   function appendEvent(intent, eventType, status, providerRef, payload) {
@@ -284,7 +316,8 @@ function buildPaymentGateway(input = {}) {
       return { intent: replay, idempotent: true, provider: provider.name, payment_url: null };
     }
 
-    const credentials = credentialsFor(provider);
+    const paymentProject = resolveRequestedMvolaProject(request);
+    const credentials = credentialsFor(provider, paymentProject);
     const missing = missingCredentials(provider, credentials);
     if (missing.length > 0) {
       throw new DataError(
@@ -302,6 +335,7 @@ function buildPaymentGateway(input = {}) {
       direction,
       reference,
       customer: request.customer || null,
+      ...(paymentProject ? { project: paymentProject } : {}),
     });
     const intent = {
       id,
@@ -689,7 +723,8 @@ function buildPaymentGateway(input = {}) {
       'E_PAYMENT_RECONCILE',
       'provider does not support polling: ' + provider.name,
     );
-    const credentials = credentialsFor(provider);
+    const project = intentProject(intent);
+    const credentials = credentialsFor(provider, project);
     const missing = missingCredentials(provider, credentials);
     if (missing.length > 0) {
       throw new DataError(

@@ -339,7 +339,7 @@ function buildApiHandlers(layer) {
 
   handlers['payments.providers'] = (ctx) => {
     session(ctx);
-    return layer.payments.listProviders();
+    return layer.payments.listProviders({ project: ctx.query.project || null });
   };
 
   handlers['payments.create'] = async (ctx) => {
@@ -360,6 +360,7 @@ function buildApiHandlers(layer) {
       amount_milli: ctx.body.amount_milli,
       currency: ctx.body.currency,
       wallet_id: walletId,
+      project: ctx.body.project,
       reference: ctx.body.reference,
       idempotency_key: key,
       user_id: user.id,
