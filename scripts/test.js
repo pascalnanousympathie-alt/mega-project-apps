@@ -14,7 +14,7 @@ if (!files.length) {
   process.exit(1);
 }
 try {
-  execFileSync(process.execPath, ['--test', ...files], { stdio: 'inherit', cwd: root });
+  execFileSync(process.execPath, ['--test-concurrency=1', '--test', ...files], { stdio: 'inherit', cwd: root });
 } catch (err) {
   process.exit(typeof err.status === 'number' ? err.status : 1);
 }
