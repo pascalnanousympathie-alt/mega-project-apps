@@ -6,6 +6,7 @@ ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 from supervisor.runtime_guard import atomic_json, load_json as rg_load, new_attempt_id, cpu_ticks, process_alive, acquire_lease, renew_lease, release_lease
+from supervisor.gemini_bridge import run as run_gemini_bridge
 RT=os.path.join(ROOT,"runtime"); os.makedirs(RT,exist_ok=True)
 STATE=os.path.join(RT,"worker-state.json")
 LOG=os.path.join(RT,"worker.log")
@@ -216,6 +217,8 @@ def main():
             else:
                 marker=None
         if phase=="P28" and not marker:
+            bridge_result=run_gemini_bridge()
+            log(f"P28 GEMINI_BRIDGE status={bridge_result.get('status')} reason={bridge_result.get('reason','')}")
             verdict_path=os.path.join(RT,"gemini-verdict.json")
             verdict=rg_load(verdict_path,{})
             if verdict.get("phase")!="P28" or verdict.get("source")!="gemini":

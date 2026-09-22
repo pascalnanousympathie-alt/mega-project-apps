@@ -5,6 +5,7 @@ import subprocess
 import time
 from quota import mode
 from checkpoint import load, save
+from gemini_bridge import run as run_gemini_bridge
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def evidence_review():
     p=subprocess.run(["python3",os.path.join(ROOT,"agents","debate.py")],
@@ -35,6 +36,7 @@ def main():
     result["checkpoint_before"]=before
     if phase=="P28":
         result["checkpoint_kind"]="gemini-external"
+        result["gemini_bridge"]=run_gemini_bridge()
         result["gemini_verdict"]=gemini_verdict(phase)
         if result["gemini_verdict"].get("verdict") in ("GO","CORRECT","BLOCK"):
             result["checkpoint_write"]="worker-only; judge does not mutate checkpoint state"
