@@ -1,0 +1,351 @@
+(function (root, factory) {
+  'use strict';
+  var mod = factory();
+  root.ACEP = root.ACEP || {};
+  root.ACEP.i18n = mod;
+  if (typeof module !== 'undefined' && module.exports) module.exports = mod;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  var DEFAULT_LOCALE = 'fr';
+  var LOCALES = ['mg', 'fr', 'en'];
+  var LOCALE_LABELS = { mg: 'Malagasy', fr: 'Français', en: 'English' };
+
+  // Currency stays Ariary (Ar / MGA) in every locale: only the grouping
+  // separator changes so that amounts stay machine-consistent but readable.
+  var MONEY = {
+    fr: { group: '\u202f', symbol: 'Ar', position: 'suffix' },
+    mg: { group: '\u202f', symbol: 'Ar', position: 'suffix' },
+    en: { group: ',', symbol: 'Ar', position: 'suffix' },
+  };
+
+  var DICT = {
+    fr: {
+      'brand.tagline': 'LudoMada nécessite JavaScript.',
+      'nav.home': 'Accueil',
+      'nav.lobby': 'Lobby',
+      'nav.wallet': 'Portefeuille',
+      'nav.profile': 'Profil',
+      'lang.label': 'Langue',
+      'login.identity': 'Identifiant / username',
+      'login.password': 'Mot de passe',
+      'login.submit': 'Se connecter',
+      'login.register_title': 'Créer un compte',
+      'login.username': 'Username',
+      'login.phone': 'Téléphone',
+      'login.email': 'Email',
+      'login.register': 'S’inscrire',
+      'home.greeting': 'Bonjour, {name}',
+      'home.default_user': 'joueur',
+      'home.play': 'Jouer',
+      'home.no_games': 'Aucune partie disponible.',
+      'lobby.title': 'Lobby',
+      'lobby.room_name': 'Nom de la table',
+      'lobby.capacity': 'Capacité',
+      'lobby.create': 'Créer une salle',
+      'lobby.full': 'Complète',
+      'lobby.join': 'Rejoindre',
+      'lobby.empty': 'Aucune salle en attente.',
+      'wallet.title': 'Portefeuille',
+      'wallet.none': 'Aucun portefeuille.',
+      'wallet.open': 'Ouvrir un portefeuille MGA',
+      'wallet.amount': 'Montant (Ar)',
+      'wallet.deposit': 'Déposer',
+      'wallet.col_date': 'Date',
+      'wallet.col_label': 'Libellé',
+      'wallet.col_amount': 'Montant',
+      'wallet.no_entries': 'Aucune écriture.',
+      'waiting.room': 'Salle : {name}',
+      'waiting.ready_yes': 'prêt',
+      'waiting.solo': 'Solo',
+      'waiting.ready': 'Prêt',
+      'waiting.unready': 'Annuler prêt',
+      'waiting.start': 'Démarrer',
+      'waiting.close': 'Fermer',
+      'waiting.leave': 'Quitter',
+      'game.turn': 'À : {who}',
+      'game.winner': 'Gagnant : {who}',
+      'game.empty': 'vide',
+      'game.none': 'aucun',
+      'domino.draw': 'Piocher ({count})',
+      'domino.pass': 'Passer',
+      'loto.buy': 'Acheter un ticket',
+      'loto.ball': 'Tirer une boule',
+      'loto.settle': 'Terminer',
+      'loto.refund': 'Remboursement',
+      'loto.no_ticket': 'Aucun ticket',
+      'rami.draw_stock': 'Piocher ({count})',
+      'rami.draw_discard': 'Piocher pile',
+      'rami.meld': 'Poser',
+      'rami.discard': 'Défausser',
+      'profile.title': 'Profil',
+      'profile.username': 'Username',
+      'profile.phone': 'Téléphone',
+      'profile.email': 'Email',
+      'profile.role': 'Rôle',
+      'profile.status': 'Statut',
+      'profile.wallet': 'Portefeuille',
+      'profile.no_wallet': 'aucun',
+      'profile.logout': 'Se déconnecter',
+      'notfound.title': 'Page introuvable',
+      'notfound.home': 'Accueil',
+      'status.waiting': 'en attente',
+      'status.scheduled': 'programmée',
+      'status.active': 'en cours',
+      'status.finished': 'terminée',
+      'status.cancelled': 'annulée',
+      'status.open': 'ouverte',
+      'status.closed': 'fermée',
+      'phase.draw': 'pioche',
+      'phase.discard': 'défausse',
+      'app.room_closed': 'La salle a été fermée.',
+      'app.bad_credentials': 'Identifiants invalides.',
+      'app.welcome': 'Compte créé. Bienvenue !',
+      'app.invalid_amount': 'Montant invalide.',
+      'app.deposit_request': 'Demande de dépôt {status}.',
+      'app.wallet_opened': 'Portefeuille {currency} ouvert.',
+      'app.no_game_for_room': 'Aucun jeu disponible pour créer une salle.',
+      'app.select_cards': 'Sélectionnez vos cartes puis validez la combinaison.',
+      'app.realtime_error': 'erreur temps réel',
+    },
+    mg: {
+      'brand.tagline': 'Milavela ny JavaScript vao miasa ny LudoMada.',
+      'nav.home': 'Fandraisana',
+      'nav.lobby': 'Efitra',
+      'nav.wallet': 'Vola',
+      'nav.profile': 'Mombamomba',
+      'lang.label': 'Fiteny',
+      'login.identity': 'Anarana fidirana',
+      'login.password': 'Teny miafina',
+      'login.submit': 'Hiditra',
+      'login.register_title': 'Hamorona kaonty',
+      'login.username': 'Anarana fidirana',
+      'login.phone': 'Telefaonina',
+      'login.email': 'Yelay',
+      'login.register': 'Hisoratra anarana',
+      'home.greeting': 'Manao ahoana, {name}',
+      'home.default_user': 'mpilalao',
+      'home.play': 'Hitapila',
+      'home.no_games': 'Tsy misy lalao azo atao.',
+      'lobby.title': 'Efitra',
+      'lobby.room_name': 'Anaran’ny latabatra',
+      'lobby.capacity': 'Isan’ny mpilalao',
+      'lobby.create': 'Hamorona efitra',
+      'lobby.full': 'Feno',
+      'lobby.join': 'Hiditra',
+      'lobby.empty': 'Tsy misy efitra miandry.',
+      'wallet.title': 'Vola',
+      'wallet.none': 'Tsy misy kaonty vola.',
+      'wallet.open': 'Manokatra kaonty vola MGA',
+      'wallet.amount': 'Vola (Ar)',
+      'wallet.deposit': 'Ampidiro',
+      'wallet.col_date': 'Daty',
+      'wallet.col_label': 'Description',
+      'wallet.col_amount': 'Vola',
+      'wallet.no_entries': 'Tsy misy hetsika.',
+      'waiting.room': 'Efitra : {name}',
+      'waiting.ready_yes': 'vonona',
+      'waiting.solo': 'Iray manja',
+      'waiting.ready': 'Vonona',
+      'waiting.unready': 'Mandraike',
+      'waiting.start': 'Atomboy',
+      'waiting.close': 'Akatony',
+      'waiting.leave': 'Miala',
+      'game.turn': 'An’i : {who}',
+      'game.winner': 'Mpandresy : {who}',
+      'game.empty': 'foana',
+      'game.none': 'tsy misy',
+      'domino.draw': 'Misaka ({count})',
+      'domino.pass': 'Maneso',
+      'loto.buy': 'Mividy karatra',
+      'loto.ball': 'Mamaly baolina',
+      'loto.settle': 'Faranao',
+      'loto.refund': 'Valifaly',
+      'loto.no_ticket': 'Tsy misy karatra',
+      'rami.draw_stock': 'Misaka ({count})',
+      'rami.draw_discard': 'Misaka ny efa natao',
+      'rami.meld': 'Petrao',
+      'rami.discard': 'Ampeto',
+      'profile.title': 'Mombamomba',
+      'profile.username': 'Anarana fidirana',
+      'profile.phone': 'Telefaonina',
+      'profile.email': 'Yelay',
+      'profile.role': 'Anjara',
+      'profile.status': 'Sata',
+      'profile.wallet': 'Vola',
+      'profile.no_wallet': 'tsy misy',
+      'profile.logout': 'Mivoaka',
+      'notfound.title': 'Tsy hita ny pejy',
+      'notfound.home': 'Fandraisana',
+      'status.waiting': 'miandry',
+      'status.scheduled': 'voatraha',
+      'status.active': 'mandeha',
+      'status.finished': 'vita',
+      'status.cancelled': 'nosokajiana',
+      'status.open': 'misokatra',
+      'status.closed': 'nakatona',
+      'phase.draw': 'misaka',
+      'phase.discard': 'ampeto',
+      'app.room_closed': 'Nakatona ny efitra.',
+      'app.bad_credentials': 'Tsy mety ny antontan-taratasy fidirana.',
+      'app.welcome': 'Voaforona ny kaonty. Tongasoa !',
+      'app.invalid_amount': 'Tsy mety ny vola nosafidiana.',
+      'app.deposit_request': 'Fangatahana fampidirana vola {status}.',
+      'app.wallet_opened': 'Nohasinana ny kaonty vola {currency}.',
+      'app.no_game_for_room': 'Tsy misy lalao azo anaovana efitra.',
+      'app.select_cards': 'Safidio ny karatranao dia hamafiso ny fifangarihana.',
+      'app.realtime_error': 'tsy fahagalana realtime',
+    },
+    en: {
+      'brand.tagline': 'LudoMada requires JavaScript.',
+      'nav.home': 'Home',
+      'nav.lobby': 'Lobby',
+      'nav.wallet': 'Wallet',
+      'nav.profile': 'Profile',
+      'lang.label': 'Language',
+      'login.identity': 'Username / identity',
+      'login.password': 'Password',
+      'login.submit': 'Sign in',
+      'login.register_title': 'Create an account',
+      'login.username': 'Username',
+      'login.phone': 'Phone',
+      'login.email': 'Email',
+      'login.register': 'Sign up',
+      'home.greeting': 'Hello, {name}',
+      'home.default_user': 'player',
+      'home.play': 'Play',
+      'home.no_games': 'No game available.',
+      'lobby.title': 'Lobby',
+      'lobby.room_name': 'Table name',
+      'lobby.capacity': 'Capacity',
+      'lobby.create': 'Create room',
+      'lobby.full': 'Full',
+      'lobby.join': 'Join',
+      'lobby.empty': 'No room waiting.',
+      'wallet.title': 'Wallet',
+      'wallet.none': 'No wallet.',
+      'wallet.open': 'Open an MGA wallet',
+      'wallet.amount': 'Amount (Ar)',
+      'wallet.deposit': 'Deposit',
+      'wallet.col_date': 'Date',
+      'wallet.col_label': 'Label',
+      'wallet.col_amount': 'Amount',
+      'wallet.no_entries': 'No entry.',
+      'waiting.room': 'Room: {name}',
+      'waiting.ready_yes': 'ready',
+      'waiting.solo': 'Solo',
+      'waiting.ready': 'Ready',
+      'waiting.unready': 'Cancel ready',
+      'waiting.start': 'Start',
+      'waiting.close': 'Close',
+      'waiting.leave': 'Leave',
+      'game.turn': 'Turn: {who}',
+      'game.winner': 'Winner: {who}',
+      'game.empty': 'empty',
+      'game.none': 'none',
+      'domino.draw': 'Draw ({count})',
+      'domino.pass': 'Pass',
+      'loto.buy': 'Buy a ticket',
+      'loto.ball': 'Draw a ball',
+      'loto.settle': 'Finish',
+      'loto.refund': 'Refund',
+      'loto.no_ticket': 'No ticket',
+      'rami.draw_stock': 'Draw ({count})',
+      'rami.draw_discard': 'Draw discard',
+      'rami.meld': 'Meld',
+      'rami.discard': 'Discard',
+      'profile.title': 'Profile',
+      'profile.username': 'Username',
+      'profile.phone': 'Phone',
+      'profile.email': 'Email',
+      'profile.role': 'Role',
+      'profile.status': 'Status',
+      'profile.wallet': 'Wallet',
+      'profile.no_wallet': 'none',
+      'profile.logout': 'Sign out',
+      'notfound.title': 'Page not found',
+      'notfound.home': 'Home',
+      'status.waiting': 'waiting',
+      'status.scheduled': 'scheduled',
+      'status.active': 'active',
+      'status.finished': 'finished',
+      'status.cancelled': 'cancelled',
+      'status.open': 'open',
+      'status.closed': 'closed',
+      'phase.draw': 'draw',
+      'phase.discard': 'discard',
+      'app.room_closed': 'The room was closed.',
+      'app.bad_credentials': 'Invalid credentials.',
+      'app.welcome': 'Account created. Welcome!',
+      'app.invalid_amount': 'Invalid amount.',
+      'app.deposit_request': 'Deposit request {status}.',
+      'app.wallet_opened': '{currency} wallet opened.',
+      'app.no_game_for_room': 'No game available to create a room.',
+      'app.select_cards': 'Select your cards then validate the combination.',
+      'app.realtime_error': 'realtime error',
+    },
+  };
+
+  function normalizeLocale(input) {
+    if (typeof input !== 'string') return DEFAULT_LOCALE;
+    var base = input.trim().toLowerCase().split(/[-_]/)[0];
+    return LOCALES.indexOf(base) >= 0 ? base : DEFAULT_LOCALE;
+  }
+
+  function detectLocale(source) {
+    var candidates = [];
+    var src = source || (typeof globalThis !== 'undefined' ? globalThis.navigator : null);
+    if (!src) return DEFAULT_LOCALE;
+    if (Array.isArray(src.languages)) candidates = candidates.concat(src.languages);
+    if (typeof src.language === 'string') candidates.push(src.language);
+    if (typeof src.acceptLanguage === 'string') {
+      candidates = candidates.concat(
+        src.acceptLanguage.split(',').map(function (part) {
+          return part.split(';')[0];
+        })
+      );
+    }
+    for (var i = 0; i < candidates.length; i += 1) {
+      var base = String(candidates[i] || '').trim().toLowerCase().split(/[-_]/)[0];
+      if (LOCALES.indexOf(base) >= 0) return base;
+    }
+    return DEFAULT_LOCALE;
+  }
+
+  function interpolate(template, params) {
+    if (!params) return template;
+    return template.replace(/\{(\w+)\}/g, function (match, key) {
+      return Object.prototype.hasOwnProperty.call(params, key) ? String(params[key]) : match;
+    });
+  }
+
+  function t(locale, key, params) {
+    var loc = normalizeLocale(locale);
+    var table = DICT[loc] || DICT[DEFAULT_LOCALE];
+    var text = table[key];
+    if (text === undefined) text = DICT[DEFAULT_LOCALE][key];
+    if (text === undefined) return key;
+    return interpolate(text, params);
+  }
+
+  function has(locale, key) {
+    var table = DICT[normalizeLocale(locale)];
+    return !!(table && Object.prototype.hasOwnProperty.call(table, key));
+  }
+
+  function moneyFor(locale) {
+    return MONEY[normalizeLocale(locale)] || MONEY[DEFAULT_LOCALE];
+  }
+
+  return {
+    DEFAULT_LOCALE: DEFAULT_LOCALE,
+    LOCALES: LOCALES,
+    LOCALE_LABELS: LOCALE_LABELS,
+    DICT: DICT,
+    normalizeLocale: normalizeLocale,
+    detectLocale: detectLocale,
+    t: t,
+    has: has,
+    moneyFor: moneyFor,
+  };
+});

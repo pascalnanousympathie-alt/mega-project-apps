@@ -1,0 +1,19 @@
+{
+  "name": "mega_project_apps",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node scripts/test.js",
+    "test:coverage": "node scripts/test-coverage.js",
+    "test:security": "node scripts/secret-scan.js",
+    "evidence:p18": "node scripts/p18-evidence.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "socket.io": "^4.8.3"
+  }
+}
