@@ -13,11 +13,42 @@ if (!files.length) {
   process.stderr.write('no test files found in tests/\n');
   process.exit(1);
 }
-try {
-  execFileSync(process.execPath, ['--test-concurrency=1', '--test', ...files], { stdio: 'inherit', cwd: root });
-} catch (err) {
-  process.exit(typeof err.status === 'number' ? err.status : 1);
+let totalTests = 0;
+let totalPass = 0;
+let totalFail = 0;
+let totalCancelled = 0;
+
+for (const file of files) {
+  let output = '';
+  try {
+    output = execFileSync(
+      process.execPath,
+      ['--test-concurrency=1', '--test-force-exit', '--test', file],
+      { encoding: 'utf8', cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+  } catch (err) {
+    output = `${err.stdout || ''}${err.stderr || ''}`;
+    process.stdout.write(output);
+    process.stderr.write(`test file failed: ${file}\n`);
+    process.exit(typeof err.status === 'number' ? err.status : 1);
+  }
+  process.stdout.write(output);
+  const tests = Number((output.match(/ℹ tests (\d+)/) || [])[1] || 0);
+  const pass = Number((output.match(/ℹ pass (\d+)/) || [])[1] || 0);
+  const fail = Number((output.match(/ℹ fail (\d+)/) || [])[1] || 0);
+  const cancelled = Number((output.match(/ℹ cancelled (\d+)/) || [])[1] || 0);
+  totalTests += tests;
+  totalPass += pass;
+  totalFail += fail;
+  totalCancelled += cancelled;
+  if (fail || cancelled || tests !== pass) {
+    process.stderr.write(`test file failed gate: ${file} tests=${tests} pass=${pass} fail=${fail} cancelled=${cancelled}\n`);
+    process.exit(1);
+  }
 }
+
+process.stdout.write(`\nℹ tests ${totalTests}\nℹ pass ${totalPass}\nℹ fail ${totalFail}\nℹ cancelled ${totalCancelled}\n`);
+
 
 // Supervisor/agent guard tests (unittest scripts in tests/*.py). They are run
 // only when a python3 interpreter is present so the node suite stays runnable
