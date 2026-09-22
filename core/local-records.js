@@ -288,7 +288,7 @@ function buildLocalRecords(deps) {
       created_at: createdAt,
     };
 
-    db.exec('BEGIN');
+    db.exec('BEGIN IMMEDIATE');
     try {
       const prevRow = db.prepare('SELECT hash FROM local_records ORDER BY seq DESC LIMIT 1').get();
       record.prev_hash = (prevRow && prevRow.hash) || GENESIS_HASH;

@@ -430,7 +430,7 @@ function migrate(db) {
     version = db.prepare('SELECT version FROM schema_meta').get().version;
   }
   for (let v = version; v < MIGRATIONS.length; v += 1) {
-    db.exec('BEGIN');
+    db.exec('BEGIN IMMEDIATE');
     try {
       db.exec(MIGRATIONS[v]);
       if (v === 0) {

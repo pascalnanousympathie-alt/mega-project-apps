@@ -314,7 +314,7 @@ function buildLotoGame(deps) {
   }
 
   function runStep(m, spec) {
-    db.exec('BEGIN');
+    db.exec('BEGIN IMMEDIATE');
     try {
       applySpec(m.state, spec);
       const prevHash = chainTail(m, spec.eventIndex - 1);

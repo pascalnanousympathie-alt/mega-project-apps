@@ -321,7 +321,7 @@ function buildPaymentGateway(input = {}) {
       updated_at: created_at,
     };
 
-    db.exec('BEGIN');
+    db.exec('BEGIN IMMEDIATE');
     try {
       db.prepare(INSERT_INTENT).run(
         intent.id, intent.provider, intent.direction, intent.user_id, intent.wallet_id,
@@ -387,7 +387,7 @@ function buildPaymentGateway(input = {}) {
     }
     const ts = now();
     const response_json = safeMeta(stripSecrets(payload || {}));
-    db.exec('BEGIN');
+    db.exec('BEGIN IMMEDIATE');
     try {
       db.prepare(
         'UPDATE payment_intents SET status = ?, provider_ref = COALESCE(?, provider_ref), response_json = ?, updated_at = ? WHERE id = ?',

@@ -135,7 +135,7 @@ function appendWithinTx(db, input) {
 }
 
 function appendLedger(db, input) {
-  db.exec('BEGIN');
+  db.exec('BEGIN IMMEDIATE');
   try {
     const result = appendWithinTx(db, input);
     db.exec('COMMIT');
@@ -167,7 +167,7 @@ function transfer(db, input) {
   const key = input.idempotency_key;
   const outMeta = { ...(input.from_meta || {}), transfer: true, transfer_key: key, counterpart_wallet_id: input.to_wallet_id };
   const inMeta = { ...(input.to_meta || {}), transfer: true, transfer_key: key, counterpart_wallet_id: input.from_wallet_id };
-  db.exec('BEGIN');
+  db.exec('BEGIN IMMEDIATE');
   try {
     const out = appendWithinTx(db, {
       wallet_id: input.from_wallet_id,
