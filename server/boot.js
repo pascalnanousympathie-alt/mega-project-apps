@@ -29,7 +29,7 @@ function createApp(options = {}) {
   function listen(port, host) {
     attachRealtime();
     return new Promise((resolve) => {
-      server.listen(port === undefined ? 0 : port, host || '127.0.0.1', () => {
+      server.listen(port === undefined ? 0 : port, host || process.env.HOST || '0.0.0.0', () => {
         resolve(server.address());
       });
     });
