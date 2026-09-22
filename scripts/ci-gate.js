@@ -8,7 +8,14 @@ function run(cmd, args, options = {}) {
   return execFileSync(cmd, args, { cwd: ROOT, encoding: options.encoding === undefined ? 'utf8' : options.encoding, stdio: options.stdio || 'pipe' });
 }
 function npmTest() {
-  const output = run('npm', ['test']);
+  let output;
+  try {
+    output = run('npm', ['test']);
+  } catch (error) {
+    if (error && error.stdout) process.stdout.write(String(error.stdout));
+    if (error && error.stderr) process.stderr.write(String(error.stderr));
+    throw error;
+  }
   const total = output.match(/ACEP_NODE_TESTS_TOTAL=(\d+)/);
   const pass = output.match(/ACEP_NODE_TESTS_PASS=(\d+)/);
   const fail = output.match(/ACEP_NODE_TESTS_FAIL=(\d+)/);
