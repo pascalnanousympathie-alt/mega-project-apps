@@ -14,11 +14,13 @@ const { buildLocalRecords } = require('./local-records');
 const { buildGateway } = require('./gateway');
 const { buildSocketIo, socketAuthMiddleware, createServer } = require('./socketio');
 const { buildPaymentGateway } = require('./payments');
+const { createObservability } = require('./observability');
 const contracts = require('./contracts');
 
 function createDataLayer(options = {}) {
   const dataDir = options.dataDir || process.env.ACEP_DATA_DIR || path.join(__dirname, '..', 'data');
   const db = openDataLayer(dataDir, options);
+  const observability = createObservability(options.observability || {});
   const repos = buildRepositories(db);
   const auth = buildAuth(db, repos);
   const wallet = buildCentralWallet(db);
@@ -63,6 +65,7 @@ function createDataLayer(options = {}) {
   return {
     dataDir,
     db,
+    observability,
     ...repos,
     repos,
     auth,

@@ -1,6 +1,7 @@
 'use strict';
 const { DataError, ok } = require('../core/db');
 const contracts = require('../core/contracts');
+const { readiness } = require('../core/observability');
 
 const GAME_LABELS = {
   domino: 'DominoMada',
@@ -182,7 +183,15 @@ function buildApiHandlers(layer) {
     status: 'ok',
     api_version: contracts.API_VERSION,
     server_time: new Date().toISOString(),
+    uptime_seconds: layer.observability ? layer.observability.snapshot().uptime_seconds : 0,
   });
+
+  handlers['ready.get'] = () => readiness(layer);
+
+  handlers['metrics.get'] = (ctx) => {
+    service(ctx, 'metrics:read');
+    return layer.observability ? layer.observability.snapshot() : { uptime_seconds: 0, total_requests: 0, total_errors: 0 };
+  };
 
   handlers['auth.register'] = (ctx) => {
     const user = layer.auth.register(ctx.body);

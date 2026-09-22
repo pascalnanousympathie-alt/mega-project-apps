@@ -163,8 +163,17 @@ function createRequestHandler(app) {
   const api = app.api;
   const clientDir = app.clientDir;
   const realtimePrefix = app.realtimePrefix || null;
+  const observability = app.observability || null;
+
+  function record(route, method, status, startedAt, errorCode) {
+    if (!observability) return;
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    observability.recordRequest({ route, method, status, durationMs });
+    if (status >= 400) observability.recordError({ route, method, status, code: errorCode });
+  }
 
   return function handle(req, res) {
+    const startedAt = process.hrtime.bigint();
     if (realtimePrefix && String(req.url || '').split(/[\?#]/)[0].startsWith(realtimePrefix)) {
       // owned by the socket.io listener attached to this server
       return;
@@ -217,10 +226,13 @@ function createRequestHandler(app) {
           handler: api.handlers[match.id],
         });
         return Promise.resolve(response).then((resolved) => {
+          record(match.id, req.method, resolved.status, startedAt, resolved.body && resolved.body.error ? resolved.body.error.code : undefined);
           sendJson(res, requestId, resolved);
         });
       })
       .catch((err) => {
+        const payload = contracts.errorResponse(err, { requestId });
+        record(match.id, req.method, payload.status, startedAt, payload.body && payload.body.error ? payload.body.error.code : undefined);
         sendErrorResponse(res, err, requestId);
       });
   };
@@ -230,6 +242,7 @@ function createHttpServer(app) {
   const withDefaults = {
     api: app.api || buildApiHandlers(app.layer),
     clientDir: app.clientDir || path.join(__dirname, '..', 'client'),
+    observability: app.observability || (app.layer && app.layer.observability) || null,
   };
   return http.createServer(createRequestHandler({ ...app, ...withDefaults }));
 }

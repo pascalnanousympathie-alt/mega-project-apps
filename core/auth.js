@@ -22,7 +22,8 @@ const SERVICE_SCOPES = [
   'games:write',
   'rooms:write',
   'payments:reconcile',
-  'users:read',
+  'metrics:read',
+  'users:read'
 ];
 
 const PERMISSIONS = {

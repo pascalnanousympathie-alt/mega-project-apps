@@ -110,7 +110,7 @@ async function boot(t, options = {}) {
   });
   const plainGame = layer.createGame({ kind: 'loto' });
   const closedGame = layer.createGame({ kind: 'rami', status: 'finished', config: { name: 'RamiMada Old' } });
-  const ops = layer.auth.registerService({ name: 'acep-ops', scopes: ['ledger:read', 'payments:reconcile'] });
+  const ops = layer.auth.registerService({ name: 'acep-ops', scopes: ['ledger:read', 'payments:reconcile', 'metrics:read'] });
   const reader = layer.auth.registerService({ name: 'acep-reader', scopes: ['ledger:read'] });
   t.after(async () => {
     await new Promise((resolve) => server.close(resolve));
@@ -185,7 +185,7 @@ function fund(layer, walletId, key, amount) {
 }
 
 test('HTTP integration: versioned envelope, security headers and unknown routes', async (t) => {
-  const { base, origin } = await boot(t);
+  const { base, origin, opsKey } = await boot(t);
 
   const health = await call(base, 'GET', '/health');
   assert.equal(health.status, 200);
@@ -196,6 +196,25 @@ test('HTTP integration: versioned envelope, security headers and unknown routes'
   assert.equal(health.headers.get('x-content-type-options'), 'nosniff');
   assert.match(health.headers.get('content-security-policy'), /default-src 'self'/);
   assert.ok(new Date(health.data.server_time).getTime() > 0);
+  assert.ok(Number.isInteger(health.data.uptime_seconds));
+
+  const ready = await call(base, 'GET', '/ready');
+  assert.equal(ready.status, 200);
+  assert.equal(ready.data.status, 'ready');
+  assert.deepEqual(ready.data.checks, { database: 'ok', ledger: 'ok' });
+
+  const metricsDenied = await call(base, 'GET', '/metrics');
+  assert.equal(metricsDenied.status, 401);
+  assert.equal(metricsDenied.error.code, 'E_UNAUTHORIZED');
+
+  const metrics = await call(base, 'GET', '/metrics', { serviceKey: opsKey });
+  assert.equal(metrics.status, 200);
+  assert.ok(metrics.data.total_requests >= 2);
+  assert.ok(metrics.data.routes['health.get'] >= 1);
+  assert.ok(metrics.data.routes['ready.get'] >= 1);
+  assert.ok(metrics.data.status_classes['2xx'] >= 2);
+  assert.equal(JSON.stringify(metrics.json).includes('callback-secret-value'), false);
+  assert.equal(JSON.stringify(metrics.json).includes('consumer-secret'), false);
 
   const unknown = await call(base, 'GET', '/nope');
   assert.equal(unknown.status, 404);
