@@ -43,10 +43,11 @@ function childCrashAfterWrite(dataDir, walletId, markerPath) {
   return spawn(process.execPath, ['-e', script], { stdio: ['ignore', 'ignore', 'pipe'] });
 }
 
-function waitForFile(file, timeoutMs = 5000) {
+async function waitForFile(file, timeoutMs = 10000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (fs.existsSync(file)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 25));
   }
   return false;
 }
@@ -83,7 +84,7 @@ test('crash before COMMIT rolls back the open write transaction on restart', asy
   const marker = path.join(dir, 'crash-ready');
   const child = childCrashAfterWrite(dir, wallet.id, marker);
   t.after(() => { try { child.kill('SIGKILL'); } catch (_) {} });
-  assert.equal(waitForFile(marker), true);
+  assert.equal(await waitForFile(marker), true);
   child.kill('SIGKILL');
   await new Promise((resolve) => child.once('close', resolve));
 
