@@ -194,8 +194,10 @@ def refresh_packet():
     head=subprocess.run(["git","rev-parse","HEAD"],cwd=ROOT,text=True,capture_output=True,timeout=15)
     branch=subprocess.run(["git","branch","--show-current"],cwd=ROOT,text=True,capture_output=True,timeout=15)
     status=subprocess.run(["git","status","--short"],cwd=ROOT,text=True,capture_output=True,timeout=15)
+    p23=load_json(os.path.join(RUNTIME,"evidence","P23-build-test.json"),{})
     coverage=load_json(os.path.join(RUNTIME,"evidence","P18-coverage.json"),{})
-    workspace_hash=((coverage.get("workspace") or {}).get("hash")
+    workspace_hash=(p23.get("source_hash")
+                    or (coverage.get("workspace") or {}).get("hash")
                     or packet.get("workspace_hash"))
     commit=head.stdout.strip() if head.returncode==0 else packet.get("commit")
     branch_name=branch.stdout.strip() if branch.returncode==0 else "main"
