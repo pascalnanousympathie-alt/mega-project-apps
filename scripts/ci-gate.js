@@ -9,10 +9,11 @@ function run(cmd, args, options = {}) {
 }
 function npmTest() {
   const output = run('npm', ['test']);
-  const match = output.match(/ℹ tests (\d+)\s+ℹ suites (\d+)\s+ℹ pass (\d+)\s+ℹ fail (\d+)/);
-  if (!match) throw new Error('npm test summary not found');
+  const matches = [...output.matchAll(/ℹ tests (\d+)\s+ℹ suites (\d+)\s+ℹ pass (\d+)\s+ℹ fail (\d+)/g)];
+  const match = matches.at(-1);
+  if (!match) throw new Error('npm test aggregate summary not found');
   const summary = { tests: +match[1], suites: +match[2], pass: +match[3], fail: +match[4] };
-  if (summary.fail !== 0 || summary.tests !== summary.pass) throw new Error('npm test failed');
+  if (summary.fail !== 0 || summary.tests !== summary.pass || summary.tests <= 0) throw new Error('npm test aggregate failed');
   return summary;
 }
 function gate(name, fn) {
