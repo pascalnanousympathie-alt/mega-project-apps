@@ -1,85 +1,148 @@
 #!/usr/bin/env node
 'use strict';
+
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const zlib = require('node:zlib');
 const { execFileSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'runtime', 'releases');
 
-function run(cmd, args, opts = {}) {
+function run(cmd, args, options = {}) {
   return execFileSync(cmd, args, {
     cwd: ROOT,
-    encoding: opts.encoding === undefined ? 'utf8' : opts.encoding,
+    encoding: options.encoding === undefined ? 'utf8' : options.encoding,
     stdio: 'pipe',
   });
 }
+
 function sha256File(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
+
 function trackedFiles() {
-  return run('git', ['ls-files', '-z']).split('\0').filter(Boolean).filter(p => !p.startsWith('runtime/'));
+  return run('git', ['ls-files', '-z'])
+    .split('\0')
+    .filter(Boolean)
+    .filter((file) => !file.startsWith('runtime/'));
 }
+
 function sourceHash(files) {
-  const h = crypto.createHash('sha256');
-  for (const f of files) {
-    h.update(f); h.update('\0'); h.update(fs.readFileSync(path.join(ROOT, f))); h.update('\0');
+  const hash = crypto.createHash('sha256');
+  for (const file of files) {
+    hash.update(file);
+    hash.update('\0');
+    hash.update(fs.readFileSync(path.join(ROOT, file)));
+    hash.update('\0');
   }
-  return h.digest('hex');
+  return hash.digest('hex');
 }
+
 function npmTest() {
-  const out = run('npm', ['test']);
-  const m = out.match(/ℹ tests (\d+)\s+ℹ suites (\d+)\s+ℹ pass (\d+)\s+ℹ fail (\d+)/);
-  if (!m) throw new Error('npm test summary not found');
-  const summary = { tests: +m[1], suites: +m[2], pass: +m[3], fail: +m[4] };
-  if (summary.fail !== 0 || summary.tests !== summary.pass) throw new Error('npm test failed');
+  const output = run('npm', ['test']);
+  const match = output.match(/ℹ tests (\d+)\s+ℹ suites (\d+)\s+ℹ pass (\d+)\s+ℹ fail (\d+)/);
+  if (!match) throw new Error('npm test summary not found');
+  const summary = {
+    tests: Number(match[1]),
+    suites: Number(match[2]),
+    pass: Number(match[3]),
+    fail: Number(match[4]),
+  };
+  if (summary.fail !== 0 || summary.tests !== summary.pass) {
+    throw new Error('npm test failed');
+  }
   return summary;
 }
+
 function archive() {
-  return execFileSync('git', ['archive', '--format=tar', '--prefix=release/', 'HEAD'], { cwd: ROOT });
+  return execFileSync(
+    'git',
+    ['archive', '--format=tar', '--prefix=release/', 'HEAD'],
+    { cwd: ROOT, encoding: null, stdio: ['ignore', 'pipe', 'pipe'] },
+  );
 }
+
+function signArtifact(artifact) {
+  const signingKey = process.env.RELEASE_SIGNING_KEY;
+  if (!signingKey) return 'ABSENT';
+  const signature = `${artifact}.sig`;
+  run('openssl', ['dgst', '-sha256', '-sign', signingKey, '-out', signature, artifact]);
+  return 'SET';
+}
+
 function build() {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-  if (run('git', ['status', '--porcelain']).trim()) throw new Error('working tree must be clean');
+  if (run('git', ['status', '--porcelain']).trim()) {
+    throw new Error('working tree must be clean');
+  }
+
   const commit = run('git', ['rev-parse', 'HEAD']).trim();
   const files = trackedFiles();
-  const sh = sourceHash(files);
-  const tests = npmTest();
-  const jsFiles = files.filter(f => f.endsWith('.js'));
-  for (const f of jsFiles) run(process.execPath, ['--check', f]);
+  const source_hash = sourceHash(files);
+  const npm_test = npmTest();
+  const jsFiles = files.filter((file) => file.endsWith('.js'));
+  for (const file of jsFiles) run(process.execPath, ['--check', file]);
 
   fs.mkdirSync(OUT, { recursive: true });
   const base = `${pkg.name}-v${pkg.version}`;
   const tmp = path.join(OUT, '.tmp');
   fs.rmSync(tmp, { recursive: true, force: true });
   fs.mkdirSync(tmp, { recursive: true });
-  const aTar = path.join(tmp, 'a.tar');
-  const bTar = path.join(tmp, 'b.tar');
-  fs.writeFileSync(aTar, archive());
-  fs.writeFileSync(bTar, archive());
-  run('gzip', ['-n', '-9', aTar]);
-  run('gzip', ['-n', '-9', bTar]);
-  const a = `${aTar}.gz`, b = `${bTar}.gz`;
-  if (sha256File(a) !== sha256File(b)) throw new Error('artifact reproducibility failed');
+
+  const tar = archive();
+  const gz = zlib.gzipSync(tar, { level: 9, mtime: 0 });
+  const first = path.join(tmp, 'first.tar.gz');
+  const second = path.join(tmp, 'second.tar.gz');
+  fs.writeFileSync(first, gz);
+  fs.writeFileSync(second, zlib.gzipSync(archive(), { level: 9, mtime: 0 }));
+  const firstHash = sha256File(first);
+  const secondHash = sha256File(second);
+  if (firstHash !== secondHash) throw new Error('artifact reproducibility failed');
 
   const artifact = path.join(OUT, `${base}.tar.gz`);
-  fs.copyFileSync(a, artifact);
-  let signing = 'ABSENT';
-  if (process.env.RELEASE_SIGNING_KEY) {
-    run('openssl', ['dgst', '-sha256', '-sign', process.env.RELEASE_KEY, 'hout', `artifact}.sig` ], artifact);
-    signing = 'SET';
-  } else {
-    fs.rmSync(`${artifact}.sig`, { force: true });
-  }
+  fs.copyFileSync(first, artifact);
+  const signing = signArtifact(artifact);
+  if (signing === 'ABSENT') fs.rmSync(`${artifact}.sig`, { force: true });
+
   const manifest = {
-    name: pkg.name, version: pkg.version, git_commit: commit, source_files: files.length,
-    source_hash: sh, artifact: path.basename(artifact), artifact_sha256: sha256File(artifact),
-    reproducible: true, npm_test: tests, node_source_checks: jsFiles.length,
-    signing_key: signing, signature_status: signing, generated_from_clean_tree: true
+    name: pkg.name,
+    version: pkg.version,
+    git_commit: commit,
+    source_files: files.length,
+    source_hash,
+    artifact: path.basename(artifact),
+    artifact_sha256: sha256File(artifact),
+    reproducible: true,
+    npm_test,
+    node_source_checks: jsFiles.length,
+    signing_key: signing,
+    signature_status: signing,
+    generated_from_clean_tree: true,
   };
-  fs.writeFileSync(path.join(OUT, `${base}.manifest.json`), JSON.strinfiy(manifest, null, 2) + '\\n');
+  fs.writeFileSync(
+    path.join(OUT, `${base}.manifest.json`),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
   fs.rmSync(tmp, { recursive: true, force: true });
-  for (const [k,v] of [['RELEASE','PASS'],['VERSION',pkg.version],['COMMIT',manifest.git_commit],['FILES',files.length],['SOURCE_HASH',sh],['ARTIFACT',path.relative(ROOT,artifact)],['SHA256',manifest.artifact_sha256],['REPRODUCIBLE','PASS'],['SIGNING_KEY',signing],['SIGNATURE',signing]]) console.log(`${n}=${v}`);
+
+  console.log(`RELEASE=PASS`);
+  console.log(`VERSION=${pkg.version}`);
+  console.log(`COMMIT=${commit}`);
+  console.log(`FILES=${files.length}`);
+  console.log(`SOURCE_HASH=${source_hash}`);
+  console.log(`ARTIFACT=${path.relative(ROOT, artifact)}`);
+  console.log(`SHA256=${manifest.artifact_sha256}`);
+  console.log(`REPRODUCIBLE=PASS`);
+  console.log(`SIGNING_KEY=${signing}`);
+  console.log(`SIGNATURE=${signing}`);
 }
-try { build(); } catch (e) { console.error('RELEASE=fAIL'); console.error(e.message); process.exit(1); }
+
+try {
+  build();
+} catch (error) {
+  console.error('RELEASE=FAIL');
+  console.error(error && error.message ? error.message : String(error));
+  process.exit(1);
+}
