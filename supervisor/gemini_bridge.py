@@ -187,6 +187,44 @@ def call_groq(prompt,model,key):
         raise ValueError("groq-empty-response")
     return "\n".join(texts)
 
+def refresh_packet():
+    packet=refresh_packet()
+    if not packet or packet.get("phase")!="P28":
+        return packet
+    head=subprocess.run(["git","rev-parse","HEAD"],cwd=ROOT,text=True,capture_output=True,timeout=15)
+    branch=subprocess.run(["git","branch","--show-current"],cwd=ROOT,text=True,capture_output=True,timeout=15)
+    status=subprocess.run(["git","status","--short"],cwd=ROOT,text=True,capture_output=True,timeout=15)
+    coverage=load_json(os.path.join(RUNTIME,"evidence","P18-coverage.json"),{})
+    workspace_hash=((coverage.get("workspace") or {}).get("hash")
+                    or packet.get("workspace_hash"))
+    commit=head.stdout.strip() if head.returncode==0 else packet.get("commit")
+    branch_name=branch.stdout.strip() if branch.returncode==0 else "main"
+    short_status=status.stdout.strip()
+    packet["generated_at"]=now()
+    packet["commit"]=commit
+    packet["workspace_hash"]=workspace_hash
+    packet["git_status"]="## "+branch_name if not short_status else "## "+branch_name+"\n"+short_status
+    packet["external_verdict"]="ABSENT"
+    packet.setdefault("checkpoint",{}).update({
+        "phase":"P28","status":"REVIEW_READY","source":"direct",
+        "workspace_hash":workspace_hash,"commit":commit,
+        "reason":"fresh-independent-external-judge-review-required-for-current-candidate",
+        "worker_pid":None,"worker_updated":None,
+        "attempt_id":None,"attempt_number":None
+    })
+    packet.setdefault("p27_revalidation",{}).update({
+        "commit":commit,"workspace_hash":workspace_hash,
+        "git_status":packet["git_status"],
+        "p28_review_required":True,
+        "next_phase":"P28","next_task":"Final independent judge"
+    })
+    packet.setdefault("supplementary_prevalidation",{}).update({
+        "commit":commit,
+        "promotion_blocker":"fresh external-judge GO for this exact candidate is required"
+    })
+    atomic_json(packet_path(),packet)
+    return packet
+
 def existing_verdict(packet):
     existing=load_json(os.path.join(RUNTIME,"gemini-verdict.json"),{})
     if (existing.get("phase")=="P28" and existing.get("source") in ("gemini","groq")
