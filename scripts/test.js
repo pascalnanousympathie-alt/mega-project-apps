@@ -23,13 +23,14 @@ for (const file of files) {
   try {
     output = execFileSync(
       process.execPath,
-      ['--test-concurrency=1', '--test-force-exit', '--test', file],
+      ['--test-concurrency=1', '--test-timeout=60000', '--test', file],
       { encoding: 'utf8', cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
     );
   } catch (err) {
     output = `${err.stdout || ''}${err.stderr || ''}`;
     process.stdout.write(output);
     process.stderr.write(`test file failed: ${file}\n`);
+    process.stderr.write(`test child status=${err.status ?? 'null'} signal=${err.signal ?? 'null'}\n`);
     process.exit(typeof err.status === 'number' ? err.status : 1);
   }
   process.stdout.write(output);
