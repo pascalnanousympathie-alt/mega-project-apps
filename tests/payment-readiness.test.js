@@ -8,6 +8,7 @@ const COMPLETE = {
   airtel: { clientId: 'id', clientSecret: 'cs', country: 'MG', currency: 'MGA', callbackSecret: 'air-cb', baseUrl: 'https://openapi.airtel.example/' },
   orange: { clientId: 'id', clientSecret: 'cs', merchantKey: 'mk', callbackSecret: 'or-cb', baseUrl: 'https://api.orange.example/' },
   binance: { apiKey: 'ak', apiSecret: 'as', callbackSecret: 'bi-cb', baseUrl: 'https://api.binance.example/' },
+  nowpayments: { apiKey: 'np-ak', callbackSecret: 'np-ipn', baseUrl: 'https://api.nowpayments.example/' },
 };
 
 test('production-safe HTTPS URL rejects sandbox/dev/test endpoints', () => {
@@ -25,7 +26,7 @@ test('all providers are not production-ready when callback secrets or required c
     production: true,
   });
   assert.equal(result.ready, false);
-  assert.equal(result.providers.length, 4);
+  assert.equal(result.providers.length, 5);
   for (const row of result.providers) {
     assert.equal(row.callback_secret, 'ABSENT');
     assert.ok(row.reasons.includes('required_credentials_absent'));

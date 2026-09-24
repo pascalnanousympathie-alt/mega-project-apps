@@ -9,6 +9,7 @@ const {
   createAirtelProvider,
   createOrangeProvider,
   createBinanceProvider,
+  createNowPaymentsProvider,
 } = require('../core/payments');
 const { makeDataLayer, expectDataError } = require('./helpers');
 
@@ -37,6 +38,12 @@ const CREDENTIALS = {
     apiKey: 'test-api-key',
     apiSecret: 'test-api-secret',
     baseUrl: 'https://binance.test',
+  },
+  nowpayments: {
+    apiKey: 'test-now-api-key',
+    callbackSecret: 'test-now-ipn-secret',
+    payCurrency: 'usdttrc20',
+    baseUrl: 'https://nowpayments.test',
   },
 };
 
@@ -67,6 +74,17 @@ function makeFakeTransport(overrides = {}) {
     if (spec.url.includes('/sapi/v1/pay/transactions')) {
       return ok({ code: '000000', data: { prepayId: 'binance-ref-1', status: 'PAID', checkoutUrl: 'https://pay.binance.test/checkout' } });
     }
+    if (spec.url.includes('nowpayments.test/v1/payment/') || spec.url.endsWith('nowpayments.test/v1/payment')) {
+      return ok({
+        payment_id: 991,
+        payment_status: 'finished',
+        price_amount: 25.5,
+        price_currency: 'USD',
+        pay_amount: 25.5,
+        pay_currency: 'USDTTRC20',
+        pay_address: 'T' + '9'.repeat(33),
+      });
+    }
     return { status: 404, ok: false, headers: {}, data: { message: 'unmatched transport route' } };
   };
   transport.calls = calls;
@@ -94,9 +112,9 @@ function makeWallet(layer, name = 'payer') {
   return { user, wallet };
 }
 
-test('all four providers are registered behind one uniform interface', () => {
+test('all payment providers are registered behind one uniform interface', () => {
   const registry = buildProviderRegistry();
-  assert.deepEqual([...registry.keys()].sort(), ['airtel', 'binance', 'mvola', 'orange']);
+  assert.deepEqual([...registry.keys()].sort(), ['airtel', 'binance', 'mvola', 'nowpayments', 'orange']);
   for (const provider of registry.values()) {
     assert.equal(typeof provider.name, 'string');
     assert.equal(typeof provider.displayName, 'string');
@@ -111,8 +129,8 @@ test('all four providers are registered behind one uniform interface', () => {
     assert.ok(CANONICAL_STATUSES.includes(normalizeStatus('pending', provider.statusMap)));
   }
   assert.deepEqual(
-    [createMvolaProvider(), createAirtelProvider(), createOrangeProvider(), createBinanceProvider()].map((p) => p.name),
-    ['mvola', 'airtel', 'orange', 'binance'],
+    [createMvolaProvider(), createAirtelProvider(), createOrangeProvider(), createBinanceProvider(), createNowPaymentsProvider()].map((p) => p.name),
+    ['mvola', 'airtel', 'orange', 'binance', 'nowpayments'],
   );
 });
 
@@ -128,13 +146,17 @@ test('provider status maps normalize vendor-specific codes', () => {
   assert.equal(normalizeStatus('success', mvola.statusMap), 'succeeded');
   const orange = createOrangeProvider();
   assert.equal(normalizeStatus('initiated', orange.statusMap), 'pending');
+  const nowpayments = createNowPaymentsProvider();
+  assert.equal(normalizeStatus('waiting', nowpayments.statusMap), 'pending');
+  assert.equal(normalizeStatus('finished', nowpayments.statusMap), 'succeeded');
+  assert.equal(normalizeStatus('expired', nowpayments.statusMap), 'expired');
   assert.equal(normalizeStatus(null, mvola.statusMap), 'pending');
 });
 
 test('gateway lists provider capabilities without leaking credentials', (t) => {
   const { layer } = makePaymentLayer(t);
   const providers = layer.payments.listProviders();
-  assert.equal(providers.length, 4);
+  assert.equal(providers.length, 5);
   for (const provider of providers) {
     assert.equal(provider.configured, true, provider.name + ' should be configured');
     assert.deepEqual(provider.missing_credentials, []);
@@ -204,6 +226,7 @@ test('every provider adapter satisfies the same gateway contract', async (t) => 
     { provider: 'airtel', amount_milli: 25000, currency: 'MGA', ref: 'airtel-ref-1' },
     { provider: 'orange', amount_milli: 25000, currency: 'MGA', ref: 'orange-pay-token' },
     { provider: 'binance', amount_milli: 50000, currency: 'USDT', ref: 'binance-ref-1' },
+    { provider: 'nowpayments', amount_milli: 25500, currency: 'USD', ref: '991' },
   ];
   for (const scenario of cases) {
     const { layer } = makePaymentLayer(t);
@@ -212,8 +235,8 @@ test('every provider adapter satisfies the same gateway contract', async (t) => 
       provider: scenario.provider,
       amount_milli: scenario.amount_milli,
       currency: scenario.currency,
-      wallet_id: wallet.id,
-      customer: { msisdn: '0340000002' },
+      wallet_id: ['binance', 'nowpayments'].includes(scenario.provider) ? undefined : wallet.id,
+      customer: ['binance', 'nowpayments'].includes(scenario.provider) ? undefined : { msisdn: '0340000002' },
       idempotency_key: scenario.provider + '-key-0001',
     });
     assert.equal(result.intent.status, 'succeeded', scenario.provider);
@@ -360,4 +383,36 @@ test('payment event chain is hash-linked and tamper evident', async (t) => {
     .prepare('UPDATE payment_events SET hash = ? WHERE intent_id = ? AND event_index = 1')
     .run('f'.repeat(64), result.intent.id);
   assert.throws(() => layer.payments.verifyIntents(), (err) => err.code === 'E_PAYMENT_CHAIN');
+});
+test('nowpayments uses crypto checkout without ever crediting the MGA wallet', async (t) => {
+  const { layer, transport } = makePaymentLayer(t);
+  const user = layer.createUser({ username: 'payer_now', phone: '+261340000130', email: 'payer_now@example.mg' });
+  const wallet = layer.createWallet(user.id);
+
+  await assert.rejects(
+    () => layer.payments.initiatePayment({
+      provider: 'nowpayments',
+      amount_milli: 25500,
+      currency: 'USD',
+      wallet_id: wallet.id,
+      idempotency_key: 'now-wallet-0001',
+    }),
+    (err) => err.code === 'E_PAYMENT_CURRENCY',
+  );
+  assert.equal(transport.calls.length, 0);
+
+  const result = await layer.payments.initiatePayment({
+    provider: 'nowpayments',
+    amount_milli: 25500,
+    currency: 'USD',
+    user_id: user.id,
+    idempotency_key: 'now-pay-0001',
+    description: 'USDT TRC20 wallet top-up',
+  });
+  assert.equal(result.intent.status, 'succeeded');
+  assert.equal(result.intent.wallet_id, null);
+  assert.equal(result.intent.currency, 'USD');
+  assert.equal(result.intent.provider_ref, '991');
+  assert.equal(layer.getWallet(wallet.id).balance_milli, 0);
+  assert.equal(layer.payments.verifyIntents().ok, true);
 });

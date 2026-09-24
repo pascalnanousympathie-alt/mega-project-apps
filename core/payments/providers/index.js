@@ -3,12 +3,14 @@ const { createMvolaProvider } = require('./mvola');
 const { createAirtelProvider } = require('./airtel');
 const { createOrangeProvider } = require('./orange');
 const { createBinanceProvider, signedQuery } = require('./binance');
+const { createNowPaymentsProvider } = require('./nowpayments');
 
 const PROVIDER_FACTORIES = [
   createMvolaProvider,
   createAirtelProvider,
   createOrangeProvider,
   createBinanceProvider,
+  createNowPaymentsProvider,
 ];
 
 function buildProviderRegistry() {
@@ -28,5 +30,6 @@ module.exports = {
   createAirtelProvider,
   createOrangeProvider,
   createBinanceProvider,
+  createNowPaymentsProvider,
   signedQuery,
 };

@@ -14,6 +14,8 @@ const {
   createAirtelProvider,
   createOrangeProvider,
   createBinanceProvider,
+  createNowPaymentsProvider,
+  hmacSha512Hex,
 } = require('../core/payments');
 const { buildPaymentGateway } = require('../core/payments');
 const { makeDataLayer, expectDataError } = require('./helpers');
@@ -45,6 +47,12 @@ const BASE_CREDENTIALS = {
     apiKey: 'test-api-key',
     apiSecret: 'test-api-secret',
     baseUrl: 'https://binance.test',
+  },
+  nowpayments: {
+    apiKey: 'test-now-api-key',
+    callbackSecret: 'callback-secret-value',
+    payCurrency: 'usdttrc20',
+    baseUrl: 'https://nowpayments.test',
   },
 };
 
@@ -451,4 +459,83 @@ test('gateway polling reconciles a non-mvola provider end to end', async (t) => 
   assert.equal(outcome.intent.status, 'failed');
   assert.equal(outcome.attempt.provider_ref, 'airtel-ref-9');
   assert.equal(layer.payments.verifyIntents().ok, true);
+});
+test('nowpayments creates payments, polls status and verifies IPN signatures', async () => {
+  const provider = createNowPaymentsProvider();
+  const transport = routeTransport([
+    [/\/v1\/payment$/, (spec) => {
+      assert.equal(spec.method, 'POST');
+      assert.equal(spec.headers['x-api-key'], 'test-now-api-key');
+      assert.equal(spec.body.price_amount, 25.5);
+      assert.equal(spec.body.price_currency, 'usd');
+      assert.equal(spec.body.pay_currency, 'usdttrc20');
+      return ok({
+        payment_id: 991,
+        payment_status: 'waiting',
+        price_amount: 25.5,
+        price_currency: 'USD',
+        pay_amount: 25.5,
+        pay_currency: 'USDTTRC20',
+        pay_address: 'T' + '9'.repeat(33),
+      });
+    }],
+    [/\/v1\/payment\/991$/, (spec) => {
+      assert.equal(spec.method, 'GET');
+      assert.equal(spec.headers['x-api-key'], 'test-now-api-key');
+      return ok({
+        payment_id: 991,
+        payment_status: 'finished',
+        price_amount: '25.500',
+        price_currency: 'USD',
+      });
+    }],
+  ]);
+  const ctx = makeCtx('nowpayments', { transport });
+  const created = await provider.createPayment({
+    reference: 'NP-1',
+    amount_milli: 25500,
+    description: 'ACEP crypto test',
+    intent: { id: 'intent-np-1' },
+  }, ctx);
+  assert.equal(created.provider_ref, '991');
+  assert.equal(created.status, 'pending');
+  assert.equal(created.raw.pay_address, 'T' + '9'.repeat(33));
+
+  const paid = await provider.getPayment('991', ctx);
+  assert.equal(paid.status, 'succeeded');
+  assert.equal(paid.amount_milli, 25500);
+  assert.equal(paid.currency, 'USD');
+
+  const payload = {
+    payment_id: 991,
+    order_id: 'NP-1',
+    payment_status: 'finished',
+    price_amount: '25.500',
+    price_currency: 'USD',
+    pay_amount: '25.500',
+    pay_currency: 'USDTTRC20',
+  };
+  const signature = hmacSha512Hex(CALLBACK_SECRET, JSON.stringify({
+    order_id: 'NP-1',
+    pay_amount: '25.500',
+    pay_currency: 'USDTTRC20',
+    payment_id: 991,
+    payment_status: 'finished',
+    price_amount: '25.500',
+    price_currency: 'USD',
+  }));
+  const parsed = provider.parseCallback(
+    payload,
+    { 'x-nowpayments-sig': signature },
+    { credentials: { callbackSecret: CALLBACK_SECRET } },
+  );
+  assert.equal(parsed.provider_ref, '991');
+  assert.equal(parsed.status, 'succeeded');
+  assert.equal(parsed.amount_milli, 25500);
+  assert.equal(parsed.currency, 'USD');
+
+  expectDataError(
+    () => provider.parseCallback(payload, { 'x-nowpayments-sig': 'bad' }, { credentials: { callbackSecret: CALLBACK_SECRET } }),
+    'E_PAYMENT_SIGNATURE',
+  );
 });

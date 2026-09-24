@@ -499,11 +499,11 @@ const REST_ROUTES = [
       type: 'object',
       required: ['provider', 'amount_milli'],
       properties: {
-        provider: { type: 'string', enum: ['mvola', 'airtel', 'orange', 'binance'] },
+        provider: { type: 'string', enum: ['mvola', 'airtel', 'orange', 'binance', 'nowpayments'] },
         project: { type: 'string', enum: ['domino', 'loto', 'rami'] },
         direction: { type: 'string', enum: ['payin'] },
         amount_milli: { type: 'integer', minimum: 1 },
-        currency: { type: 'string', enum: ['MGA', 'USDT'] },
+        currency: { type: 'string', enum: ['MGA', 'USD', 'USDT'] },
         wallet_id: { type: 'string', minLength: 1 },
         reference: { type: 'string', minLength: 1, maxLength: 128 },
         idempotency_key: { type: 'string', minLength: 1, maxLength: 128 },
@@ -565,7 +565,7 @@ const REST_ROUTES = [
     params: {
       type: 'object',
       required: ['provider'],
-      properties: { provider: { type: 'string', enum: ['mvola', 'airtel', 'orange', 'binance'] } },
+      properties: { provider: { type: 'string', enum: ['mvola', 'airtel', 'orange', 'binance', 'nowpayments'] } },
     },
     body: { type: 'object', additionalProperties: true },
     response: { type: 'object' },
@@ -628,7 +628,7 @@ const REST_ROUTES = [
       type: 'object',
       properties: {
         limit: { type: 'integer', minimum: 1, maximum: 500 },
-        provider: { type: 'string', enum: ['mvola', 'airtel', 'orange', 'binance'] },
+        provider: { type: 'string', enum: ['mvola', 'airtel', 'orange', 'binance', 'nowpayments'] },
         expire_after_ms: { type: 'integer', minimum: 1, maximum: 31536000000 },
       },
       additionalProperties: false,

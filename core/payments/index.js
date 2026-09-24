@@ -11,7 +11,7 @@ const {
 } = require('./base');
 const { redact, stripSecrets, redactText, containsSecretLike } = require('./redact');
 const { createHttpTransport } = require('./transport');
-const { maskSecret, hmacSha256Hex, basicAuthHeader } = require('./sign');
+const { maskSecret, hmacSha256Hex, hmacSha512Hex, basicAuthHeader } = require('./sign');
 const { MVOLA_PROJECTS, normalizeMvolaProject, mvolaProjectEnv, resolveMvolaProjectCredentials } = require('./project-map');
 const {
   buildProviderRegistry,
@@ -20,6 +20,7 @@ const {
   createAirtelProvider,
   createOrangeProvider,
   createBinanceProvider,
+  createNowPaymentsProvider,
 } = require('./providers');
 
 module.exports = {
@@ -30,6 +31,7 @@ module.exports = {
   createAirtelProvider,
   createOrangeProvider,
   createBinanceProvider,
+  createNowPaymentsProvider,
   CANONICAL_STATUSES,
   TERMINAL_STATUSES,
   DIRECTIONS,
@@ -43,6 +45,7 @@ module.exports = {
   createHttpTransport,
   maskSecret,
   hmacSha256Hex,
+  hmacSha512Hex,
   basicAuthHeader,
   MVOLA_PROJECTS,
   normalizeMvolaProject,

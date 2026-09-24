@@ -5,6 +5,10 @@ function hmacSha256Hex(secret, payload) {
   return crypto.createHmac('sha256', String(secret)).update(String(payload)).digest('hex');
 }
 
+function hmacSha512Hex(secret, payload) {
+  return crypto.createHmac('sha512', String(secret)).update(String(payload)).digest('hex');
+}
+
 function basicAuthHeader(clientId, clientSecret) {
   return 'Basic ' + Buffer.from(String(clientId) + ':' + String(clientSecret)).toString('base64');
 }
@@ -23,4 +27,4 @@ function constantTimeEqual(a, b) {
   return crypto.timingSafeEqual(left, right);
 }
 
-module.exports = { hmacSha256Hex, basicAuthHeader, maskSecret, constantTimeEqual };
+module.exports = { hmacSha256Hex, hmacSha512Hex, basicAuthHeader, maskSecret, constantTimeEqual };

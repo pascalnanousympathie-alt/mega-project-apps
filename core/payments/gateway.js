@@ -320,6 +320,9 @@ function buildPaymentGateway(input = {}) {
     const key = idempotencyKey.trim();
 
     const wallet = validateWallet(request.wallet_id);
+    if (wallet) {
+      ok(wallet.currency === currency, 'E_PAYMENT_CURRENCY', 'wallet currency does not match payment currency');
+    }
     const userId = request.user_id || (wallet ? wallet.user_id : null);
     if (userId && repos && typeof repos.getById === 'function' && !wallet) repos.getById(userId);
 

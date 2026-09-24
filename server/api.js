@@ -80,7 +80,7 @@ function publicRoom(room) {
   };
 }
 
-function publicIntent(intent, paymentUrl) {
+function publicIntent(intent, paymentUrl, paymentDetails) {
   if (!intent) return null;
   return {
     id: intent.id,
@@ -93,9 +93,20 @@ function publicIntent(intent, paymentUrl) {
     provider_ref: intent.provider_ref || null,
     reference: intent.customer_ref || null,
     payment_url: paymentUrl === undefined ? null : paymentUrl,
+    payment_details: paymentDetails || null,
     created_at: intent.created_at,
     updated_at: intent.updated_at,
   };
+}
+
+function publicNowPaymentsDetails(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const keys = ['payment_id', 'payment_status', 'pay_address', 'pay_amount', 'pay_currency', 'price_amount', 'price_currency', 'invoice_url'];
+  const out = {};
+  for (const key of keys) {
+    if (raw[key] !== undefined && raw[key] !== null) out[key] = raw[key];
+  }
+  return Object.keys(out).length ? out : null;
 }
 
 function bearerOf(headers) {
@@ -413,11 +424,11 @@ function buildApiHandlers(layer) {
     const key = contracts.idempotencyKeyFrom(ctx.headers);
     ok(key, 'E_IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header is required');
     let walletId = ctx.body.wallet_id;
-    if (!walletId) {
+    if (!walletId && ctx.body.provider !== 'nowpayments') {
       const own = ownWallet(user.id);
       ok(own, 'E_NO_WALLET', 'create a wallet before depositing');
       walletId = own.id;
-    } else {
+    } else if (walletId) {
       assertWalletAccess(user.id, walletId);
     }
     const result = await layer.payments.initiatePayment({
@@ -432,9 +443,18 @@ function buildApiHandlers(layer) {
       user_id: user.id,
       customer: paymentCustomer(ctx.body, user),
     });
+    let details = null;
+    if (result.intent && result.intent.provider === 'nowpayments') {
+      try {
+        details = publicNowPaymentsDetails(JSON.parse(result.intent.response_json || '{}'));
+      } catch (_) {
+        details = null;
+      }
+    }
     return {
-      intent: publicIntent(result.intent),
+      intent: publicIntent(result.intent, result.payment_url, details),
       payment_url: result.payment_url || null,
+      payment_details: details,
       idempotent: result.idempotent === true,
     };
   };
@@ -447,7 +467,15 @@ function buildApiHandlers(layer) {
       const wallet = repos.getWallet(intent.wallet_id);
       ok(wallet.user_id === user.id, 'E_FORBIDDEN', 'payment wallet does not belong to this user');
     }
-    return { intent: publicIntent(intent) };
+    let details = null;
+    if (intent.provider === 'nowpayments') {
+      try {
+        details = publicNowPaymentsDetails(JSON.parse(intent.response_json || '{}'));
+      } catch (_) {
+        details = null;
+      }
+    }
+    return { intent: publicIntent(intent, null, details), payment_details: details };
   };
 
   handlers['payments.events'] = (ctx) => {
