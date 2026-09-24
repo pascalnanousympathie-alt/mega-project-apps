@@ -20,6 +20,35 @@
     return i18n.t(l, key, params);
   }
 
+  function brandKind(value) {
+    var kind = String(value || 'ludomada').toLowerCase();
+    if (kind === 'ludo') return 'ludo';
+    if (kind === 'domino') return 'domino';
+    if (kind === 'loto') return 'loto';
+    if (kind === 'rami') return 'rami';
+    if (kind === 'ludomada') return 'ludo';
+    if (kind === 'dominomada') return 'domino';
+    if (kind === 'lotomada') return 'loto';
+    if (kind === 'ramimada') return 'rami';
+    return 'ludo';
+  }
+
+  function brandLogo(kind, label) {
+    var k = brandKind(kind);
+    var title = label || ({ ludo: 'LudoMada', domino: 'DominoMada', loto: 'LotoMada', rami: 'RamiMada' }[k]);
+    var icon;
+    if (k === 'domino') {
+      icon = '<rect x="7" y="7" width="34" height="20" rx="5" transform="rotate(-34 24 17)" fill="currentColor"/><path d="M24 8v19" stroke="#07111f" stroke-width="2.5" transform="rotate(-34 24 17)"/><circle cx="18" cy="15" r="2.2" fill="#07111f"/><circle cx="30" cy="24" r="2.2" fill="#07111f"/>';
+    } else if (k === 'loto') {
+      icon = '<circle cx="24" cy="24" r="16" fill="currentColor"/><circle cx="17" cy="18" r="3" fill="#07111f"/><circle cx="31" cy="18" r="3" fill="#07111f"/><circle cx="17" cy="31" r="3" fill="#07111f"/><text x="24" y="29" text-anchor="middle" font-size="11" font-weight="800" fill="#07111f">90</text>';
+    } else if (k === 'rami') {
+      icon = '<rect x="11" y="7" width="24" height="31" rx="5" fill="currentColor" transform="rotate(-8 23 22)"/><rect x="13" y="5" width="24" height="31" rx="5" fill="currentColor" opacity=".72" transform="rotate(8 25 20)"/><path d="M25 12c-5 5-7 9-7 13 0 5 3 9 7 9s7-4 7-9c0-4-2-8-7-13Z" fill="#07111f"/>';
+    } else {
+      icon = '<path d="M24 6c8 0 13 5 13 13v5c0 8-5 14-13 14S11 32 11 24v-5C11 11 16 6 24 6Z" fill="currentColor"/><circle cx="18" cy="19" r="2.5" fill="#07111f"/><circle cx="30" cy="19" r="2.5" fill="#07111f"/><path d="M16 29c2.5 3 5.2 4.5 8 4.5s5.5-1.5 8-4.5" fill="none" stroke="#07111f" stroke-width="2.5" stroke-linecap="round"/>';
+    }
+    return '<span class="brand brand-' + k + '" role="img" aria-label="' + esc(title) + '"><svg viewBox="0 0 48 48" aria-hidden="true">' + icon + '</svg><span>' + esc(title) + '</span></span>';
+  }
+
   function money(l, milli, opts) {
     var options = opts || {};
     var merged = {};
@@ -49,7 +78,8 @@
     var error = s.error ? '<p class="error" role="alert">' + esc(s.error) + '</p>' : '';
     return (
       '<section class="screen login" data-screen="login" lang="' + esc(l) + '">' +
-      '<h1>LudoMada</h1>' +
+      brandLogo('ludo') +
+      '<h1 class="sr-only">LudoMada</h1>' +
       error +
       '<form data-form="login">' +
       '<label>' + esc(tr(l, 'login.identity')) + ' <input name="identity" autocomplete="username" required></label>' +
@@ -76,7 +106,8 @@
     var balance = s.wallet ? money(l, s.wallet.balance_milli) : '\u2014';
     var cards = games.map(function (game) {
       return (
-        '<article class="game-card" data-game-id="' + esc(game.id) + '">' +
+        '<article class="game-card game-card-' + esc(brandKind(game.kind)) + '" data-game-id="' + esc(game.id) + '">' +
+        brandLogo(game.kind, game.name || game.kind) +
         '<h3>' + esc(game.name || game.kind) + '</h3>' +
         '<p class="kind">' + esc(game.kind) + '</p>' +
         '<p class="fee">' + esc(money(l, game.entry_fee_milli || 0)) + '</p>' +
@@ -400,6 +431,7 @@
         (playable ? '' : ' disabled') + '>' + esc(tile.a) + '|' + esc(tile.b) + '</button>';
     }).join('');
     return (
+      brandLogo('domino') +
       '<h2>DominoMada \u00b7 ' + esc(statusLabel(l, snapshot.status)) + '</h2>' +
       '<p class="turn" data-testid="turn">' + esc(tr(l, 'game.turn', { who: snapshot.current_user_id || '\u2014' })) + '</p>' +
       '<div class="board" data-testid="board">' + (tiles || '<span class="empty">' + esc(tr(l, 'game.empty')) + '</span>') + '</div>' +
@@ -421,6 +453,7 @@
       }).join('') + '</tr>';
     }).join('');
     return (
+      brandLogo('loto') +
       '<h2>LotoMada \u00b7 ' + esc(statusLabel(l, snapshot.status)) + '</h2>' +
       '<p class="cagnotte" data-testid="cagnotte">' + esc(money(l, snapshot.cagnotte_milli || 0)) + '</p>' +
       '<p class="balls" data-testid="balls">' + esc(snapshot.balls_drawn || 0) + '/' + esc(snapshot.balls_total || 0) + '</p>' +
@@ -441,6 +474,7 @@
       return '<button class="card" data-action="select-card" data-card="' + esc(card) + '">' + esc(card) + '</button>';
     }).join('');
     return (
+      brandLogo('rami') +
       '<h2>RamiMada \u00b7 ' + esc(statusLabel(l, snapshot.status)) + (snapshot.turn_phase ? ' \u00b7 ' + esc(phaseLabel(l, snapshot.turn_phase)) : '') + '</h2>' +
       '<p class="turn" data-testid="turn">' + esc(tr(l, 'game.turn', { who: snapshot.current_user_id || '\u2014' })) + '</p>' +
       '<p class="last-discard" data-testid="last-discard">' + esc(last ? (last.key || (last.suit + '-' + last.rank)) : '\u2014') + '</p>' +
