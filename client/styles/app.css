@@ -114,7 +114,7 @@ button[disabled] { opacity: .4; cursor: default; transform: none; box-shadow: no
   transform: translateX(-50%);
   width: min(calc(100% - 24px), 760px);
   display: grid;
-  grid-template-columns: repeat(4, 1fr) auto;
+  grid-template-columns: repeat(5, 1fr) auto;
   gap: 4px;
   padding: 8px;
   background: rgba(9, 18, 31, .92);
@@ -219,6 +219,27 @@ button[disabled] { opacity: .4; cursor: default; transform: none; box-shadow: no
   padding: 11px 0;
   border-bottom: 1px solid var(--border);
 }
+.crypto-prices {
+  margin: 12px 0 16px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(79,140,255,.07);
+}
+.crypto-prices-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: .78rem;
+}
+.crypto-price {
+  display: inline-flex;
+  gap: 5px;
+  margin: 3px 10px 3px 0;
+  font-variant-numeric: tabular-nums;
+}
 .crypto-wallet code, .crypto-deposit-result code {
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -301,6 +322,111 @@ button[disabled] { opacity: .4; cursor: default; transform: none; box-shadow: no
 .profile dt { color: var(--muted); }
 .profile dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
 .status, .presence, .ready { color: var(--muted); }
+.community-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 14px;
+}
+.community-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(9, 22, 38, .62);
+}
+.chat-groups {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.chat-groups button {
+  width: auto;
+  white-space: nowrap;
+  min-height: 38px;
+  background: #0d1c2f;
+  box-shadow: none;
+}
+.chat-groups button.active {
+  background: rgba(79,140,255,.28);
+}
+.chat-messages {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chat-messages li {
+  max-width: 88%;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: #0d1c2f;
+  border: 1px solid var(--border);
+}
+.chat-messages li.mine {
+  align-self: flex-end;
+  background: rgba(49,196,141,.1);
+}
+.chat-messages li time,
+.chat-messages li small {
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: .72rem;
+}
+.chat-messages li p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+textarea {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  margin-top: 7px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #091523;
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+.support-tickets {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.support-tickets li { border-bottom: 1px solid var(--border); }
+.ticket-link {
+  width: 100%;
+  justify-content: flex-start;
+  background: transparent;
+  box-shadow: none;
+  margin: 0;
+  padding: 10px 4px;
+  min-height: 42px;
+}
+.ticket-link strong { flex: 1; text-align: left; }
+.ticket-link span, .ticket-link small { color: var(--muted); }
+.support-thread {
+  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding-top: 12px;
+}
+.support-thread-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.support-thread-head > span { color: var(--muted); }
+.support-actions { margin-left: auto; display: flex; gap: 6px; }
+.support-actions button { width: auto; min-height: 36px; padding: 7px 10px; }
 .winner {
   margin-top: 18px;
   padding: 14px;
@@ -318,6 +444,7 @@ button[disabled] { opacity: .4; cursor: default; transform: none; box-shadow: no
   .rooms li { grid-template-columns: 1fr auto; }
   .rooms .players, .rooms .status { font-size: .84rem; }
   .quick { grid-template-columns: 1fr; }
+  .community-grid { grid-template-columns: 1fr; }
   .profile dl { grid-template-columns: 1fr; gap: 4px; }
   .profile dd { margin-bottom: 8px; }
   .crypto-wallets { padding: 14px; }

@@ -10,7 +10,7 @@ test('creates database file with schema applied', (t) => {
   const { layer, dir } = makeDataLayer(t);
   assert.ok(fs.existsSync(path.join(dir, 'app.db')));
   const version = layer.db.prepare('SELECT version FROM schema_meta').get().version;
-  assert.equal(version, 11);
+  assert.equal(version, 12);
   const tables = layer.db
     .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
     .all()
@@ -18,6 +18,8 @@ test('creates database file with schema applied', (t) => {
   assert.deepEqual(tables, [
     'audit_entries',
     'auth_sessions',
+    'chat_groups',
+    'chat_messages',
     'crypto_balances',
     'crypto_conversions',
     'crypto_ledger_entries',
@@ -41,6 +43,8 @@ test('creates database file with schema applied', (t) => {
     'rooms',
     'schema_meta',
     'service_credentials',
+    'support_messages',
+    'support_tickets',
     'users',
     'wallets',
   ]);
@@ -60,7 +64,7 @@ test('reopening an existing database is idempotent', (t) => {
   layer.close();
   const reopened = openDataLayer(dir);
   try {
-    assert.equal(reopened.prepare('SELECT version FROM schema_meta').get().version, 11);
+    assert.equal(reopened.prepare('SELECT version FROM schema_meta').get().version, 12);
     assert.equal(
       reopened.prepare('SELECT COUNT(*) AS c FROM users').get().c,
       1,

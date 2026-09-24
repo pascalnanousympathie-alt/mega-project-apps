@@ -12,6 +12,7 @@
     { name: 'home', pattern: /^\/(home)?\/?$/, auth: true },
     { name: 'lobby', pattern: /^\/lobby\/?$/, auth: true },
     { name: 'wallet', pattern: /^\/wallet\/?$/, auth: true },
+    { name: 'community', pattern: /^\/community\/?$/, auth: true },
     { name: 'profile', pattern: /^\/profile\/?$/, auth: true },
     { name: 'room', pattern: /^\/room\/([^/?#]+)$/, auth: true },
     { name: 'game', pattern: /^\/game\/([^/?#]+)$/, auth: true },

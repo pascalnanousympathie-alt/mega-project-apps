@@ -62,6 +62,7 @@ function buildPaymentGateway(input = {}) {
   ok(db, 'E_ARG', 'payment gateway requires a database');
   const repos = input.repos || null;
   const cryptoLedger = input.cryptoLedger || null;
+  const priceFeed = input.priceFeed || null;
   const now = typeof input.now === 'function' ? input.now : nowIso;
   const transport = input.transport || createHttpTransport(input.transportOptions || {});
   const providerCredentials = input.credentials || {};
@@ -207,7 +208,7 @@ function buildPaymentGateway(input = {}) {
     const info = nowCurrencyInfo(payoutCurrency);
     ok(info, 'E_CRYPTO_WITHDRAWAL_CURRENCY', 'unsupported payout currency code: ' + payoutCurrency);
     ok(info.asset === cryptoWallet.asset && info.network === cryptoWallet.network, 'E_CRYPTO_WALLET_INVALID', 'payout currency does not match wallet asset/network');
-    const usdRate = resolveUsdRate(info.asset, info.network, env);
+    const usdRate = resolveUsdRate(info.asset, info.network, env, priceFeed);
     const usdAmount = cryptoToUsd(amount, usdRate);
     ok(usdAtLeastCents(usdAmount, MIN_CRYPTO_WITHDRAW_USD_CENTS), 'E_PAYMENT_LIMIT', 'crypto withdrawal minimum is $0.50');
     const balance = cryptoLedger.getBalance(userId, info.asset, info.network);

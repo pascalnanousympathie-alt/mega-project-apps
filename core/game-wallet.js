@@ -323,7 +323,7 @@ function buildGameWallet(deps) {
     ok(Number.isInteger(cents) && cents > 0, 'E_STAKE_AMOUNT', 'USD cents amount must be positive');
     const asset = String(input.asset || '');
     const network = String(input.network || '');
-    const rate = resolveUsdRate(asset, network, env);
+    const rate = cryptoEconomy.resolveUsdRate(asset, network);
     return { stake_usd_cents: cents, stake_usd: centsToUsd(cents), asset: asset.toUpperCase(), network: network.toLowerCase(), usd_rate: rate, amount_crypto: usdToCrypto(centsToUsd(cents), rate) };
   }
 

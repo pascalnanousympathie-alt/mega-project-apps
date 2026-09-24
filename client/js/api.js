@@ -155,6 +155,35 @@
       refundLotoDraw: function (drawId) {
         return request('POST', '/loto/draws/' + encodeURIComponent(drawId) + '/refund', { body: {}, idempotency: true });
       },
+      chatGroups: function () {
+        return request('GET', '/chat/groups');
+      },
+      chatMessages: function (groupKey, limit) {
+        var q = limit ? '?limit=' + encodeURIComponent(String(limit)) : '';
+        return request('GET', '/chat/groups/' + encodeURIComponent(groupKey) + '/messages' + q);
+      },
+      sendChatMessage: function (groupKey, body, key) {
+        return request('POST', '/chat/groups/' + encodeURIComponent(groupKey) + '/messages', { body: { body: body }, idempotency: key || true });
+      },
+      supportTickets: function () {
+        return request('GET', '/support/tickets');
+      },
+      createSupportTicket: function (subject, body, key) {
+        return request('POST', '/support/tickets', { body: { subject: subject, body: body }, idempotency: key || true });
+      },
+      supportTicket: function (ticketId) {
+        return request('GET', '/support/tickets/' + encodeURIComponent(ticketId));
+      },
+      supportMessages: function (ticketId, limit) {
+        var q = limit ? '?limit=' + encodeURIComponent(String(limit)) : '';
+        return request('GET', '/support/tickets/' + encodeURIComponent(ticketId) + '/messages' + q);
+      },
+      sendSupportMessage: function (ticketId, body, key) {
+        return request('POST', '/support/tickets/' + encodeURIComponent(ticketId) + '/messages', { body: { body: body }, idempotency: key || true });
+      },
+      setSupportStatus: function (ticketId, status, key) {
+        return request('POST', '/support/tickets/' + encodeURIComponent(ticketId) + '/status', { body: { status: status }, idempotency: key || true });
+      },
     };
   }
 

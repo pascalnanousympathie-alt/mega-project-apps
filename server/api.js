@@ -377,6 +377,7 @@ function buildApiHandlers(layer) {
       mga_per_usd: mgaPerUsd,
       conversion_ready: conversionReady,
       supported_networks: ['bitcoin', 'ethereum', 'tron', 'polygon', 'bsc', 'arbitrum', 'optimism', 'base', 'solana'],
+      price_feed: layer.cryptoEconomy.ratesSnapshot(),
     };
   };
 
@@ -486,6 +487,75 @@ function buildApiHandlers(layer) {
     const { user } = session(ctx);
     const row = await layer.payments.syncCryptoWithdrawal(ctx.params.withdrawalId, user.id);
     return { withdrawal: publicCryptoWithdrawal(row) };
+  };
+
+  handlers['chat.groups'] = (ctx) => {
+    session(ctx);
+    return layer.community.listGroups();
+  };
+
+  handlers['chat.messages.list'] = (ctx) => {
+    const { user } = session(ctx);
+    return layer.community.listChatMessages(user.id, ctx.params.groupKey, ctx.query.limit);
+  };
+
+  handlers['chat.messages.create'] = (ctx) => {
+    const { user } = session(ctx);
+    const key = contracts.idempotencyKeyFrom(ctx.headers);
+    ok(key, 'E_IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header is required');
+    return layer.community.sendChatMessage({
+      user_id: user.id,
+      group_key: ctx.params.groupKey,
+      body: ctx.body.body,
+      idempotency_key: key,
+    });
+  };
+
+  handlers['support.tickets.list'] = (ctx) => {
+    const { user } = session(ctx);
+    return layer.community.listTickets(user.id);
+  };
+
+  handlers['support.tickets.create'] = (ctx) => {
+    const { user } = session(ctx);
+    const key = contracts.idempotencyKeyFrom(ctx.headers);
+    ok(key, 'E_IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header is required');
+    return layer.community.createTicket({
+      user_id: user.id,
+      subject: ctx.body.subject,
+      body: ctx.body.body,
+      idempotency_key: key,
+    });
+  };
+
+  handlers['support.tickets.get'] = (ctx) => {
+    const { user } = session(ctx);
+    return {
+      ticket: layer.community.getTicket(user.id, ctx.params.ticketId),
+      messages: layer.community.listTicketMessages(user.id, ctx.params.ticketId),
+    };
+  };
+
+  handlers['support.messages.list'] = (ctx) => {
+    const { user } = session(ctx);
+    return layer.community.listTicketMessages(user.id, ctx.params.ticketId, ctx.query.limit);
+  };
+
+  handlers['support.messages.create'] = (ctx) => {
+    const { user } = session(ctx);
+    const key = contracts.idempotencyKeyFrom(ctx.headers);
+    ok(key, 'E_IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header is required');
+    return layer.community.addTicketMessage({
+      user_id: user.id,
+      ticket_id: ctx.params.ticketId,
+      body: ctx.body.body,
+      idempotency_key: key,
+    });
+  };
+
+  handlers['support.tickets.status'] = (ctx) => {
+    const { user } = session(ctx);
+    return { ticket: layer.community.setTicketStatus(user.id, ctx.params.ticketId, ctx.body.status) };
   };
 
   handlers['ledger.entries'] = (ctx) => {
@@ -724,6 +794,8 @@ function buildApiHandlers(layer) {
     service(ctx);
     return layer.localRecords.verifyChain();
   };
+
+  ok(layer.community && layer.cryptoPriceFeed, 'E_ARG', 'api requires community and crypto price services');
 
   return {
     handlers,

@@ -57,9 +57,13 @@ function parseConfiguredRates(env = {}) {
 
 function isStable(asset) { return ['USDT', 'USDC'].includes(normalizeAsset(asset)); }
 
-function resolveUsdRate(asset, network, env = {}) {
+function resolveUsdRate(asset, network, env = {}, priceFeed = null) {
   const key = rateKey(asset, network);
   if (isStable(asset)) return '1';
+  if (priceFeed && typeof priceFeed.getUsdRateSync === 'function') {
+    const live = priceFeed.getUsdRateSync(asset);
+    if (live) return String(live);
+  }
   const rates = parseConfiguredRates(env);
   const raw = rates[key] !== undefined ? rates[key] : rates[key.replace('/', ':')];
   if (raw === undefined || raw === null || String(raw).trim() === '') {
@@ -108,28 +112,37 @@ function validateStakeUsdCents(cents) {
 
 function buildCryptoEconomy(options = {}) {
   const env = options.env || {};
+  const priceFeed = options.priceFeed || null;
   function stake(stakeUsdCents, asset, network) {
     const cents = validateStakeUsdCents(stakeUsdCents);
     const a = normalizeAsset(asset);
     const n = normalizeNetwork(network);
-    const rate = resolveUsdRate(a, n, env);
+    const rate = resolveUsdRate(a, n, env, priceFeed);
     return { stake_usd_cents: cents, stake_usd: centsToUsd(cents), asset: a, network: n, usd_rate: rate, amount_crypto: usdToCrypto(centsToUsd(cents), rate) };
   }
   function quoteCryptoToMga(input = {}) {
     const a = normalizeAsset(input.asset); const n = normalizeNetwork(input.network);
     const amountCrypto = String(input.amount || '').trim();
-    const rate = resolveUsdRate(a, n, env); const fx = mgaPerUsd(env);
+    const rate = resolveUsdRate(a, n, env, priceFeed); const fx = mgaPerUsd(env);
     const usd = cryptoToUsd(amountCrypto, rate); const mgaMilli = usdToMgaMilli(usd, fx);
     return { direction: 'crypto_to_mga', asset: a, network: n, amount_crypto: amountCrypto, usd_rate: rate, mga_per_usd: fx, amount_usd: usd, amount_mga_milli: mgaMilli };
   }
   function quoteMgaToCrypto(input = {}) {
     const a = normalizeAsset(input.asset); const n = normalizeNetwork(input.network);
     const milli = Number(input.amount_mga_milli);
-    const rate = resolveUsdRate(a, n, env); const fx = mgaPerUsd(env);
+    const rate = resolveUsdRate(a, n, env, priceFeed); const fx = mgaPerUsd(env);
     const usd = mgaMilliToUsd(milli, fx); const amountCrypto = usdToCrypto(usd, rate);
     return { direction: 'mga_to_crypto', asset: a, network: n, amount_mga_milli: milli, usd_rate: rate, mga_per_usd: fx, amount_usd: usd, amount_crypto: amountCrypto };
   }
-  return { stake, quoteCryptoToMga, quoteMgaToCrypto, resolveUsdRate: (a,n)=>resolveUsdRate(a,n,env), mgaPerUsd: ()=>mgaPerUsd(env), validateStakeUsdCents };
+  return {
+    stake,
+    quoteCryptoToMga,
+    quoteMgaToCrypto,
+    resolveUsdRate: (a,n) => resolveUsdRate(a,n,env,priceFeed),
+    mgaPerUsd: () => mgaPerUsd(env),
+    ratesSnapshot: () => priceFeed && typeof priceFeed.getSnapshot === 'function' ? priceFeed.getSnapshot() : null,
+    validateStakeUsdCents,
+  };
 }
 
 module.exports = { STAKE_USD_CENTS, MIN_CRYPTO_DEPOSIT_USD_CENTS, MIN_CRYPTO_WITHDRAW_USD_CENTS, buildCryptoEconomy, normalizeAsset, normalizeNetwork, rateKey, resolveUsdRate, mgaPerUsd, centsToUsd, usdToCrypto, cryptoToUsd, usdAtLeastCents, usdToMgaMilli, mgaMilliToUsd, validateStakeUsdCents };

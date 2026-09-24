@@ -62,6 +62,12 @@
     cryptoDeposit: null,
     cryptoEconomy: null,
     cryptoConversions: [],
+    communityGroups: [],
+    chatGroup: 'ludomada',
+    chatMessages: [],
+    supportTickets: [],
+    supportTicket: null,
+    supportMessages: [],
     gameSettings: { mode: 'mga', stakeUsdCents: 0, asset: 'USDT', network: 'tron' },
     snapshot: null,
     gameSnapshot: null,
@@ -202,6 +208,18 @@
     game: function () {
       RENDERERS.room();
     },
+    community: function () {
+      mount(views.renderCommunity({
+        user: (data.me && data.me.user) || {},
+        groups: data.communityGroups,
+        chatGroup: data.chatGroup,
+        chatMessages: data.chatMessages,
+        supportTickets: data.supportTickets,
+        supportTicket: data.supportTicket,
+        supportMessages: data.supportMessages,
+        locale: locale,
+      }));
+    },
     profile: function () {
       mount(views.renderProfile({ me: data.me || { user: (session && session.user) || {} }, locale: locale }));
     },
@@ -275,6 +293,56 @@
     });
   }
 
+  function loadCommunity() {
+    return Promise.all([api.chatGroups(), api.supportTickets()]).then(function (res) {
+      data.communityGroups = res[0] || [];
+      data.supportTickets = res[1] || [];
+      if (!data.chatGroup || !data.communityGroups.some(function (g) { return g.group_key === data.chatGroup; })) {
+        data.chatGroup = (data.communityGroups[0] && data.communityGroups[0].group_key) || 'ludomada';
+      }
+      return api.chatMessages(data.chatGroup, 80).then(function (messages) {
+        data.chatMessages = messages || [];
+        render();
+        return ensureSocket().then(function (sock) {
+          sock.emit('chat:join', { group: data.chatGroup });
+          if (data.supportTicket) sock.emit('support:join', { ticketId: data.supportTicket.id });
+        }, function () {});
+      });
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+  }
+
+  function openChatGroup(groupKey) {
+    data.chatGroup = String(groupKey || '').toLowerCase();
+    data.chatMessages = [];
+    render();
+    api.chatMessages(data.chatGroup, 80).then(function (messages) {
+      data.chatMessages = messages || [];
+      render();
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+    if (socket) socket.emit('chat:join', { group: data.chatGroup });
+    else ensureSocket().then(function (sock) { sock.emit('chat:join', { group: data.chatGroup }); }, function () {});
+  }
+
+  function openSupportTicket(ticketId) {
+    return api.supportTicket(ticketId).then(function (result) {
+      data.supportTicket = result.ticket;
+      data.supportMessages = result.messages || [];
+      render();
+      return ensureSocket().then(function (sock) {
+        sock.emit('support:join', { ticketId: ticketId });
+      }, function () {});
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+  }
+
   function loadWallet() {
     data.wallet = data.me && data.me.wallet ? data.me.wallet : null;
     if (!data.wallet) {
@@ -340,6 +408,34 @@
     sock.on('room:left', function () {
       data.snapshot = null;
       data.gameSnapshot = null;
+    });
+    sock.on('chat:joined', function (payload) {
+      data.chatMessages = (payload && payload.messages) || [];
+      if (payload && payload.group && payload.group.group_key) data.chatGroup = payload.group.group_key;
+      render();
+    });
+    sock.on('chat:message', function (message) {
+      if (!message || message.group_key !== data.chatGroup) return;
+      var exists = data.chatMessages.some(function (m) { return m.id === message.id; });
+      if (!exists) data.chatMessages = data.chatMessages.concat([message]);
+      render();
+    });
+    sock.on('support:joined', function (payload) {
+      data.supportTicket = payload && payload.ticket ? payload.ticket : null;
+      data.supportMessages = (payload && payload.messages) || [];
+      render();
+    });
+    sock.on('support:message', function (message) {
+      if (!message || !data.supportTicket || message.ticket_id !== data.supportTicket.id) return;
+      var exists = data.supportMessages.some(function (m) { return m.id === message.id; });
+      if (!exists) data.supportMessages = data.supportMessages.concat([message]);
+      render();
+    });
+    sock.on('support:updated', function (payload) {
+      if (!payload || !payload.ticket) return;
+      if (data.supportTicket && payload.ticket.id === data.supportTicket.id) data.supportTicket = payload.ticket;
+      data.supportTickets = data.supportTickets.map(function (t) { return t.id === payload.ticket.id ? payload.ticket : t; });
+      render();
     });
     sock.on('room:closed', function () {
       data.notice = { i18n: 'app.room_closed' };
@@ -570,6 +666,50 @@
     render();
   }
 
+  function handleChatMessage(form) {
+    var values = formValues(form);
+    var body = String(values.body || '').trim();
+    var group = String(values.group_key || data.chatGroup || '').toLowerCase();
+    if (!body || !group) return;
+    var key = api.makeIdempotencyKey ? api.makeIdempotencyKey() : ('chat-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+    if (socket) socket.emit('chat:send', { group: group, body: body, client_ref: key });
+    else api.sendChatMessage(group, body, key).then(function (result) {
+      if (result && result.message) data.chatMessages = data.chatMessages.concat([result.message]);
+      render();
+    }, function (err) { data.error = err.message; render(); });
+    form.elements.body.value = '';
+  }
+
+  function handleSupportCreate(form) {
+    var values = formValues(form);
+    var subject = String(values.subject || '').trim();
+    var body = String(values.body || '').trim();
+    if (!subject || !body) return;
+    api.createSupportTicket(subject, body).then(function (result) {
+      data.supportTicket = result.ticket;
+      data.supportMessages = result.messages || [];
+      data.notice = { i18n: 'app.support_ticket_created' };
+      return loadCommunity();
+    }, function (err) { data.error = err.message; render(); });
+  }
+
+  function handleSupportReply(form) {
+    var values = formValues(form);
+    var ticketId = values.ticket_id || (data.supportTicket && data.supportTicket.id);
+    var body = String(values.body || '').trim();
+    if (!ticketId || !body) return;
+    var key = api.makeIdempotencyKey ? api.makeIdempotencyKey() : ('support-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+    if (socket) socket.emit('support:message', { ticketId: ticketId, body: body, client_ref: key });
+    else api.sendSupportMessage(ticketId, body, key).then(function (result) {
+      if (result && result.message) data.supportMessages = data.supportMessages.concat([result.message]);
+      return api.supportTicket(ticketId);
+    }).then(function (result) {
+      if (result) data.supportTicket = result.ticket;
+      render();
+    }, function (err) { data.error = err.message; render(); });
+    form.elements.body.value = '';
+  }
+
   function handleCreateRoom(form) {
     var values = formValues(form);
     var games = (data.me && data.me.games) || [];
@@ -674,6 +814,24 @@
     },
     'join-room': function (el) {
       enterRoom(el.getAttribute('data-room-id'));
+    },
+    'open-chat-group': function (el) {
+      openChatGroup(el.getAttribute('data-group-key'));
+    },
+    'open-support-ticket': function (el) {
+      openSupportTicket(el.getAttribute('data-ticket-id'));
+    },
+    'resolve-ticket': function (el) {
+      api.setSupportStatus(el.getAttribute('data-ticket-id'), 'resolved').then(function (result) {
+        data.supportTicket = result.ticket;
+        return loadCommunity();
+      }, function (err) { data.error = err.message; render(); });
+    },
+    'close-ticket': function (el) {
+      api.setSupportStatus(el.getAttribute('data-ticket-id'), 'closed').then(function (result) {
+        data.supportTicket = result.ticket;
+        return loadCommunity();
+      }, function (err) { data.error = err.message; render(); });
     },
     'disable-crypto-wallet': function (el) {
       var walletId = el.getAttribute('data-crypto-wallet-id');
@@ -798,6 +956,9 @@
     else if (kind === 'crypto-conversion') handleCryptoConversion(form);
     else if (kind === 'game-economy') applyGameEconomyForm(form);
     else if (kind === 'create-room') handleCreateRoom(form);
+    else if (kind === 'chat-message') handleChatMessage(form);
+    else if (kind === 'support-create') handleSupportCreate(form);
+    else if (kind === 'support-reply') handleSupportReply(form);
   });
 
   document.addEventListener('click', function (event) {
@@ -829,6 +990,8 @@
       refreshMe().then(function () { return Promise.all([loadWallet(), loadCryptoCurrencies()]); });
     } else if (route.name === 'lobby') {
       loadRooms();
+    } else if (route.name === 'community') {
+      loadCommunity();
     } else if (route.name === 'room' || route.name === 'game') {
       render();
       if (data.roomId) enterRoom(data.roomId);
@@ -845,6 +1008,7 @@
     refreshMe().then(function () {
       var route = currentRoute();
       if (route.name === 'wallet') Promise.all([loadWallet(), loadCryptoCurrencies()]);
+      else if (route.name === 'community') loadCommunity();
       else if (route.name === 'lobby') loadRooms();
       else if (route.name === 'room' || route.name === 'game') enterRoom(data.roomId);
     });

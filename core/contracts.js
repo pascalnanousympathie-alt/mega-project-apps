@@ -4,7 +4,7 @@ const { DataError, ok, sha256hex } = require('./db');
 const API_VERSION = 'v1';
 const API_VERSIONS = ['v1'];
 const API_PREFIX = '/api/' + API_VERSION;
-const CONTRACTS_REVISION = 2;
+const CONTRACTS_REVISION = 3;
 
 const ERROR_STATUS = {
   E_ARG: 400,
@@ -38,6 +38,13 @@ const ERROR_STATUS = {
   E_CRYPTO_BALANCE_NOT_FOUND: 404,
   E_CRYPTO_WITHDRAWAL_NOT_FOUND: 404,
   E_CRYPTO_WITHDRAWAL_STATUS: 409,
+  E_CHAT_GROUP_INVALID: 400,
+  E_CHAT_GROUP_NOT_FOUND: 404,
+  E_CHAT_MESSAGE: 400,
+  E_SUPPORT_TICKET_NOT_FOUND: 404,
+  E_SUPPORT_TICKET_CREATE: 400,
+  E_SUPPORT_TICKET_CLOSED: 409,
+  E_SUPPORT_MESSAGE: 400,
   E_CRYPTO_AMOUNT: 400,
   E_CRYPTO_INSUFFICIENT_FUNDS: 409,
   E_CRYPTO_SETTLEMENT_UNSUPPORTED: 409,
@@ -329,6 +336,43 @@ const CRYPTO_CONVERSION_BODY = {
   additionalProperties: false,
 };
 
+const CHAT_GROUP_PARAMS = {
+  type: 'object',
+  required: ['groupKey'],
+  properties: { groupKey: { type: 'string', enum: ['ludomada', 'dominomada', 'lotomada', 'ramimada'] } },
+};
+
+const CHAT_MESSAGE_BODY = {
+  type: 'object',
+  required: ['body'],
+  properties: { body: { type: 'string', minLength: 1, maxLength: 1000 } },
+  additionalProperties: false,
+};
+
+const SUPPORT_TICKET_ID_PARAMS = {
+  type: 'object',
+  required: ['ticketId'],
+  properties: { ticketId: { type: 'string', minLength: 1 } },
+};
+
+const SUPPORT_TICKET_BODY = {
+  type: 'object',
+  required: ['subject', 'body'],
+  properties: {
+    subject: { type: 'string', minLength: 1, maxLength: 120 },
+    body: { type: 'string', minLength: 1, maxLength: 1000 },
+  },
+  additionalProperties: false,
+};
+
+const SUPPORT_MESSAGE_BODY = CHAT_MESSAGE_BODY;
+const SUPPORT_STATUS_BODY = {
+  type: 'object',
+  required: ['status'],
+  properties: { status: { type: 'string', enum: ['open', 'pending', 'resolved', 'closed'] } },
+  additionalProperties: false,
+};
+
 const CRYPTO_WITHDRAWAL_VERIFY_BODY = {
   type: 'object',
   required: ['verification_code'],
@@ -614,6 +658,102 @@ const REST_ROUTES = [
     idempotent: true,
     params: CRYPTO_WITHDRAWAL_ID_PARAMS,
     body: { type: 'object', additionalProperties: false },
+    response: { type: 'object' },
+  },
+  {
+    id: 'chat.groups',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/chat/groups',
+    auth: 'bearer',
+    idempotent: false,
+    query: { type: 'object' },
+    response: { type: 'array' },
+  },
+  {
+    id: 'chat.messages.list',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/chat/groups/:groupKey/messages',
+    auth: 'bearer',
+    idempotent: false,
+    params: CHAT_GROUP_PARAMS,
+    query: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 200 } } },
+    response: { type: 'array' },
+  },
+  {
+    id: 'chat.messages.create',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/chat/groups/:groupKey/messages',
+    auth: 'bearer',
+    idempotent: true,
+    params: CHAT_GROUP_PARAMS,
+    body: CHAT_MESSAGE_BODY,
+    response: { type: 'object' },
+  },
+  {
+    id: 'support.tickets.list',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/support/tickets',
+    auth: 'bearer',
+    idempotent: false,
+    query: { type: 'object' },
+    response: { type: 'array' },
+  },
+  {
+    id: 'support.tickets.create',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/support/tickets',
+    auth: 'bearer',
+    idempotent: true,
+    body: SUPPORT_TICKET_BODY,
+    response: { type: 'object' },
+  },
+  {
+    id: 'support.tickets.get',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/support/tickets/:ticketId',
+    auth: 'bearer',
+    idempotent: false,
+    params: SUPPORT_TICKET_ID_PARAMS,
+    query: { type: 'object' },
+    response: { type: 'object' },
+  },
+  {
+    id: 'support.messages.list',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/support/tickets/:ticketId/messages',
+    auth: 'bearer',
+    idempotent: false,
+    params: SUPPORT_TICKET_ID_PARAMS,
+    query: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 300 } } },
+    response: { type: 'array' },
+  },
+  {
+    id: 'support.messages.create',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/support/tickets/:ticketId/messages',
+    auth: 'bearer',
+    idempotent: true,
+    params: SUPPORT_TICKET_ID_PARAMS,
+    body: SUPPORT_MESSAGE_BODY,
+    response: { type: 'object' },
+  },
+  {
+    id: 'support.tickets.status',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/support/tickets/:ticketId/status',
+    auth: 'bearer',
+    idempotent: true,
+    params: SUPPORT_TICKET_ID_PARAMS,
+    body: SUPPORT_STATUS_BODY,
     response: { type: 'object' },
   },
   {
@@ -963,6 +1103,11 @@ const WS_CLIENT_CONTRACTS = {
   'room:start': { payload: null, summary: 'host starts the room' },
   'room:close': { payload: null, summary: 'host closes the room' },
   'room:state': { payload: null, summary: 'pull authoritative room state' },
+  'chat:join': { payload: { type: 'object', required: ['group'], properties: { group: { type: 'string' } } } },
+  'chat:send': { payload: { type: 'object', required: ['group', 'body'], properties: { group: { type: 'string' }, body: { type: 'string', minLength: 1, maxLength: 1000 }, client_ref: { type: 'string' } } } },
+  'support:join': { payload: { type: 'object', required: ['ticketId'], properties: { ticketId: { type: 'string' } } } },
+  'support:message': { payload: { type: 'object', required: ['ticketId', 'body'], properties: { ticketId: { type: 'string' }, body: { type: 'string', minLength: 1, maxLength: 1000 }, client_ref: { type: 'string' } } } },
+  'support:status': { payload: { type: 'object', required: ['ticketId', 'status'], properties: { ticketId: { type: 'string' }, status: { type: 'string', enum: ['open', 'pending', 'resolved', 'closed'] } } } },
   'game:event': {
     summary: 'authoritative game action forwarded to the room engine',
     payload: { type: 'object' },
@@ -980,6 +1125,11 @@ const WS_SERVER_CONTRACTS = {
   'room:presence': { payload: { type: 'object', required: ['room_id', 'players'] } },
   'room:state': { payload: { type: 'object', required: ['room', 'players', 'state'] } },
   'room:started': { payload: { type: 'object', required: ['room', 'players', 'state'] } },
+  'chat:joined': { payload: { type: 'object', required: ['group', 'messages'] } },
+  'chat:message': { payload: { type: 'object', required: ['id', 'group_key', 'user_id', 'body', 'created_at'] } },
+  'support:joined': { payload: { type: 'object', required: ['ticket', 'messages'] } },
+  'support:message': { payload: { type: 'object', required: ['id', 'ticket_id', 'sender_user_id', 'body', 'created_at'] } },
+  'support:updated': { payload: { type: 'object', required: ['ticket'] } },
 };
 
 function routeById(id) {

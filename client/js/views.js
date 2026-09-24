@@ -178,9 +178,16 @@
     var conversionRate = eco && eco.mga_per_usd ? ' · 1 USD = ' + String(eco.mga_per_usd) + ' Ar' : '';
     var minDeposit = eco && eco.min_deposit_usd ? String(eco.min_deposit_usd) : '0.5';
     var minWithdraw = eco && eco.min_withdraw_usd ? String(eco.min_withdraw_usd) : '0.5';
+    var feed = eco && eco.price_feed ? eco.price_feed : null;
+    var rates = feed && feed.rates ? feed.rates : {};
+    var priceRows = Object.keys(rates).map(function (asset) {
+      return '<span class="crypto-price"><strong>' + esc(asset) + '</strong> $' + esc(String(rates[asset])) + '</span>';
+    }).join('');
+    var priceFeedBox = '<div class="crypto-prices"><div class="crypto-prices-head"><strong>' + esc(tr(l, 'crypto.live_prices')) + '</strong><span>' + esc(feed && feed.updated_at ? String(feed.updated_at) : tr(l, 'crypto.price_unavailable')) + '</span></div>' +
+      (priceRows || '<span class="hint">' + esc(tr(l, 'crypto.price_unavailable')) + '</span>') + '</div>';
     return '<section class="crypto-wallets" data-testid="crypto-wallets">' +
       '<h3>' + esc(tr(l, 'crypto.title')) + '</h3>' +
-      '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' + depositBox +
+      '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' + priceFeedBox + depositBox +
       '<div class="crypto-economy"><h4>' + esc(tr(l, 'crypto.game_stakes')) + '</h4>' +
       '<p class="hint">' + esc(tr(l, 'crypto.game_stakes_hint')) + esc(conversionRate) + '</p>' +
       '<span>$0.10 · $0.50 · $1 · $2 · $5</span></div>' +
@@ -504,6 +511,71 @@
     );
   }
 
+  function renderCommunity(state) {
+    var s = state || {};
+    var l = loc(s);
+    var user = s.user || {};
+    var groups = s.groups || [];
+    var activeGroup = s.chatGroup || (groups[0] && groups[0].group_key) || 'ludomada';
+    var messages = s.chatMessages || [];
+    var tickets = s.supportTickets || [];
+    var ticket = s.supportTicket || null;
+    var supportMessages = s.supportMessages || [];
+    var staff = user.role === 'admin' || user.role === 'support';
+
+    var groupButtons = groups.map(function (g) {
+      return '<button type="button" class="' + (g.group_key === activeGroup ? 'active' : '') + '" data-action="open-chat-group" data-group-key="' + esc(g.group_key) + '">' +
+        esc(g.name) + '</button>';
+    }).join('');
+
+    var chatRows = messages.map(function (m) {
+      var mine = m.user_id === user.id;
+      return '<li class="' + (mine ? 'mine' : '') + '"><strong>' + esc(m.display_name || m.username || 'member') + '</strong>' +
+        '<time>' + esc(String(m.created_at || '')) + '</time><p>' + esc(m.body) + '</p></li>';
+    }).join('');
+
+    var ticketRows = tickets.map(function (t) {
+      return '<li><button type="button" class="ticket-link" data-action="open-support-ticket" data-ticket-id="' + esc(t.id) + '">' +
+        '<strong>' + esc(t.subject) + '</strong><span>' + esc(t.status) + '</span><small>' + esc(String(t.message_count || 0)) + ' messages</small></button></li>';
+    }).join('');
+
+    var ticketPane = ticket ? (
+      '<div class="support-thread">' +
+      '<div class="support-thread-head"><strong>' + esc(ticket.subject) + '</strong><span>' + esc(ticket.status) + '</span>' +
+      (staff && ticket.status !== 'closed'
+        ? '<span class="support-actions"><button type="button" data-action="resolve-ticket" data-ticket-id="' + esc(ticket.id) + '">Resolved</button><button type="button" data-action="close-ticket" data-ticket-id="' + esc(ticket.id) + '">Closed</button></span>'
+        : '') + '</div>' +
+      '<ul class="chat-messages support-messages">' +
+      supportMessages.map(function (m) {
+        var mine = m.sender_user_id === user.id;
+        return '<li class="' + (mine ? 'mine' : '') + '"><strong>' + esc(m.display_name || m.username || m.sender_role) + '</strong>' +
+          '<small>' + esc(m.sender_role) + '</small><p>' + esc(m.body) + '</p></li>';
+      }).join('') + '</ul>' +
+      (ticket.status === 'closed' ? '<p class="hint">Cette demande est clôturée.</p>' :
+        '<form data-form="support-reply"><input type="hidden" name="ticket_id" value="' + esc(ticket.id) + '">' +
+        '<label>' + esc(tr(l, 'community.message')) + ' <textarea name="body" rows="3" maxlength="1000" required></textarea></label>' +
+        '<button type="submit">' + esc(tr(l, 'community.send')) + '</button></form>') +
+      '</div>'
+    ) : '<p class="hint">' + esc(tr(l, 'community.no_ticket_selected')) + '</p>';
+
+    return '<section class="screen community" data-screen="community" lang="' + esc(l) + '">' +
+      '<h2>' + esc(tr(l, 'community.title')) + '</h2>' +
+      '<p class="hint">' + esc(tr(l, 'community.subtitle')) + '</p>' +
+      '<div class="community-grid">' +
+      '<article class="community-panel chat-panel"><h3>' + esc(tr(l, 'community.group_chat')) + '</h3>' +
+      '<div class="chat-groups">' + groupButtons + '</div>' +
+      '<ul class="chat-messages" data-testid="chat-messages">' + (chatRows || '<li class="empty">' + esc(tr(l, 'community.empty_chat')) + '</li>') + '</ul>' +
+      '<form data-form="chat-message"><input type="hidden" name="group_key" value="' + esc(activeGroup) + '">' +
+      '<label>' + esc(tr(l, 'community.message')) + ' <textarea name="body" rows="2" maxlength="1000" required></textarea></label>' +
+      '<button type="submit">' + esc(tr(l, 'community.send')) + '</button></form></article>' +
+      '<article class="community-panel support-panel"><h3>' + esc(tr(l, 'community.support')) + '</h3>' +
+      '<ul class="support-tickets">' + (ticketRows || '<li class="empty">' + esc(tr(l, 'community.no_tickets')) + '</li>') + '</ul>' +
+      '<form data-form="support-create"><label>' + esc(tr(l, 'community.subject')) + ' <input name="subject" maxlength="120" required></label>' +
+      '<label>' + esc(tr(l, 'community.message')) + ' <textarea name="body" rows="3" maxlength="1000" required></textarea></label>' +
+      '<button type="submit">' + esc(tr(l, 'community.open_ticket')) + '</button></form>' +
+      ticketPane + '</article></div></section>';
+  }
+
   function renderProfile(state) {
     var s = state || {};
     var l = loc(s);
@@ -539,6 +611,7 @@
     renderWallet: renderWallet,
     renderWaiting: renderWaiting,
     renderGame: renderGame,
+    renderCommunity: renderCommunity,
     renderProfile: renderProfile,
     renderNotFound: renderNotFound,
     waitingActions: waitingActions,

@@ -552,7 +552,66 @@ CREATE TABLE crypto_conversions (
 CREATE INDEX idx_crypto_conversions_user ON crypto_conversions (user_id, created_at);
 `;
 
-const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8, SCHEMA_V9, SCHEMA_V10, SCHEMA_V11];
+const SCHEMA_V12 = `
+CREATE TABLE chat_groups (
+  id           TEXT PRIMARY KEY,
+  group_key    TEXT NOT NULL UNIQUE,
+  name         TEXT NOT NULL,
+  description  TEXT NOT NULL DEFAULT '',
+  created_at   TEXT NOT NULL,
+  updated_at   TEXT NOT NULL
+);
+CREATE TABLE chat_messages (
+  seq              INTEGER PRIMARY KEY AUTOINCREMENT,
+  id               TEXT NOT NULL UNIQUE,
+  group_id         TEXT NOT NULL REFERENCES chat_groups(id) ON DELETE CASCADE,
+  user_id          TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  idempotency_key  TEXT NOT NULL,
+  body             TEXT NOT NULL,
+  prev_hash        TEXT NOT NULL,
+  hash             TEXT NOT NULL UNIQUE,
+  created_at       TEXT NOT NULL,
+  UNIQUE (group_id, idempotency_key)
+);
+CREATE INDEX idx_chat_messages_group ON chat_messages (group_id, seq);
+CREATE INDEX idx_chat_messages_user ON chat_messages (user_id, seq);
+
+CREATE TABLE support_tickets (
+  id               TEXT PRIMARY KEY,
+  user_id          TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  idempotency_key  TEXT NOT NULL UNIQUE,
+  subject          TEXT NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','pending','resolved','closed')),
+  created_at       TEXT NOT NULL,
+  updated_at       TEXT NOT NULL
+);
+CREATE INDEX idx_support_tickets_user ON support_tickets (user_id, updated_at);
+CREATE INDEX idx_support_tickets_status ON support_tickets (status, updated_at);
+
+CREATE TABLE support_messages (
+  seq              INTEGER PRIMARY KEY AUTOINCREMENT,
+  id               TEXT NOT NULL UNIQUE,
+  ticket_id        TEXT NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+  sender_user_id   TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  sender_role      TEXT NOT NULL CHECK (sender_role IN ('player','admin','support')),
+  idempotency_key  TEXT NOT NULL,
+  body             TEXT NOT NULL,
+  prev_hash        TEXT NOT NULL,
+  hash             TEXT NOT NULL UNIQUE,
+  created_at       TEXT NOT NULL,
+  UNIQUE (ticket_id, idempotency_key)
+);
+CREATE INDEX idx_support_messages_ticket ON support_messages (ticket_id, seq);
+
+INSERT OR IGNORE INTO chat_groups (id, group_key, name, description, created_at, updated_at)
+VALUES
+ ('chat-ludomada', 'ludomada', 'LudoMada', 'Communauté LudoMada', datetime('now'), datetime('now')),
+ ('chat-dominomada', 'dominomada', 'DominoMada', 'Communauté DominoMada', datetime('now'), datetime('now')),
+ ('chat-lotomada', 'lotomada', 'LotoMada', 'Communauté LotoMada', datetime('now'), datetime('now')),
+ ('chat-ramimada', 'ramimada', 'RamiMada', 'Communauté RamiMada', datetime('now'), datetime('now'));
+`;
+
+const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8, SCHEMA_V9, SCHEMA_V10, SCHEMA_V11, SCHEMA_V12];
 
 function migrate(db) {
   const has = db.prepare(

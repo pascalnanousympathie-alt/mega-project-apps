@@ -16,7 +16,9 @@ const { buildSocketIo, socketAuthMiddleware, createServer } = require('./socketi
 const { buildPaymentGateway } = require('./payments');
 const { buildCryptoLedger } = require('./crypto-ledger');
 const { buildCryptoEconomy } = require('./crypto-economy');
+const { buildCryptoPriceFeed } = require('./crypto-price-feed');
 const { buildCryptoConversion } = require('./crypto-conversion');
+const { buildCommunityService } = require('./community');
 const { createObservability } = require('./observability');
 const contracts = require('./contracts');
 
@@ -29,7 +31,9 @@ function createDataLayer(options = {}) {
   const wallet = buildCentralWallet(db);
   const cryptoLedger = buildCryptoLedger(db);
   const paymentEnv = (options.payments || {}).env || process.env;
-  const cryptoEconomy = buildCryptoEconomy({ env: paymentEnv });
+  const cryptoPriceFeed = buildCryptoPriceFeed({ env: paymentEnv, dataDir });
+  if (String(paymentEnv.CRYPTO_PRICE_FEED_ENABLED || '0') === '1') cryptoPriceFeed.start();
+  const cryptoEconomy = buildCryptoEconomy({ env: paymentEnv, priceFeed: cryptoPriceFeed });
   const gameWallet = buildGameWallet({ db, repos, cryptoLedger, cryptoEconomy, env: paymentEnv, options: options.house || {} });
   const gatewayOptions = {
     ...(options.gateway || {}),
@@ -55,12 +59,14 @@ function createDataLayer(options = {}) {
     db,
     repos,
     cryptoLedger,
+    priceFeed: cryptoPriceFeed,
     credentials: (options.payments || {}).credentials,
     env: paymentEnv,
     transport: (options.payments || {}).transport,
     callbackUrl: (options.payments || {}).callbackUrl,
   });
   const cryptoConversion = buildCryptoConversion({ db, repos, cryptoLedger, cryptoEconomy, gameWallet, env: paymentEnv });
+  const community = buildCommunityService({ db, repos });
   const idempotency = contracts.createIdempotencyStore();
   const ledger = {
     append: (input) => appendLedger(db, input),
@@ -80,7 +86,9 @@ function createDataLayer(options = {}) {
     wallet,
     cryptoLedger,
     cryptoEconomy,
+    cryptoPriceFeed,
     cryptoConversion,
+    community,
     gameWallet,
     ledger,
     domino,
@@ -93,6 +101,7 @@ function createDataLayer(options = {}) {
     idempotency,
     close() {
       gateway.stopSweep();
+      cryptoPriceFeed.stop();
       if (db.isOpen) db.close();
     },
   };

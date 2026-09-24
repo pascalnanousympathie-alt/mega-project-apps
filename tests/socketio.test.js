@@ -277,6 +277,58 @@ test('realtime gateway drives a real websocket session end to end', async (t) =>
   assert.deepEqual(built.gateway.usersInRoom(room.id), []);
 });
 
+test('community chat and admin support work over the authenticated websocket', async (t) => {
+  const { layer, url } = await makeServer(t);
+  const client = makePlayer(t, layer, url, 'ws_community');
+  const admin = layer.auth.register({ username: 'ws_admin', password: PW, role: 'admin' });
+  const adminSession = layer.auth.createSession(admin.id);
+  const ticket = layer.community.createTicket({
+    user_id: client.user.id,
+    subject: 'WS support',
+    body: 'Please help me.',
+    idempotency_key: 'ws-ticket-1',
+  }).ticket;
+
+  await client.client.open();
+  assert.equal((await client.client.handshake({ token: client.token })).kind, 'connect');
+  await client.client.event('connected');
+
+  client.client.emit('chat:join', { group: 'ludomada' });
+  const chatJoined = await client.client.event('chat:joined');
+  assert.equal(chatJoined.data.group.group_key, 'ludomada');
+
+  const chatPromise = client.client.event('chat:message');
+  client.client.emit('chat:send', { group: 'ludomada', body: 'Hello members', client_ref: 'ws-chat-1' });
+  const chat = await chatPromise;
+  assert.equal(chat.data.body, 'Hello members');
+
+  client.client.emit('support:join', { ticketId: ticket.id });
+  const supportJoined = await client.client.event('support:joined');
+  assert.equal(supportJoined.data.ticket.id, ticket.id);
+
+  const supportPromise = client.client.event('support:message');
+  client.client.emit('support:message', { ticketId: ticket.id, body: 'Any update?', client_ref: 'ws-support-1' });
+  const support = await supportPromise;
+  assert.equal(support.data.body, 'Any update?');
+  assert.equal(support.data.sender_user_id, client.user.id);
+
+  // The admin can join the same ticket and reply through the same realtime channel.
+  const adminClient = createClient(url);
+  t.after(() => adminClient.close());
+  await adminClient.open();
+  assert.equal((await adminClient.handshake({ token: adminSession.token })).kind, 'connect');
+  await adminClient.event('connected');
+  adminClient.emit('support:join', { ticketId: ticket.id });
+  await adminClient.event('support:joined');
+
+  const adminReplyPromise = client.client.event('support:message');
+  adminClient.emit('support:message', { ticketId: ticket.id, body: 'Nous traitons votre demande.', client_ref: 'ws-support-2' });
+  const adminReply = await adminReplyPromise;
+  assert.equal(adminReply.data.sender_user_id, admin.id);
+  assert.equal(adminReply.data.sender_role, 'admin');
+  assert.deepEqual(layer.community.verify(), { ok: true });
+});
+
 test('realtime gateway rejects a websocket connection with an invalid token', async (t) => {
   const { built, url } = await makeServer(t);
   const client = createClient(url);
