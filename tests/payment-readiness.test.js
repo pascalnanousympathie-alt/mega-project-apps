@@ -26,8 +26,13 @@ test('all providers are not production-ready when callback secrets or required c
     production: true,
   });
   assert.equal(result.ready, false);
-  assert.equal(result.providers.length, 5);
+  assert.equal(result.providers.length, 6);
   for (const row of result.providers) {
+    if (row.name === 'nowpayments-sandbox') {
+      assert.equal(row.ready, true);
+      assert.ok(row.reasons.includes('sandbox_provider_excluded_from_production_gate'));
+      continue;
+    }
     assert.equal(row.callback_secret, 'ABSENT');
     assert.ok(row.reasons.includes('required_credentials_absent'));
     assert.ok(row.reasons.includes('callback_secret_absent'));
