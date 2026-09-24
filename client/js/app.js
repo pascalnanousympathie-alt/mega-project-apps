@@ -16,6 +16,7 @@
   var views = ACEP.views;
   var router = ACEP.router;
   var esc = ACEP.format.escapeHtml;
+  var music = ACEP.music.createController(root);
 
   var LOCALE_KEY = 'acep.locale.v1';
   var locale = readLocale();
@@ -69,6 +70,7 @@
     supportTicket: null,
     supportMessages: [],
     gameSettings: { mode: 'mga', stakeUsdCents: 0, asset: 'USDT', network: 'tron' },
+    musicSettings: music.settings(),
     snapshot: null,
     gameSnapshot: null,
     selectedTile: null,
@@ -170,6 +172,7 @@
           user: (data.me && data.me.user) || (session && session.user) || {},
           wallet: data.me && data.me.wallet,
           games: (data.me && data.me.games) || [],
+          musicSettings: data.musicSettings,
           locale: locale,
         })
       );
@@ -199,7 +202,7 @@
       var roomStatus = snapshot && snapshot.room ? snapshot.room.status : null;
       if (roomStatus === 'active' && data.gameSnapshot) {
         var g = gamesById()[(snapshot.room && snapshot.room.game_id) || ''] || {};
-        mount(views.renderGame({ snapshot: data.gameSnapshot, userId: userId(), kind: g.kind || 'domino', locale: locale }));
+        mount(views.renderGame({ snapshot: data.gameSnapshot, userId: userId(), kind: g.kind || 'domino', musicSettings: data.musicSettings, locale: locale }));
       } else {
         var wg = gamesById()[(snapshot && snapshot.room && snapshot.room.game_id) || ''] || {};
         mount(views.renderWaiting({ snapshot: snapshot || { room: {}, players: [] }, userId: userId(), kind: wg.kind || 'domino', gameSettings: data.gameSettings, locale: locale }));
@@ -730,6 +733,13 @@
     );
   }
 
+  function toggleMusic(el) {
+    var kind = el.getAttribute('data-music-kind') || 'ludo';
+    music.toggle(kind);
+    data.musicSettings = music.settings();
+    render();
+  }
+
   function connectCryptoWallet(el) {
     var form = el && el.form;
     var set = function (name, value) {
@@ -792,6 +802,7 @@
   }
 
   var ACTIONS = {
+    'toggle-music': toggleMusic,
     'connect-wallet': function (el) {
       connectCryptoWallet(el);
     },

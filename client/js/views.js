@@ -49,6 +49,13 @@
     return '<span class="brand brand-' + k + '" role="img" aria-label="' + esc(title) + '"><svg viewBox="0 0 48 48" aria-hidden="true">' + icon + '</svg><span>' + esc(title) + '</span></span>';
   }
 
+  function renderMusicControl(l, kind, enabled) {
+    var k = brandKind(kind);
+    var isOn = enabled !== false;
+    return '<button type="button" class="music-toggle ' + (isOn ? 'is-on' : 'is-off') + '" data-action="toggle-music" data-music-kind="' + esc(k) + '" aria-pressed="' + (isOn ? 'true' : 'false') + '">' +
+      esc(tr(l, 'music.label')) + ': ' + esc(isOn ? tr(l, 'music.on') : tr(l, 'music.off')) + '</button>';
+  }
+
   function money(l, milli, opts) {
     var options = opts || {};
     var merged = {};
@@ -104,13 +111,16 @@
     var user = s.user || {};
     var games = s.games || [];
     var balance = s.wallet ? money(l, s.wallet.balance_milli) : '\u2014';
+    var musicSettings = s.musicSettings || {};
     var cards = games.map(function (game) {
+      var k = brandKind(game.kind);
       return (
-        '<article class="game-card game-card-' + esc(brandKind(game.kind)) + '" data-game-id="' + esc(game.id) + '">' +
+        '<article class="game-card game-card-' + esc(k) + '" data-game-id="' + esc(game.id) + '">' +
         brandLogo(game.kind, game.name || game.kind) +
         '<h3>' + esc(game.name || game.kind) + '</h3>' +
         '<p class="kind">' + esc(game.kind) + '</p>' +
         '<p class="fee">' + esc(money(l, game.entry_fee_milli || 0)) + '</p>' +
+        renderMusicControl(l, k, musicSettings[k]) +
         '<a class="btn" href="#/lobby?game=' + esc(game.id) + '">' + esc(tr(l, 'home.play')) + '</a>' +
         '</article>'
       );
@@ -521,7 +531,8 @@
     var s = state || {};
     var l = loc(s);
     var snapshot = s.snapshot || {};
-    var kind = s.kind || 'domino';
+    var kind = brandKind(s.kind || 'domino');
+    var musicSettings = s.musicSettings || {};
     var actions;
     var body;
     if (kind === 'loto') {
@@ -539,6 +550,7 @@
     return (
       '<section class="screen game game-' + esc(kind) + '" data-screen="game" lang="' + esc(l) + '" data-kind="' + esc(kind) + '" data-game-id="' + esc(id) + '">' +
       body +
+      renderMusicControl(l, kind, musicSettings[kind]) +
       (actions.start ? '<button data-action="start-game">' + esc(tr(l, 'waiting.start')) + '</button>' : '') +
       (snapshot.winner_user_id ? '<p class="winner" data-testid="winner">' + esc(tr(l, 'game.winner', { who: snapshot.winner_user_id })) + '</p>' : '') +
       '</section>'

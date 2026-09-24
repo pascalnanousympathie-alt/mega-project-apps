@@ -201,6 +201,19 @@ button[disabled] { opacity: .4; cursor: default; transform: none; box-shadow: no
 }
 .game-card .kind, .fee { color: var(--muted); }
 .game-card .fee { font-size: 1.15rem; font-weight: 800; color: #dbe9ff; }
+.music-toggle {
+  width: auto;
+  min-height: 36px;
+  margin-top: 2px;
+  padding: 7px 11px;
+  background: #0d1c2f;
+  box-shadow: none;
+  border-color: var(--border);
+  font-size: .8rem;
+}
+.music-toggle.is-on { border-color: rgba(49,196,141,.45); }
+.music-toggle.is-off { opacity: .72; }
+.game > .music-toggle { margin-bottom: 4px; }
 .rooms { list-style: none; padding: 0; margin: 16px 0 0; }
 .rooms li {
   display: grid;

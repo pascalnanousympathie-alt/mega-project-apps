@@ -69,10 +69,20 @@ test('views render every P15 screen with escaped content', () => {
   assert.ok(!login.includes('<script>'));
   assert.ok(login.includes('&lt;script&gt;'));
 
-  const home = views.renderHome({ user: { username: xss }, wallet: { balance_milli: 2500 }, games: [{ id: 'g1', kind: 'domino', name: 'D1', entry_fee_milli: 500 }] });
+  const home = views.renderHome({ user: { username: xss }, wallet: { balance_milli: 2500 }, musicSettings: { ludo: true, domino: false, loto: true, rami: false }, games: [
+    { id: 'g1', kind: 'ludo', name: 'LudoMada', entry_fee_milli: 500 },
+    { id: 'g2', kind: 'domino', name: 'DominoMada', entry_fee_milli: 500 },
+    { id: 'g3', kind: 'loto', name: 'LotoMada', entry_fee_milli: 500 },
+    { id: 'g4', kind: 'rami', name: 'RamiMada', entry_fee_milli: 500 },
+  ] });
   assert.ok(home.includes('data-screen="home"'));
   assert.ok(home.includes('2\u202f500 Ar'));
   assert.ok(home.includes('#/lobby?game=g1'));
+  assert.ok(home.includes('data-music-kind="ludo"'));
+  assert.ok(home.includes('data-music-kind="domino"'));
+  assert.ok(home.includes('data-music-kind="loto"'));
+  assert.ok(home.includes('data-music-kind="rami"'));
+  assert.ok(home.includes('data-music-kind="domino" aria-pressed="false"'));
   assert.ok(!home.includes('<script>alert'));
 
   const lobby = views.renderLobby({ rooms: [{ id: 'r1', name: xss, players: 2, capacity: 2, status: 'waiting' }, { id: 'r2', name: 'open', players: 0, capacity: 4, status: 'waiting' }] });
