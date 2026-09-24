@@ -60,6 +60,9 @@
     cryptoBalances: [],
     cryptoWithdrawals: [],
     cryptoDeposit: null,
+    cryptoEconomy: null,
+    cryptoConversions: [],
+    gameSettings: { mode: 'mga', stakeUsdCents: 0, asset: 'USDT', network: 'tron' },
     snapshot: null,
     gameSnapshot: null,
     selectedTile: null,
@@ -179,6 +182,8 @@
           cryptoBalances: data.cryptoBalances,
           cryptoWithdrawals: data.cryptoWithdrawals,
           cryptoDeposit: data.cryptoDeposit,
+          cryptoEconomy: data.cryptoEconomy,
+          cryptoConversions: data.cryptoConversions,
           locale: locale,
         })
       );
@@ -190,7 +195,8 @@
         var g = gamesById()[(snapshot.room && snapshot.room.game_id) || ''] || {};
         mount(views.renderGame({ snapshot: data.gameSnapshot, userId: userId(), kind: g.kind || 'domino', locale: locale }));
       } else {
-        mount(views.renderWaiting({ snapshot: snapshot || { room: {}, players: [] }, userId: userId(), locale: locale }));
+        var wg = gamesById()[(snapshot && snapshot.room && snapshot.room.game_id) || ''] || {};
+        mount(views.renderWaiting({ snapshot: snapshot || { room: {}, players: [] }, userId: userId(), kind: wg.kind || 'domino', gameSettings: data.gameSettings, locale: locale }));
       }
     },
     game: function () {
@@ -255,9 +261,11 @@
   }
 
   function loadCryptoState() {
-    return Promise.all([api.cryptoBalances(), api.cryptoWithdrawals(50)]).then(function (res) {
+    return Promise.all([api.cryptoBalances(), api.cryptoWithdrawals(50), api.cryptoEconomy(), api.cryptoConversions(50)]).then(function (res) {
       data.cryptoBalances = res[0] || [];
       data.cryptoWithdrawals = res[1] || [];
+      data.cryptoEconomy = res[2] || null;
+      data.cryptoConversions = res[3] || [];
       render();
       return data.cryptoBalances;
     }, function (err) {
@@ -322,12 +330,11 @@
     });
     sock.on('room:joined', function (snapshot) {
       data.snapshot = snapshot;
-      sendGame({ action: 'status' });
       render();
     });
     sock.on('room:started', function (snapshot) {
       data.snapshot = snapshot;
-      sendGame({ action: 'status' });
+      sendGame({ action: 'status', settings: gameSettingsPayload() });
       render();
     });
     sock.on('room:left', function () {
@@ -354,6 +361,12 @@
     });
   }
 
+  function gameSettingsPayload() {
+    var s = data.gameSettings || {};
+    if (s.mode !== 'crypto') return { mode: 'mga' };
+    return { mode: 'crypto', stakeUsdCents: Number(s.stakeUsdCents), asset: s.asset || 'USDT', network: s.network || 'tron' };
+  }
+
   function sendGame(payload) {
     if (socket && data.roomId) socket.emit('game:event', payload);
   }
@@ -365,7 +378,6 @@
     go('#/room/' + encodeURIComponent(roomId));
     ensureSocket().then(function (sock) {
       sock.emit('room:join', { roomId: roomId });
-      sendGame({ action: 'status' });
     }, function () {
       render();
     });
@@ -512,6 +524,49 @@
       data.error = err.message;
       render();
     });
+  }
+
+  function handleCryptoConversion(form) {
+    var values = formValues(form);
+    var direction = values.direction;
+    var asset = String(values.asset || 'USDT').trim().toUpperCase();
+    var network = String(values.network || 'tron').trim().toLowerCase();
+    var raw = String(values.amount || '').trim();
+    if (!raw || !direction || !asset || !network) {
+      data.error = { i18n: 'app.invalid_crypto_conversion' };
+      render();
+      return;
+    }
+    var body = { direction: direction, asset: asset, network: network };
+    if (direction === 'crypto_to_mga') body.amount_crypto = raw;
+    else body.amount_mga_milli = ACEP.format.parseMilliInput(raw);
+    if (!body.amount_mga_milli && direction === 'mga_to_crypto') {
+      data.error = { i18n: 'app.invalid_crypto_conversion' };
+      render();
+      return;
+    }
+    api.createCryptoConversion(body, 'crypto-convert-' + Date.now() + '-' + Math.random().toString(16).slice(2)).then(function (result) {
+      data.notice = { i18n: 'app.crypto_conversion_done' };
+      return loadWallet();
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+  }
+
+  function applyGameEconomyForm(form) {
+    var values = formValues(form);
+    var mode = values.mode || 'mga';
+    var cents = parseInt(values.stake_usd_cents || '10', 10);
+    data.gameSettings = {
+      mode: mode === 'crypto' ? 'crypto' : 'mga',
+      stakeUsdCents: cents,
+      asset: String(values.asset || 'USDT').toUpperCase(),
+      network: String(values.network || 'tron').toLowerCase(),
+    };
+    if (data.gameSettings.mode !== 'crypto') data.gameSettings.stakeUsdCents = 0;
+    data.notice = { i18n: 'app.game_economy_saved' };
+    render();
   }
 
   function handleCreateRoom(form) {

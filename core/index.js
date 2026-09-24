@@ -15,6 +15,8 @@ const { buildGateway } = require('./gateway');
 const { buildSocketIo, socketAuthMiddleware, createServer } = require('./socketio');
 const { buildPaymentGateway } = require('./payments');
 const { buildCryptoLedger } = require('./crypto-ledger');
+const { buildCryptoEconomy } = require('./crypto-economy');
+const { buildCryptoConversion } = require('./crypto-conversion');
 const { createObservability } = require('./observability');
 const contracts = require('./contracts');
 
@@ -26,12 +28,14 @@ function createDataLayer(options = {}) {
   const auth = buildAuth(db, repos);
   const wallet = buildCentralWallet(db);
   const cryptoLedger = buildCryptoLedger(db);
-  const gameWallet = buildGameWallet({ db, repos, options: options.house || {} });
+  const paymentEnv = (options.payments || {}).env || process.env;
+  const cryptoEconomy = buildCryptoEconomy({ env: paymentEnv });
+  const gameWallet = buildGameWallet({ db, repos, cryptoLedger, cryptoEconomy, env: paymentEnv, options: options.house || {} });
   const gatewayOptions = {
     ...(options.gateway || {}),
   };
   const domino = buildDominoGame({ db, repos, gameWallet, options: options.domino });
-  const loto = buildLotoGame({ db, repos, wallet, gameWallet, options: options.loto });
+  const loto = buildLotoGame({ db, repos, wallet, gameWallet, cryptoLedger, options: options.loto });
   const rami = buildRamiGame({ db, repos, gameWallet, options: options.rami });
   const localRecords = buildLocalRecords({
     db,
@@ -52,10 +56,11 @@ function createDataLayer(options = {}) {
     repos,
     cryptoLedger,
     credentials: (options.payments || {}).credentials,
-    env: (options.payments || {}).env || process.env,
+    env: paymentEnv,
     transport: (options.payments || {}).transport,
     callbackUrl: (options.payments || {}).callbackUrl,
   });
+  const cryptoConversion = buildCryptoConversion({ db, repos, cryptoLedger, cryptoEconomy, gameWallet, env: paymentEnv });
   const idempotency = contracts.createIdempotencyStore();
   const ledger = {
     append: (input) => appendLedger(db, input),
@@ -74,6 +79,8 @@ function createDataLayer(options = {}) {
     auth,
     wallet,
     cryptoLedger,
+    cryptoEconomy,
+    cryptoConversion,
     gameWallet,
     ledger,
     domino,

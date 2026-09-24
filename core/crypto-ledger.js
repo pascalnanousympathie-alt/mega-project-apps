@@ -88,8 +88,10 @@ function buildCryptoLedger(db) {
     const reservedBefore = normalizeDecimal(balance.reserved_amount);
     let availableAfter = availableBefore;
     let reservedAfter = reservedBefore;
-    if (input.tx_type === 'deposit') {
+    if (input.tx_type === 'deposit' || input.tx_type === 'credit') {
       availableAfter = addDecimal(availableBefore, amount);
+    } else if (input.tx_type === 'debit') {
+      availableAfter = subtractDecimal(availableBefore, amount);
     } else if (input.tx_type === 'withdrawal_reserve') {
       availableAfter = subtractDecimal(availableBefore, amount);
       reservedAfter = addDecimal(reservedBefore, amount);
@@ -132,6 +134,15 @@ function buildCryptoLedger(db) {
       ...input, tx_type: 'deposit',
       idempotency_key: input.idempotency_key,
     }));
+  }
+  function creditWithinTx(input) {
+    return appendWithinTx({ ...input, tx_type: input.tx_type || 'credit', idempotency_key: input.idempotency_key });
+  }
+  function debit(input) {
+    return withTx(() => appendWithinTx({ ...input, tx_type: 'debit', idempotency_key: input.idempotency_key }));
+  }
+  function debitWithinTx(input) {
+    return appendWithinTx({ ...input, tx_type: 'debit', idempotency_key: input.idempotency_key });
   }
   function reserve(input) {
     return withTx(() => appendWithinTx({
@@ -185,6 +196,14 @@ function buildCryptoLedger(db) {
     }
     return { ok: true, entries: rows.length, balances: balances.length };
   }
+  function debit(input) {
+    return withTx(() => appendWithinTx({ ...input, tx_type: 'debit', idempotency_key: input.idempotency_key }));
+  }
+
+  function debitWithinTx(input) {
+    return appendWithinTx({ ...input, tx_type: 'debit', idempotency_key: input.idempotency_key });
+  }
+
   function createWithdrawal(input) {
     return withTx(() => {
       const ts = nowIso(); const id = genId();
@@ -221,8 +240,9 @@ function buildCryptoLedger(db) {
 
   return {
     normalizeDecimal, addDecimal, subtractDecimal, compareDecimal, cryptoAmount,
-    getBalance, listBalances, listEntries, credit, reserve, release, settle,
+    getBalance, listBalances, listEntries, credit, debit, reserve, release, settle,
     creditWithinTx: appendWithinTx,
+    debitWithinTx,
     reserveWithinTx: appendWithinTx,
     releaseWithinTx: appendWithinTx,
     settleWithinTx: appendWithinTx,

@@ -41,6 +41,13 @@ const ERROR_STATUS = {
   E_CRYPTO_AMOUNT: 400,
   E_CRYPTO_INSUFFICIENT_FUNDS: 409,
   E_CRYPTO_SETTLEMENT_UNSUPPORTED: 409,
+  E_CONVERSION_DIRECTION: 400,
+  E_FX_RATE_CONFIG: 400,
+  E_FX_RATE_UNAVAILABLE: 409,
+  E_FX_RATE_INVALID: 400,
+  E_HOUSE_INSUFFICIENT_MGA: 409,
+  E_HOUSE_INSUFFICIENT_CRYPTO: 409,
+  E_STAKE_AMOUNT: 400,
   E_CRYPTO_LEDGER_LINK: 500,
   E_CRYPTO_LEDGER_HASH: 500,
   E_CRYPTO_LEDGER_RECONCILE: 500,
@@ -309,6 +316,19 @@ const CRYPTO_WITHDRAWAL_BODY = {
   additionalProperties: false,
 };
 
+const CRYPTO_CONVERSION_BODY = {
+  type: 'object',
+  required: ['direction', 'asset', 'network'],
+  properties: {
+    direction: { type: 'string', enum: ['crypto_to_mga', 'mga_to_crypto'] },
+    asset: { type: 'string', pattern: '^[A-Z][A-Z0-9._-]{1,31}$' },
+    network: { type: 'string', enum: ['bitcoin', 'ethereum', 'tron', 'polygon', 'bsc', 'arbitrum', 'optimism', 'base', 'solana'] },
+    amount_crypto: { type: 'string', minLength: 1, maxLength: 60, pattern: '^\\d+(?:\\.\\d{1,18})?$' },
+    amount_mga_milli: { type: 'integer', minimum: 1, maximum: 1000000000000 },
+  },
+  additionalProperties: false,
+};
+
 const CRYPTO_WITHDRAWAL_VERIFY_BODY = {
   type: 'object',
   required: ['verification_code'],
@@ -469,6 +489,36 @@ const REST_ROUTES = [
     auth: 'bearer',
     idempotent: false,
     query: { type: 'object' },
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto.economy',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/crypto/economy',
+    auth: 'bearer',
+    idempotent: false,
+    query: { type: 'object' },
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto.conversions.list',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/crypto/conversions',
+    auth: 'bearer',
+    idempotent: false,
+    query: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 500 } } },
+    response: { type: 'array' },
+  },
+  {
+    id: 'crypto.conversions.create',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/crypto/conversions',
+    auth: 'bearer',
+    idempotent: true,
+    body: CRYPTO_CONVERSION_BODY,
     response: { type: 'object' },
   },
   {

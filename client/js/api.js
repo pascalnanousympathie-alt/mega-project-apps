@@ -114,6 +114,16 @@
       cryptoCurrencies: function () {
         return request('GET', '/crypto/currencies');
       },
+      cryptoEconomy: function () {
+        return request('GET', '/crypto/economy');
+      },
+      cryptoConversions: function (limit) {
+        var q = limit ? '?limit=' + encodeURIComponent(String(limit)) : '';
+        return request('GET', '/crypto/conversions' + q);
+      },
+      createCryptoConversion: function (body, key) {
+        return request('POST', '/crypto/conversions', { body: body, idempotency: key || true });
+      },
       cryptoBalances: function () {
         return request('GET', '/crypto/balances');
       },

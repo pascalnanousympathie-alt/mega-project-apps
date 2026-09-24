@@ -259,7 +259,8 @@ function categoriesForTicket(grid, drawn) {
 function normalizePayout(configured) {
   const out = {};
   for (const key of ['quine', 'carton_plein', 'commission']) {
-    const value = configured && Number.isFinite(configured[key]) ? configured[key] : DEFAULT_PAYOUT[key];
+    const configuredValue = configured && Number.isFinite(configured[key]) ? configured[key] : DEFAULT_PAYOUT[key];
+    const value = key === 'commission' ? DEFAULT_PAYOUT.commission : configuredValue;
     out[key] = Math.min(Math.max(value, 0), 1);
   }
   return out;

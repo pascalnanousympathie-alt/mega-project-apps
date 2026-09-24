@@ -60,6 +60,11 @@ function freshState(m) {
     ticketByUser: {},
     pool_milli: 0,
     entry_fees_milli: 0,
+    crypto_pool_usd_cents: 0,
+    crypto_entry_count: 0,
+    crypto_prize_usd_cents: 0,
+    crypto_commission_usd_cents: 0,
+    crypto_pool_remainder_usd_cents: 0,
     drawn_index: 0,
     drawn: [],
     marks: {},
@@ -83,30 +88,25 @@ function computeSettlement(st) {
     for (const category of categories) byCategory[category].push(ticket.index);
   }
   for (const category of CATEGORIES) byCategory[category].sort((a, b) => a - b);
-  const result = computePayouts(st.pool_milli, byCategory, st.settings.payout);
+  const cryptoMode = st.settings && st.settings.economy && st.settings.economy.mode === 'crypto';
+  const pool = cryptoMode ? st.crypto_pool_usd_cents : st.pool_milli;
+  const result = computePayouts(pool, byCategory, st.settings.payout);
   const userPrize = {};
-  for (const p of result.prize) {
-    userPrize[p.ticketIndex] = (userPrize[p.ticketIndex] || 0) + p.amount_milli;
-  }
-  const winners = st.tickets
-    .map((t) => ({
-      ticketIndex: t.index,
-      userId: t.userId,
-      categories: st.marks[t.index] ? st.marks[t.index].categories.slice() : [],
-      prize_milli: userPrize[t.index] || 0,
-    }))
-    .sort((a, b) => a.ticketIndex - b.ticketIndex);
+  for (const p of result.prize) userPrize[p.ticketIndex] = (userPrize[p.ticketIndex] || 0) + p.amount_milli;
+  const winners = st.tickets.map((t) => ({
+    ticketIndex: t.index,
+    userId: t.userId,
+    categories: st.marks[t.index] ? st.marks[t.index].categories.slice() : [],
+    prize_milli: cryptoMode ? 0 : (userPrize[t.index] || 0),
+    prize_usd_cents: cryptoMode ? (userPrize[t.index] || 0) : 0,
+  })).sort((a, b) => a.ticketIndex - b.ticketIndex);
   const payouts = result.prize.map((p) => {
     const t = st.tickets[p.ticketIndex];
-    return { ...p, userId: t ? t.userId : null };
+    return { ...p, userId: t ? t.userId : null, amount_usd_cents: cryptoMode ? p.amount_milli : 0 };
   });
-  return {
-    winners,
-    payouts,
-    prize_milli: result.prize_milli,
-    commission_milli: result.commission_milli,
-    pool_remainder_milli: result.remainder_milli,
-  };
+  return cryptoMode
+    ? { winners, payouts, prize_milli: 0, commission_milli: 0, pool_remainder_milli: 0, prize_usd_cents: result.prize_milli, commission_usd_cents: result.commission_milli, pool_remainder_usd_cents: result.remainder_milli }
+    : { winners, payouts, prize_milli: result.prize_milli, commission_milli: result.commission_milli, pool_remainder_milli: result.remainder_milli, prize_usd_cents: 0, commission_usd_cents: 0, pool_remainder_usd_cents: 0 };
 }
 
 function refreshMarks(st) {
@@ -166,8 +166,13 @@ function applySpec(st, spec) {
       st.players.push({ userId: spec.userId, kind: ticket.kind, joinedAt: null });
       st.tickets.push(ticket);
       st.ticketByUser[spec.userId] = ticket.index;
-      st.pool_milli += spec.entryFee;
-      st.entry_fees_milli += spec.entryFee;
+      if (st.settings && st.settings.economy && st.settings.economy.mode === 'crypto') {
+        st.crypto_pool_usd_cents += st.settings.economy.stake_usd_cents;
+        st.crypto_entry_count += 1;
+      } else {
+        st.pool_milli += spec.entryFee;
+        st.entry_fees_milli += spec.entryFee;
+      }
       st.version += 1;
       return;
     }
@@ -195,6 +200,9 @@ function applySpec(st, spec) {
       st.prize_milli = result.prize_milli;
       st.commission_milli = result.commission_milli;
       st.pool_remainder_milli = result.pool_remainder_milli;
+      st.crypto_prize_usd_cents = result.prize_usd_cents;
+      st.crypto_commission_usd_cents = result.commission_usd_cents;
+      st.crypto_pool_remainder_usd_cents = result.pool_remainder_usd_cents;
       st.status = 'finished';
       st.finishedAt = spec.finishedAt || nowIso();
       st.version += 1;
@@ -215,6 +223,7 @@ function buildLotoGame(deps) {
   const db = deps && deps.db;
   const repos = deps && deps.repos;
   const gameWallet = (deps && deps.gameWallet) || null;
+  const cryptoLedger = (deps && deps.cryptoLedger) || null;
   ok(db, 'E_ARG', 'loto game requires db');
   ok(repos, 'E_ARG', 'loto game requires repos');
 
@@ -226,7 +235,10 @@ function buildLotoGame(deps) {
 
   function loadDraw(row) {
     const settings = JSON.parse(row.settings_json || '{}');
-    const state = JSON.parse(row.state_json || '{}');
+    const parsedState = JSON.parse(row.state_json || '{}');
+    const state = { ...freshState({ ...row, settings }), ...parsedState };
+    if (!Array.isArray(state.payouts)) state.payouts = [];
+    if (!Array.isArray(state.winners)) state.winners = [];
     const stateHash = row.state_hash;
     return { ...row, settings, state, state_hash: stateHash };
   }
@@ -352,6 +364,62 @@ function buildLotoGame(deps) {
   }
 
   function applyMoney(m, spec) {
+    const econ = m.state.settings && m.state.settings.economy;
+    if (econ && econ.mode === 'crypto') {
+      if (spec.eventType === 'ticket') {
+        gameWallet.chargeCryptoEntryFeeWithinTx({
+          gameKind: 'loto', gameId: m.id, userId: spec.userId,
+          stakeUsdCents: econ.stake_usd_cents, asset: econ.asset, network: econ.network,
+          eventHash: spec.hash,
+        });
+        return;
+      }
+      if (spec.eventType === 'settle') {
+        for (const payout of m.state.payouts) {
+          if (!(payout.amount_usd_cents > 0) || isBot(payout.userId)) continue;
+          gameWallet.creditCryptoPrizeWithinTx({
+            gameKind: 'loto', gameId: m.id, userId: payout.userId,
+            amountUsdCents: payout.amount_usd_cents,
+            asset: econ.asset, network: econ.network,
+            ref: String(payout.ticketIndex) + ':' + String(payout.category), eventHash: spec.hash,
+          });
+        }
+        const auditExists = db.prepare("SELECT id FROM audit_entries WHERE action = 'game.crypto_commission.credited' AND target_type = 'game' AND target_id = ? LIMIT 1").get(m.id);
+        if (!auditExists) {
+          repos.recordAudit({
+            actorType: 'system',
+            actorId: gameWallet.houseWallet().user_id,
+            action: 'game.crypto_commission.credited',
+            targetType: 'game',
+            targetId: m.id,
+            detail: {
+              game_kind: 'loto',
+              commission_fraction: 0.1,
+              stake_usd_cents: econ.stake_usd_cents,
+              pot_usd_cents: m.state.crypto_pool_usd_cents,
+              commission_usd_cents: m.state.crypto_commission_usd_cents,
+              prize_usd_cents: m.state.crypto_prize_usd_cents,
+              asset: econ.asset,
+              network: econ.network,
+              admin_revenue: true,
+            },
+          });
+        }
+        return;
+      }
+      if (spec.eventType === 'cancel') {
+        for (const ticket of m.state.tickets) {
+          if (isBot(ticket.userId)) continue;
+          gameWallet.refundCryptoEntryWithinTx({
+            gameKind: 'loto', gameId: m.id, userId: ticket.userId,
+            stakeUsdCents: econ.stake_usd_cents, asset: econ.asset, network: econ.network,
+            eventHash: spec.hash,
+          });
+        }
+        return;
+      }
+      return;
+    }
     if (spec.eventType === 'ticket' && spec.entryFee > 0) {
       const wallet = walletFor(spec.userId);
       ok(wallet, 'E_NO_WALLET', 'player has no wallet to pay the entry fee');
@@ -435,6 +503,10 @@ function buildLotoGame(deps) {
       ok(game.kind === 'loto', 'E_ARG', 'room does not belong to loto game');
     }
     const settings = normalizeSettings(input && input.settings, mode);
+    if (gameWallet) {
+      settings.economy = gameWallet.normalizeEconomy(input && input.settings, mode);
+      if (settings.economy.mode === 'crypto') settings.entryFee = 0;
+    }
     const explicitBalls = validateExplicitBalls((input && input.settings && input.settings.balls) || null);
     if (explicitBalls) settings.balls = explicitBalls.slice();
     const seed = settings.seed || genId() + ':' + crypto.randomBytes(8).toString('hex');
@@ -723,6 +795,43 @@ function buildLotoGame(deps) {
   }
 
   function verifyWalletHandshake(m) {
+    const econ = m.state.settings && m.state.settings.economy;
+    if (econ && econ.mode === 'crypto') {
+      ok(cryptoLedger, 'E_CRYPTO_ECONOMY', 'crypto ledger is unavailable');
+      const humanTickets = m.state.tickets.filter((t) => !isBot(t.userId));
+      for (const ticket of humanTickets) {
+        const key = m.state.status === 'cancelled'
+          ? 'loto:crypto-refund:' + m.id + ':' + ticket.userId
+          : 'loto:crypto-stake:' + m.id + ':' + ticket.userId;
+        const row = cryptoLedger.listEntries(cryptoLedger.getBalance(ticket.userId, econ.asset, econ.network)?.id || '', 500)
+          .find((entry) => entry.idempotency_key === key);
+        if (!row || (row.tx_type !== 'debit' && row.tx_type !== 'credit')) throw new DataError('E_TAMPER', 'crypto ticket ledger missing for ' + ticket.userId);
+        if (cryptoLedger.normalizeDecimal(row.amount) !== cryptoLedger.normalizeDecimal(econ.amount_crypto)) throw new DataError('E_TAMPER', 'crypto ticket amount mismatch for draw ' + m.id);
+      }
+      const house = gameWallet ? gameWallet.houseWallet() : null;
+      if (!house) throw new DataError('E_TAMPER', 'crypto house wallet missing for draw ' + m.id);
+      for (const payout of m.state.payouts) {
+        if (!(payout.amount_usd_cents > 0) || isBot(payout.userId)) continue;
+        const ref = String(payout.ticketIndex) + ':' + String(payout.category);
+        const entries = cryptoLedger.listEntries(cryptoLedger.getBalance(house.user_id, econ.asset, econ.network)?.id || '', 500);
+        const debit = entries.find((entry) => entry.idempotency_key === 'loto:crypto-prize-pot:' + m.id + ':' + ref);
+        const userBalance = cryptoLedger.getBalance(payout.userId, econ.asset, econ.network);
+        const credit = userBalance ? cryptoLedger.listEntries(userBalance.id, 500).find((entry) => entry.idempotency_key === 'loto:crypto-prize:' + m.id + ':' + ref) : null;
+        if (!debit || !credit) throw new DataError('E_TAMPER', 'crypto prize ledger missing for draw ' + m.id);
+      }
+      if (m.state.status === 'finished') {
+        const expectedCommission = Math.floor(m.state.crypto_pool_usd_cents * 0.1);
+        const audit = db.prepare("SELECT * FROM audit_entries WHERE action = 'game.crypto_commission.credited' AND target_type = 'game' AND target_id = ? LIMIT 1").get(m.id);
+        if (!audit) throw new DataError('E_TAMPER', 'crypto commission audit missing for draw ' + m.id);
+        let detail = {};
+        try { detail = JSON.parse(audit.detail_json || '{}'); } catch (_) {}
+        if (detail.commission_fraction !== 0.1 || detail.commission_usd_cents !== expectedCommission || detail.admin_revenue !== true) {
+          throw new DataError('E_TAMPER', 'crypto commission audit mismatch for draw ' + m.id);
+        }
+      }
+      const ledgerCheck = cryptoLedger.verify();
+      return { ok: true, mode: 'crypto', ledger: ledgerCheck };
+    }
     for (const payout of m.state.payouts) {
       if (payout.amount_milli <= 0 || isBot(payout.userId)) continue;
       const wallet = repos.getWalletByUser(payout.userId);

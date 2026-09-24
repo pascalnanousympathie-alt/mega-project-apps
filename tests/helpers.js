@@ -5,9 +5,9 @@ const path = require('node:path');
 const assert = require('node:assert');
 const { createDataLayer } = require('../core');
 
-function makeDataLayer(t) {
+function makeDataLayer(t, options = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'acep-p04-'));
-  const layer = createDataLayer({ dataDir: dir });
+  const layer = createDataLayer({ ...options, dataDir: dir });
   t.after(() => {
     try {
       layer.close();

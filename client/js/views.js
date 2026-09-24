@@ -124,7 +124,7 @@
     );
   }
 
-  function renderCryptoWallets(l, wallets, currencies, balances, withdrawals, deposit) {
+  function renderCryptoWallets(l, wallets, currencies, balances, withdrawals, deposit, cryptoEconomy, conversions) {
     var rows = (wallets || []).map(function (wallet) {
       var shortAddress = wallet.address.length > 18 ? wallet.address.slice(0, 10) + '…' + wallet.address.slice(-8) : wallet.address;
       return '<li class="crypto-wallet" data-crypto-wallet-id="' + esc(wallet.id) + '">' +
@@ -171,9 +171,29 @@
         (depositDetails.pay_address ? '<br><code>' + esc(depositDetails.pay_address) + '</code>' : '') +
         (depositDetails.invoice_url ? '<br><a class="btn" target="_blank" rel="noopener noreferrer" href="' + esc(depositDetails.invoice_url) + '">' + esc(tr(l, 'crypto.open_payment')) + '</a>' : '') +
         '</div>' : '';
+    var eco = cryptoEconomy || {};
+    var stakeChoices = (eco.allowed_stake_usd || [0.1, 0.5, 1, 2, 5]).map(function (usd) {
+      var cents = Math.round(Number(usd) * 100);
+      return '<option value="' + esc(cents) + '">$' + esc(Number(usd).toFixed(2).replace(/0+$/, '').replace(/\\.$/, '')) + '</option>';
+    }).join('');
+    var conversionRows = (conversions || []).slice(0, 12).map(function (c) {
+      return '<li><strong>' + esc(c.direction) + '</strong> · ' + esc(c.amount_crypto) + ' ' + esc(c.asset) + ' → ' + esc(String(c.amount_mga_milli)) + ' Ar · ' + esc(String(c.created_at || '')) + '</li>';
+    }).join('');
+    var conversionRate = eco && eco.mga_per_usd ? ' · 1 USD = ' + String(eco.mga_per_usd) + ' Ar' : '';
     return '<section class="crypto-wallets" data-testid="crypto-wallets">' +
       '<h3>' + esc(tr(l, 'crypto.title')) + '</h3>' +
       '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' + depositBox +
+      '<div class="crypto-economy"><h4>' + esc(tr(l, 'crypto.game_stakes')) + '</h4>' +
+      '<p class="hint">' + esc(tr(l, 'crypto.game_stakes_hint')) + esc(conversionRate) + '</p>' +
+      '<span>$0.10 · $0.50 · $1 · $2 · $5</span></div>' +
+      '<h4>' + esc(tr(l, 'crypto.conversion')) + '</h4>' +
+      '<form data-form="crypto-conversion">' +
+      '<label>' + esc(tr(l, 'crypto.direction')) + ' <select name="direction" required><option value="crypto_to_mga">Crypto → MGA</option><option value="mga_to_crypto">MGA → Crypto</option></select></label>' +
+      '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="asset" list="crypto-currency-catalog" value="USDT" required></label>' +
+      '<label>' + esc(tr(l, 'crypto.network')) + ' <select name="network" required><option value="tron">TRON</option><option value="ethereum">Ethereum</option><option value="polygon">Polygon</option><option value="bsc">BSC</option><option value="solana">Solana</option><option value="base">Base</option><option value="bitcoin">Bitcoin</option></select></label>' +
+      '<label>' + esc(tr(l, 'crypto.amount')) + ' <input name="amount" inputmode="decimal" placeholder="1" required></label>' +
+      '<button type="submit">' + esc(tr(l, 'crypto.convert')) + '</button></form>' +
+      '<ul class="crypto-conversions">' + (conversionRows || '<li class="empty">' + esc(tr(l, 'crypto.no_conversions')) + '</li>') + '</ul>' +
       '<h4>' + esc(tr(l, 'crypto.balances')) + '</h4>' +
       '<ul>' + (balanceRows || '<li class="empty">' + esc(tr(l, 'crypto.no_balances')) + '</li>') + '</ul>' +
       '<h4>' + esc(tr(l, 'crypto.deposit')) + '</h4>' +
@@ -206,7 +226,7 @@
     var wallet = s.wallet;
     var entries = s.entries || [];
     var cryptoWallets = s.cryptoWallets || [];
-    var cryptoSection = renderCryptoWallets(l, cryptoWallets, s.cryptoCurrencies || [], s.cryptoBalances || [], s.cryptoWithdrawals || [], s.cryptoDeposit || null);
+    var cryptoSection = renderCryptoWallets(l, cryptoWallets, s.cryptoCurrencies || [], s.cryptoBalances || [], s.cryptoWithdrawals || [], s.cryptoDeposit || null, s.cryptoEconomy || null, s.cryptoConversions || []);
     if (!wallet) {
       return (
         '<section class="screen wallet" data-screen="wallet" lang="' + esc(l) + '"><h2>' + esc(tr(l, 'wallet.title')) + '</h2>' +
@@ -283,6 +303,14 @@
       '<h2>' + esc(tr(l, 'waiting.room', { name: esc(room.name) })) + '</h2>' +
       '<p class="status">' + esc(statusLabel(l, room.status)) + ' \u00b7 ' + esc(players.length) + '/' + esc(room.capacity) + '</p>' +
       '<ul class="players" data-testid="players">' + (rows || '<li class="empty">' + esc(tr(l, 'waiting.solo')) + '</li>') + '</ul>' +
+      '<form class="game-economy" data-form="game-economy">' +
+      '<h3>' + esc(tr(l, 'waiting.mise_title')) + '</h3>' +
+      '<label>' + esc(tr(l, 'waiting.mise_mode')) + ' <select name="mode"><option value="mga">MGA</option><option value="crypto">Crypto</option></select></label>' +
+      '<label>' + esc(tr(l, 'waiting.mga_stake')) + ' <select name="entry_fee_milli"><option value="500">500 Ar</option><option value="1000" selected>1 000 Ar</option><option value="2000">2 000 Ar</option><option value="5000">5 000 Ar</option><option value="10000">10 000 Ar</option><option value="20000">20 000 Ar</option></select></label>' +
+      '<label>' + esc(tr(l, 'waiting.crypto_stake')) + ' <select name="stake_usd_cents"><option value="10">$0.10</option><option value="50">$0.50</option><option value="100">$1</option><option value="200">$2</option><option value="500">$5</option></select></label>' +
+      '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="asset" value="USDT" required></label>' +
+      '<label>' + esc(tr(l, 'crypto.network')) + ' <select name="network"><option value="tron">TRON</option><option value="ethereum">Ethereum</option><option value="polygon">Polygon</option><option value="bsc">BSC</option><option value="solana">Solana</option><option value="base">Base</option></select></label>' +
+      '<button type="submit">' + esc(tr(l, 'waiting.mise_save')) + '</button></form>' +
       (actions.ready ? '<button data-action="ready">' + esc(tr(l, 'waiting.ready')) + '</button>' : '') +
       (actions.unready ? '<button data-action="unready">' + esc(tr(l, 'waiting.unready')) + '</button>' : '') +
       (actions.start ? '<button data-action="start-game">' + esc(tr(l, 'waiting.start')) + '</button>' : '') +

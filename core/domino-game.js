@@ -368,40 +368,46 @@ function buildDominoGame(deps) {
   function applyMoney(m, spec) {
     if (!gameWallet) return;
     const econ = m.settings && m.settings.economy;
-    if (!econ || !Number.isSafeInteger(econ.entry_fee_milli) || econ.entry_fee_milli <= 0) return;
+    if (!econ) return;
     const st = m.state;
-    if (spec.moveType === 'start') {
-      gameWallet.chargeEntryFees({
-        gameKind: 'domino',
-        gameId: m.id,
-        players: st.players,
-        entryFeeMilli: econ.entry_fee_milli,
+    if (econ.mode === 'crypto') {
+      const cryptoInput = {
+        gameKind: 'domino', gameId: m.id, players: st.players,
+        stakeUsdCents: econ.stake_usd_cents, asset: econ.asset, network: econ.network,
         eventHash: spec.hash,
-      });
-      return;
-    }
-    if (spec.moveType === 'cancel') {
-      if (st.startedAt) {
-        gameWallet.refundEntries({
-          gameKind: 'domino',
-          gameId: m.id,
-          players: st.players,
-          entryFeeMilli: econ.entry_fee_milli,
-          eventHash: spec.hash,
+      };
+      if (spec.moveType === 'start') {
+        gameWallet.chargeCryptoEntryFeesWithinTx(cryptoInput);
+        return;
+      }
+      if (spec.moveType === 'cancel') {
+        if (st.startedAt) {
+          for (const player of st.players.filter((p) => p && p.kind !== 'bot')) {
+            gameWallet.refundCryptoEntryWithinTx({ ...cryptoInput, userId: player.userId });
+          }
+        }
+        return;
+      }
+      if (st.status === 'finished') {
+        gameWallet.settlePot({
+          gameKind: 'domino', gameId: m.id, players: st.players,
+          economy: econ, commissionFraction: econ.commission_fraction,
+          winnerUserId: st.winnerUserId, eventHash: spec.hash,
         });
       }
       return;
     }
+    if (!Number.isSafeInteger(econ.entry_fee_milli) || econ.entry_fee_milli <= 0) return;
+    if (spec.moveType === 'start') {
+      gameWallet.chargeEntryFees({ gameKind: 'domino', gameId: m.id, players: st.players, entryFeeMilli: econ.entry_fee_milli, eventHash: spec.hash });
+      return;
+    }
+    if (spec.moveType === 'cancel') {
+      if (st.startedAt) gameWallet.refundEntries({ gameKind: 'domino', gameId: m.id, players: st.players, entryFeeMilli: econ.entry_fee_milli, eventHash: spec.hash });
+      return;
+    }
     if (st.status === 'finished') {
-      gameWallet.settlePot({
-        gameKind: 'domino',
-        gameId: m.id,
-        players: st.players,
-        entryFeeMilli: econ.entry_fee_milli,
-        commissionFraction: econ.commission_fraction,
-        winnerUserId: st.winnerUserId,
-        eventHash: spec.hash,
-      });
+      gameWallet.settlePot({ gameKind: 'domino', gameId: m.id, players: st.players, entryFeeMilli: econ.entry_fee_milli, commissionFraction: econ.commission_fraction, winnerUserId: st.winnerUserId, eventHash: spec.hash });
     }
   }
 

@@ -56,12 +56,14 @@ function onlineRoom(layer, kind, host, capacity = 2) {
 
 test('economy normalization and pot math are deterministic', () => {
   assert.deepEqual(gameWalletModule.normalizeEconomy({ entryFee: 1000 }, 'online'), {
+    mode: 'mga',
+    currency: 'MGA',
     entry_fee_milli: 1000,
     commission_fraction: 0.1,
   });
   assert.equal(gameWalletModule.normalizeEconomy({ entryFee: 1000 }, 'offline').entry_fee_milli, 0);
   assert.equal(gameWalletModule.normalizeEconomy({ entryFee: -5 }, 'online').entry_fee_milli, 0);
-  assert.equal(gameWalletModule.normalizeEconomy({ entryFee: 100, commission: 0.25 }, 'online').commission_fraction, 0.25);
+  assert.equal(gameWalletModule.normalizeEconomy({ entryFee: 100, commission: 0.25 }, 'online').commission_fraction, 0.1);
   assert.equal(gameWalletModule.normalizeEconomy({ entryFee: 100, commission: 2 }, 'online').commission_fraction, 0.1);
 
   const breakdown = gameWalletModule.potBreakdown(1000, 3, 0.1);

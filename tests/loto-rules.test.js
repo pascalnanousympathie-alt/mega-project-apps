@@ -173,12 +173,12 @@ test('computePayouts returns an empty plan for an empty or zero pool', () => {
   assert.equal(empty.remainder_milli, 0);
 });
 
-test('custom payout fractions are honored and clamped', () => {
+test('prize fractions are configurable while commission remains fixed at 10%', () => {
   const result = rules.computePayouts(100000, { quine: [1], carton_plein: [1] }, {
     quine: 0.5,
     carton_plein: 0.3,
     commission: 0.2,
   });
   assert.equal(result.prize_milli, 80000);
-  assert.equal(result.commission_milli, 20000);
+  assert.equal(result.commission_milli, 10000);
 });

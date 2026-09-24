@@ -360,6 +360,37 @@ function buildApiHandlers(layer) {
     return layer.payments.listCurrencies('nowpayments');
   };
 
+  handlers['crypto.economy'] = (ctx) => {
+    session(ctx);
+    let mgaPerUsd = null;
+    let conversionReady = false;
+    try { mgaPerUsd = layer.cryptoEconomy.mgaPerUsd(); conversionReady = true; } catch (_) {}
+    return {
+      stake_usd: [0.1, 0.5, 1, 2, 5],
+      stake_usd_cents: [10, 50, 100, 200, 500],
+      default_asset: 'USDT',
+      default_network: 'tron',
+      stablecoin_usd_rate: 1,
+      mga_per_usd: mgaPerUsd,
+      conversion_ready: conversionReady,
+      supported_networks: ['bitcoin', 'ethereum', 'tron', 'polygon', 'bsc', 'arbitrum', 'optimism', 'base', 'solana'],
+    };
+  };
+
+  handlers['crypto.conversions.list'] = (ctx) => {
+    const { user } = session(ctx);
+    const limit = Number.isSafeInteger(ctx.query.limit) ? ctx.query.limit : 100;
+    return layer.cryptoConversion.list(user.id, limit);
+  };
+
+  handlers['crypto.conversions.create'] = (ctx) => {
+    const { user } = session(ctx);
+    const key = contracts.idempotencyKeyFrom(ctx.headers);
+    ok(key, 'E_IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header is required');
+    const result = layer.cryptoConversion.convert({ ...ctx.body, user_id: user.id, idempotency_key: key });
+    return { conversion: result.conversion, idempotent: result.idempotent === true };
+  };
+
   handlers['crypto-wallets.create'] = (ctx) => {
     const { user } = session(ctx);
     const wallet = repos.createCryptoWallet(user.id, {

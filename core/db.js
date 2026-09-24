@@ -498,7 +498,61 @@ CREATE INDEX idx_crypto_withdrawals_user ON crypto_withdrawals (user_id, created
 CREATE INDEX idx_crypto_withdrawals_status ON crypto_withdrawals (status, updated_at);
 `;
 
-const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8, SCHEMA_V9, SCHEMA_V10];
+const SCHEMA_V11 = `
+-- Extend the crypto ledger for auditable internal conversion and game settlement legs.
+ALTER TABLE crypto_ledger_entries RENAME TO crypto_ledger_entries_v10;
+CREATE TABLE crypto_ledger_entries (
+  seq               INTEGER PRIMARY KEY AUTOINCREMENT,
+  id                TEXT NOT NULL UNIQUE,
+  balance_id        TEXT NOT NULL REFERENCES crypto_balances(id) ON DELETE RESTRICT,
+  user_id           TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  asset             TEXT NOT NULL,
+  network           TEXT NOT NULL,
+  idempotency_key   TEXT NOT NULL,
+  tx_type           TEXT NOT NULL CHECK (tx_type IN ('deposit','credit','debit','withdrawal_reserve','withdrawal_release','withdrawal_settlement')),
+  amount            TEXT NOT NULL,
+  available_before  TEXT NOT NULL,
+  available_after   TEXT NOT NULL,
+  reserved_before   TEXT NOT NULL,
+  reserved_after    TEXT NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'committed' CHECK (status = 'committed'),
+  prev_hash         TEXT NOT NULL,
+  hash              TEXT NOT NULL UNIQUE,
+  meta_json         TEXT NOT NULL DEFAULT '{}',
+  created_at        TEXT NOT NULL,
+  UNIQUE (balance_id, idempotency_key)
+);
+INSERT INTO crypto_ledger_entries
+  (seq,id,balance_id,user_id,asset,network,idempotency_key,tx_type,amount,available_before,available_after,reserved_before,reserved_after,status,prev_hash,hash,meta_json,created_at)
+SELECT seq,id,balance_id,user_id,asset,network,idempotency_key,tx_type,amount,available_before,available_after,reserved_before,reserved_after,status,prev_hash,hash,meta_json,created_at
+FROM crypto_ledger_entries_v10 ORDER BY seq ASC;
+DROP TABLE crypto_ledger_entries_v10;
+CREATE INDEX idx_crypto_ledger_balance ON crypto_ledger_entries (balance_id, seq);
+CREATE INDEX idx_crypto_ledger_user ON crypto_ledger_entries (user_id, seq);
+
+CREATE TABLE crypto_conversions (
+  seq                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  id                   TEXT NOT NULL UNIQUE,
+  user_id              TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  direction            TEXT NOT NULL CHECK (direction IN ('crypto_to_mga','mga_to_crypto')),
+  asset                TEXT NOT NULL,
+  network              TEXT NOT NULL,
+  amount_crypto        TEXT NOT NULL,
+  amount_mga_milli     INTEGER NOT NULL CHECK (amount_mga_milli > 0),
+  amount_usd           TEXT NOT NULL,
+  usd_rate             TEXT NOT NULL,
+  mga_per_usd          TEXT NOT NULL,
+  status               TEXT NOT NULL CHECK (status IN ('completed','failed')),
+  idempotency_key      TEXT NOT NULL UNIQUE,
+  prev_hash            TEXT NOT NULL,
+  hash                 TEXT NOT NULL UNIQUE,
+  meta_json            TEXT NOT NULL DEFAULT '{}',
+  created_at           TEXT NOT NULL
+);
+CREATE INDEX idx_crypto_conversions_user ON crypto_conversions (user_id, created_at);
+`;
+
+const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8, SCHEMA_V9, SCHEMA_V10, SCHEMA_V11];
 
 function migrate(db) {
   const has = db.prepare(
