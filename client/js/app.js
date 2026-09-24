@@ -57,6 +57,9 @@
     entries: [],
     cryptoWallets: [],
     cryptoCurrencies: [],
+    cryptoBalances: [],
+    cryptoWithdrawals: [],
+    cryptoDeposit: null,
     snapshot: null,
     gameSnapshot: null,
     selectedTile: null,
@@ -173,6 +176,9 @@
           entries: data.entries,
           cryptoWallets: data.cryptoWallets,
           cryptoCurrencies: data.cryptoCurrencies,
+          cryptoBalances: data.cryptoBalances,
+          cryptoWithdrawals: data.cryptoWithdrawals,
+          cryptoDeposit: data.cryptoDeposit,
           locale: locale,
         })
       );
@@ -248,16 +254,27 @@
     });
   }
 
+  function loadCryptoState() {
+    return Promise.all([api.cryptoBalances(), api.cryptoWithdrawals(50)]).then(function (res) {
+      data.cryptoBalances = res[0] || [];
+      data.cryptoWithdrawals = res[1] || [];
+      render();
+      return data.cryptoBalances;
+    }, function (err) {
+      data.error = err.message;
+      render();
+      return [];
+    });
+  }
+
   function loadWallet() {
-    if (!data.me || !data.me.wallet) {
-      data.wallet = null;
+    data.wallet = data.me && data.me.wallet ? data.me.wallet : null;
+    if (!data.wallet) {
       data.entries = [];
       data.walletDetail = null;
-      render();
-      return Promise.resolve();
+      return loadCryptoState();
     }
-    data.wallet = data.me.wallet;
-    return Promise.all([api.wallet(data.wallet.id), api.walletEntries(data.wallet.id, 25)]).then(function (res) {
+    return Promise.all([api.wallet(data.wallet.id), api.walletEntries(data.wallet.id, 25), loadCryptoState()]).then(function (res) {
       data.walletDetail = res[0];
       data.wallet = res[0].wallet;
       data.entries = res[1] || [];
@@ -422,7 +439,75 @@
     };
     api.createCryptoWallet(body).then(function (result) {
       data.notice = { i18n: 'app.crypto_wallet_added', params: { asset: result.wallet && result.wallet.asset } };
-      return refreshMe().then(loadWallet);
+      return refreshMe().then(function () { return Promise.all([loadWallet(), loadCryptoCurrencies()]); });
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+  }
+
+  function handleCryptoDeposit(form) {
+    var values = formValues(form);
+    var amount = ACEP.format.parseMilliInput(values.amount_milli);
+    if (!amount || amount <= 0 || !values.pay_currency) {
+      data.error = { i18n: 'app.invalid_crypto_deposit' };
+      render();
+      return;
+    }
+    api.createDeposit({
+      provider: 'nowpayments',
+      direction: 'payin',
+      amount_milli: amount,
+      currency: 'USD',
+      pay_currency: values.pay_currency,
+      reference: 'crypto-deposit-' + Date.now(),
+      description: 'LudoMada crypto deposit',
+    }, 'crypto-deposit-' + Date.now()).then(function (result) {
+      data.cryptoDeposit = result;
+      data.notice = { i18n: 'app.crypto_deposit_created' };
+      return loadCryptoState();
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+  }
+
+  function handleCryptoWithdrawal(form) {
+    var values = formValues(form);
+    var amount = String(values.amount || '').trim();
+    if (!amount || !values.crypto_wallet_id) {
+      data.error = { i18n: 'app.invalid_crypto_withdrawal' };
+      render();
+      return;
+    }
+    var walletSelect = form.elements.crypto_wallet_id;
+    var selected = walletSelect && walletSelect.options[walletSelect.selectedIndex];
+    var payoutCurrency = (selected && selected.getAttribute('data-payout-currency')) || values.payout_currency;
+    if (!payoutCurrency) {
+      data.error = { i18n: 'app.invalid_crypto_withdrawal' };
+      render();
+      return;
+    }
+    api.createCryptoWithdrawal({
+      provider: 'nowpayments',
+      crypto_wallet_id: values.crypto_wallet_id,
+      amount: amount,
+      payout_currency: payoutCurrency,
+    }, 'crypto-withdraw-' + Date.now()).then(function (result) {
+      data.notice = { i18n: 'app.crypto_withdrawal_2fa' };
+      return loadCryptoState();
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+  }
+
+  function handleCryptoWithdrawalVerify(form) {
+    var values = formValues(form);
+    if (!values.withdrawal_id || !values.verification_code) return;
+    api.verifyCryptoWithdrawal(values.withdrawal_id, values.verification_code, 'crypto-verify-' + values.withdrawal_id).then(function () {
+      data.notice = { i18n: 'app.crypto_withdrawal_verified' };
+      return loadCryptoState();
     }, function (err) {
       data.error = err.message;
       render();
@@ -544,6 +629,16 @@
         render();
       });
     },
+    'sync-crypto-withdrawal': function (el) {
+      var withdrawalId = el.getAttribute('data-withdrawal-id');
+      api.syncCryptoWithdrawal(withdrawalId).then(function () {
+        data.notice = { i18n: 'app.crypto_withdrawal_synced' };
+        return loadCryptoState();
+      }, function (err) {
+        data.error = err.message;
+        render();
+      });
+    },
     'ready': function () {
       if (socket) socket.emit('room:ready', { ready: true });
     },
@@ -641,6 +736,9 @@
     else if (kind === 'register') handleRegister(form);
     else if (kind === 'deposit') handleDeposit(form);
     else if (kind === 'crypto-wallet') handleCryptoWallet(form);
+    else if (kind === 'crypto-deposit') handleCryptoDeposit(form);
+    else if (kind === 'crypto-withdraw') handleCryptoWithdrawal(form);
+    else if (kind === 'crypto-withdraw-verify') handleCryptoWithdrawalVerify(form);
     else if (kind === 'create-room') handleCreateRoom(form);
   });
 

@@ -124,52 +124,80 @@
     );
   }
 
-  function renderCryptoWallets(l, wallets, currencies) {
+  function renderCryptoWallets(l, wallets, currencies, balances, withdrawals, deposit) {
     var rows = (wallets || []).map(function (wallet) {
-      var shortAddress = wallet.address.length > 18
-        ? wallet.address.slice(0, 10) + '…' + wallet.address.slice(-8)
-        : wallet.address;
-      return (
-        '<li class="crypto-wallet" data-crypto-wallet-id="' + esc(wallet.id) + '">' +
-        '<strong>' + esc(wallet.asset) + '</strong> · <span>' + esc(wallet.network) + '</span> · <span>' + esc(wallet.provider) + '</span>' +
-        '<code title="' + esc(wallet.address) + '">' + esc(shortAddress) + '</code>' +
-        (wallet.label ? '<small>' + esc(wallet.label) + '</small>' : '') +
+      var shortAddress = wallet.address.length > 18 ? wallet.address.slice(0, 10) + '…' + wallet.address.slice(-8) : wallet.address;
+      return '<li class="crypto-wallet" data-crypto-wallet-id="' + esc(wallet.id) + '">' +
+        '<strong>' + esc(wallet.asset) + '/' + esc(wallet.network) + '</strong> · ' +
+        '<code title="' + esc(wallet.address) + '">' + esc(shortAddress) + '</code> · ' +
+        esc(wallet.provider) +
+        (wallet.label ? '<small> · ' + esc(wallet.label) + '</small>' : '') +
         '<button type="button" data-action="disable-crypto-wallet" data-crypto-wallet-id="' + esc(wallet.id) + '">' +
-        esc(tr(l, 'crypto.disable')) + '</button>' +
-        '</li>'
-      );
+        esc(tr(l, 'crypto.disable')) + '</button></li>';
     }).join('');
-    var catalog = (currencies && currencies.length ? currencies : ['btc', 'eth', 'usdttrc20', 'usdterc20', 'usdtbsc', 'usdtmatic', 'usdtsol', 'usdc', 'sol', 'trx']).slice(0, 200);
+    var balanceRows = (balances || []).map(function (b) {
+      return '<li><strong>' + esc(b.asset) + '/' + esc(b.network) + '</strong> · ' +
+        esc(tr(l, 'crypto.available')) + ': ' + esc(b.available_amount) +
+        ' · ' + esc(tr(l, 'crypto.reserved')) + ': ' + esc(b.reserved_amount) + '</li>';
+    }).join('');
+    var known = {
+      'BTC/bitcoin': 'btc', 'ETH/ethereum': 'eth', 'USDT/tron': 'usdttrc20',
+      'USDT/ethereum': 'usdterc20', 'USDT/bsc': 'usdtbsc', 'USDT/polygon': 'usdtmatic',
+      'USDC/ethereum': 'usdc', 'USDC/polygon': 'usdcmatic', 'USDC/solana': 'usdcsol',
+      'SOL/solana': 'sol', 'TRX/tron': 'trx'
+    };
+    var withdrawOptions = (wallets || []).map(function (wallet) {
+      var code = known[String(wallet.asset).toUpperCase() + '/' + String(wallet.network).toLowerCase()];
+      return code ? '<option value="' + esc(wallet.id) + '" data-payout-currency="' + esc(code) + '">' +
+        esc(wallet.asset) + ' / ' + esc(wallet.network) + ' → ' + esc(code.toUpperCase()) + '</option>' : '';
+    }).join('');
+    var withdrawalRows = (withdrawals || []).map(function (w) {
+      var verify = w.status === 'awaiting_2fa'
+        ? '<form data-form="crypto-withdraw-verify"><input type="hidden" name="withdrawal_id" value="' + esc(w.id) + '">' +
+          '<input name="verification_code" inputmode="numeric" autocomplete="one-time-code" minlength="4" maxlength="12" placeholder="2FA" required>' +
+          '<button type="submit">' + esc(tr(l, 'crypto.verify')) + '</button></form>' : '';
+      return '<li><strong>' + esc(w.amount) + ' ' + esc(w.payout_currency) + '</strong> · ' + esc(w.status) +
+        (w.provider_ref ? ' · #' + esc(w.provider_ref) : '') + verify +
+        (w.status === 'processing' ? '<button type="button" data-action="sync-crypto-withdrawal" data-withdrawal-id="' + esc(w.id) + '">' + esc(tr(l, 'crypto.sync')) + '</button>' : '') +
+        '</li>';
+    }).join('');
+    var catalog = (currencies && currencies.length ? currencies : ['btc','eth','usdttrc20','usdterc20','usdtbsc','usdtmatic','usdtsol','usdc','sol','trx']).slice(0, 200);
     var currencyOptions = catalog.map(function (code) {
       return '<option value="' + esc(code) + '">' + esc(code.toUpperCase()) + '</option>';
     }).join('');
-    return (
-      '<section class="crypto-wallets" data-testid="crypto-wallets">' +
+    var depositDetails = deposit && deposit.payment_details;
+    var depositBox = depositDetails
+      ? '<div class="crypto-deposit-result"><strong>' + esc(String(depositDetails.pay_amount || '')) + ' ' + esc(String(depositDetails.pay_currency || '').toUpperCase()) + '</strong>' +
+        (depositDetails.pay_address ? '<br><code>' + esc(depositDetails.pay_address) + '</code>' : '') +
+        (depositDetails.invoice_url ? '<br><a class="btn" target="_blank" rel="noopener noreferrer" href="' + esc(depositDetails.invoice_url) + '">' + esc(tr(l, 'crypto.open_payment')) + '</a>' : '') +
+        '</div>' : '';
+    return '<section class="crypto-wallets" data-testid="crypto-wallets">' +
       '<h3>' + esc(tr(l, 'crypto.title')) + '</h3>' +
-      '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' +
-      '<p class="hint">' + esc(tr(l, 'crypto.catalog')) + '</p>' +
-      '<ul>' + (rows || '<li class="empty">' + esc(tr(l, 'crypto.none')) + '</li>') + '</ul>' +
-      '<form data-form="crypto-wallet">' +
-      '<label>' + esc(tr(l, 'crypto.provider')) + ' <select name="provider" required>' +
-      '<option value="other">Wallet / injected provider</option><option value="metamask">MetaMask</option><option value="trust_wallet">Trust Wallet</option>' +
-      '<option value="coinbase_wallet">Coinbase Wallet</option><option value="walletconnect">WalletConnect</option>' +
-      '<option value="ledger">Ledger</option><option value="trezor">Trezor</option>' +
-      '</select></label>' +
-      '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="asset" list="crypto-currency-catalog" placeholder="USDT" required pattern="[A-Za-z0-9._-]{2,32}"></label>' +
+      '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' + depositBox +
+      '<h4>' + esc(tr(l, 'crypto.balances')) + '</h4>' +
+      '<ul>' + (balanceRows || '<li class="empty">' + esc(tr(l, 'crypto.no_balances')) + '</li>') + '</ul>' +
+      '<h4>' + esc(tr(l, 'crypto.deposit')) + '</h4>' +
+      '<form data-form="crypto-deposit"><label>USD <input name="amount_milli" inputmode="decimal" placeholder="20" required></label>' +
+      '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="pay_currency" list="crypto-currency-catalog" placeholder="usdttrc20" required></label>' +
       '<datalist id="crypto-currency-catalog">' + currencyOptions + '</datalist>' +
-      '<label>' + esc(tr(l, 'crypto.network')) + ' <select name="network" required>' +
-      '<option value="bitcoin">Bitcoin</option><option value="ethereum">Ethereum / EVM</option><option value="tron">TRON</option>' +
-      '<option value="polygon">Polygon</option><option value="bsc">BNB Smart Chain</option><option value="arbitrum">Arbitrum</option>' +
-      '<option value="optimism">Optimism</option><option value="base">Base</option><option value="solana">Solana</option>' +
-      '</select></label>' +
+      '<button type="submit">' + esc(tr(l, 'crypto.deposit_submit')) + '</button></form>' +
+      '<h4>' + esc(tr(l, 'crypto.withdraw')) + '</h4>' +
+      '<form data-form="crypto-withdraw"><label>' + esc(tr(l, 'crypto.wallet_target')) + ' <select name="crypto_wallet_id" required>' +
+      (withdrawOptions || '<option value="">No supported payout wallet</option>') + '</select></label>' +
+      '<label>' + esc(tr(l, 'crypto.amount')) + ' <input name="amount" inputmode="decimal" placeholder="0.1" required></label>' +
+      '<input type="hidden" name="payout_currency" value="">' +
+      '<button type="submit">' + esc(tr(l, 'crypto.withdraw_submit')) + '</button></form>' +
+      '<h4>' + esc(tr(l, 'crypto.saved')) + '</h4><ul>' + (rows || '<li class="empty">' + esc(tr(l, 'crypto.none')) + '</li>') + '</ul>' +
+      '<h4>' + esc(tr(l, 'crypto.withdrawals')) + '</h4><ul>' + (withdrawalRows || '<li class="empty">' + esc(tr(l, 'crypto.no_withdrawals')) + '</li>') + '</ul>' +
+      '<p class="hint">' + esc(tr(l, 'crypto.catalog')) + '</p>' +
+      '<form data-form="crypto-wallet">' +
+      '<label>' + esc(tr(l, 'crypto.provider')) + ' <select name="provider" required><option value="other">Wallet / injected provider</option><option value="metamask">MetaMask</option><option value="trust_wallet">Trust Wallet</option><option value="coinbase_wallet">Coinbase Wallet</option><option value="walletconnect">WalletConnect</option><option value="ledger">Ledger</option><option value="trezor">Trezor</option></select></label>' +
+      '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="asset" list="crypto-currency-catalog" placeholder="USDT" required pattern="[A-Za-z0-9._-]{2,32}"></label>' +
+      '<label>' + esc(tr(l, 'crypto.network')) + ' <select name="network" required><option value="bitcoin">Bitcoin</option><option value="ethereum">Ethereum / EVM</option><option value="tron">TRON</option><option value="polygon">Polygon</option><option value="bsc">BNB Smart Chain</option><option value="arbitrum">Arbitrum</option><option value="optimism">Optimism</option><option value="base">Base</option><option value="solana">Solana</option></select></label>' +
       '<label>' + esc(tr(l, 'crypto.address')) + ' <input name="address" autocomplete="off" required minlength="20" maxlength="160"></label>' +
       '<button type="button" data-action="connect-wallet">' + esc(tr(l, 'crypto.connect')) + '</button>' +
-      '<label>' + esc(tr(l, 'crypto.memo')) + ' <input name="address_memo" maxlength="120"></label>' +
-      '<label>' + esc(tr(l, 'crypto.label')) + ' <input name="label" maxlength="80"></label>' +
-      '<button type="submit">' + esc(tr(l, 'crypto.add')) + '</button>' +
-      '</form>' +
-      '</section>'
-    );
+      '<label>' + esc(tr(l, 'crypto.memo')) + ' <input name="address_memo" maxlength="120"></label><label>' + esc(tr(l, 'crypto.label')) + ' <input name="label" maxlength="80"></label>' +
+      '<button type="submit">' + esc(tr(l, 'crypto.add')) + '</button></form></section>';
   }
 
   function renderWallet(state) {
@@ -178,7 +206,7 @@
     var wallet = s.wallet;
     var entries = s.entries || [];
     var cryptoWallets = s.cryptoWallets || [];
-    var cryptoSection = renderCryptoWallets(l, cryptoWallets, s.cryptoCurrencies || []);
+    var cryptoSection = renderCryptoWallets(l, cryptoWallets, s.cryptoCurrencies || [], s.cryptoBalances || [], s.cryptoWithdrawals || [], s.cryptoDeposit || null);
     if (!wallet) {
       return (
         '<section class="screen wallet" data-screen="wallet" lang="' + esc(l) + '"><h2>' + esc(tr(l, 'wallet.title')) + '</h2>' +

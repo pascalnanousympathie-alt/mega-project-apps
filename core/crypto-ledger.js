@@ -88,12 +88,17 @@ function buildCryptoLedger(db) {
     const reservedBefore = normalizeDecimal(balance.reserved_amount);
     let availableAfter = availableBefore;
     let reservedAfter = reservedBefore;
-    if (input.tx_type === 'deposit' || input.tx_type === 'withdrawal_release') {
+    if (input.tx_type === 'deposit') {
       availableAfter = addDecimal(availableBefore, amount);
     } else if (input.tx_type === 'withdrawal_reserve') {
       availableAfter = subtractDecimal(availableBefore, amount);
       reservedAfter = addDecimal(reservedBefore, amount);
+    } else if (input.tx_type === 'withdrawal_release') {
+      ok(compareDecimal(reservedBefore, amount) >= 0, 'E_CRYPTO_WITHDRAWAL_STATUS', 'cannot release more than reserved amount');
+      availableAfter = addDecimal(availableBefore, amount);
+      reservedAfter = subtractDecimal(reservedBefore, amount);
     } else if (input.tx_type === 'withdrawal_settlement') {
+      ok(compareDecimal(reservedBefore, amount) >= 0, 'E_CRYPTO_WITHDRAWAL_STATUS', 'cannot settle more than reserved amount');
       reservedAfter = subtractDecimal(reservedBefore, amount);
     } else {
       throw new DataError('E_ARG', 'invalid crypto ledger tx_type');

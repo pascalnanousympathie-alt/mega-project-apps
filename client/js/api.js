@@ -114,6 +114,28 @@
       cryptoCurrencies: function () {
         return request('GET', '/crypto/currencies');
       },
+      cryptoBalances: function () {
+        return request('GET', '/crypto/balances');
+      },
+      cryptoBalanceEntries: function (balanceId, limit) {
+        var q = limit ? '?limit=' + encodeURIComponent(String(limit)) : '';
+        return request('GET', '/crypto/balances/' + encodeURIComponent(balanceId) + '/entries' + q);
+      },
+      cryptoWithdrawals: function (limit) {
+        var q = limit ? '?limit=' + encodeURIComponent(String(limit)) : '';
+        return request('GET', '/crypto/withdrawals' + q);
+      },
+      createCryptoWithdrawal: function (body, key) {
+        return request('POST', '/crypto/withdrawals', { body: body, idempotency: key || true });
+      },
+      verifyCryptoWithdrawal: function (withdrawalId, verificationCode, key) {
+        return request('POST', '/crypto/withdrawals/' + encodeURIComponent(withdrawalId) + '/verify', {
+          body: { verification_code: verificationCode }, idempotency: key || true,
+        });
+      },
+      syncCryptoWithdrawal: function (withdrawalId) {
+        return request('POST', '/crypto/withdrawals/' + encodeURIComponent(withdrawalId) + '/sync', { body: {}, idempotency: true });
+      },
       createDeposit: function (body, key) {
         return request('POST', '/payments/intents', { body: body, idempotency: key || true });
       },
