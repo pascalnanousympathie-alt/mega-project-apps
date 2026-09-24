@@ -55,7 +55,7 @@ function createAirtelProvider() {
       { key: 'clientSecret', env: 'AIRTEL_CLIENT_SECRET', secret: true },
       { key: 'country', env: 'AIRTEL_COUNTRY', secret: false },
       { key: 'currency', env: 'AIRTEL_CURRENCY', secret: false },
-      { key: 'baseUrl', env: 'AIRTEL_BASE_URL', required: false, secret: false },
+      { key: 'baseUrl', env: 'AIRTEL_API_BASE_URL', required: false, secret: false },
       { key: 'callbackSecret', env: 'AIRTEL_CALLBACK_SECRET', required: false, secret: true },
     ],
     async createPayment(request, ctx) {

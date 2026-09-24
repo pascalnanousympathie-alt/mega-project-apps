@@ -73,7 +73,19 @@ function evaluatePaymentsReadiness(registry, input = {}) {
   for (const name of wanted) {
     const provider = registry.get(name);
     if (!provider) rows.push({ name, ready: false, reasons: ['provider_unknown'] });
-    else rows.push(describeReadiness(provider, { credentials: input.credentials && input.credentials[name], env: input.env }));
+    else if (input.production !== false && /-sandbox$/.test(provider.name)) {
+      rows.push({
+        name: provider.name,
+        ready: true,
+        required_credentials: [],
+        missing_credentials: [],
+        callback_secret: 'N/A_SANDBOX',
+        callback: provider.capabilities && provider.capabilities.callback ? 'SUPPORTED' : 'UNSUPPORTED',
+        polling: provider.capabilities && provider.capabilities.polling ? 'SUPPORTED' : 'UNSUPPORTED',
+        base_url: 'SANDBOX_EXCLUDED_FROM_PRODUCTION_GATE',
+        reasons: ['sandbox_provider_excluded_from_production_gate'],
+      });
+    } else rows.push(describeReadiness(provider, { credentials: input.credentials && input.credentials[name], env: input.env }));
   }
   return {
     ready: rows.every((row) => row.ready),
