@@ -64,6 +64,10 @@ function createProvider(definition) {
     createPayment: definition.createPayment,
     getPayment: definition.getPayment,
     parseCallback: definition.parseCallback,
+    ...(typeof definition.listCurrencies === 'function' ? { listCurrencies: definition.listCurrencies } : {}),
+    ...(typeof definition.createPayout === 'function' ? { createPayout: definition.createPayout } : {}),
+    ...(typeof definition.verifyPayout === 'function' ? { verifyPayout: definition.verifyPayout } : {}),
+    ...(typeof definition.getPayout === 'function' ? { getPayout: definition.getPayout } : {}),
   });
 }
 

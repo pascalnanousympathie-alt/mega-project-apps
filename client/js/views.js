@@ -124,7 +124,7 @@
     );
   }
 
-  function renderCryptoWallets(l, wallets) {
+  function renderCryptoWallets(l, wallets, currencies) {
     var rows = (wallets || []).map(function (wallet) {
       var shortAddress = wallet.address.length > 18
         ? wallet.address.slice(0, 10) + '…' + wallet.address.slice(-8)
@@ -139,26 +139,31 @@
         '</li>'
       );
     }).join('');
+    var catalog = (currencies && currencies.length ? currencies : ['btc', 'eth', 'usdttrc20', 'usdterc20', 'usdtbsc', 'usdtmatic', 'usdtsol', 'usdc', 'sol', 'trx']).slice(0, 200);
+    var currencyOptions = catalog.map(function (code) {
+      return '<option value="' + esc(code) + '">' + esc(code.toUpperCase()) + '</option>';
+    }).join('');
     return (
       '<section class="crypto-wallets" data-testid="crypto-wallets">' +
       '<h3>' + esc(tr(l, 'crypto.title')) + '</h3>' +
       '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' +
+      '<p class="hint">' + esc(tr(l, 'crypto.catalog')) + '</p>' +
       '<ul>' + (rows || '<li class="empty">' + esc(tr(l, 'crypto.none')) + '</li>') + '</ul>' +
       '<form data-form="crypto-wallet">' +
       '<label>' + esc(tr(l, 'crypto.provider')) + ' <select name="provider" required>' +
-      '<option value="metamask">MetaMask</option><option value="trust_wallet">Trust Wallet</option>' +
+      '<option value="other">Wallet / injected provider</option><option value="metamask">MetaMask</option><option value="trust_wallet">Trust Wallet</option>' +
       '<option value="coinbase_wallet">Coinbase Wallet</option><option value="walletconnect">WalletConnect</option>' +
-      '<option value="ledger">Ledger</option><option value="trezor">Trezor</option><option value="other">Other</option>' +
+      '<option value="ledger">Ledger</option><option value="trezor">Trezor</option>' +
       '</select></label>' +
-      '<label>' + esc(tr(l, 'crypto.asset')) + ' <select name="asset" required>' +
-      '<option value="BTC">BTC</option><option value="ETH">ETH</option><option value="USDT">USDT</option>' +
-      '<option value="USDC">USDC</option><option value="SOL">SOL</option>' +
-      '</select></label>' +
+      '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="asset" list="crypto-currency-catalog" placeholder="USDT" required pattern="[A-Za-z0-9._-]{2,32}"></label>' +
+      '<datalist id="crypto-currency-catalog">' + currencyOptions + '</datalist>' +
       '<label>' + esc(tr(l, 'crypto.network')) + ' <select name="network" required>' +
-      '<option value="bitcoin">Bitcoin</option><option value="ethereum">Ethereum</option><option value="tron">TRON</option>' +
-      '<option value="polygon">Polygon</option><option value="solana">Solana</option>' +
+      '<option value="bitcoin">Bitcoin</option><option value="ethereum">Ethereum / EVM</option><option value="tron">TRON</option>' +
+      '<option value="polygon">Polygon</option><option value="bsc">BNB Smart Chain</option><option value="arbitrum">Arbitrum</option>' +
+      '<option value="optimism">Optimism</option><option value="base">Base</option><option value="solana">Solana</option>' +
       '</select></label>' +
       '<label>' + esc(tr(l, 'crypto.address')) + ' <input name="address" autocomplete="off" required minlength="20" maxlength="160"></label>' +
+      '<button type="button" data-action="connect-wallet">' + esc(tr(l, 'crypto.connect')) + '</button>' +
       '<label>' + esc(tr(l, 'crypto.memo')) + ' <input name="address_memo" maxlength="120"></label>' +
       '<label>' + esc(tr(l, 'crypto.label')) + ' <input name="label" maxlength="80"></label>' +
       '<button type="submit">' + esc(tr(l, 'crypto.add')) + '</button>' +
@@ -173,7 +178,7 @@
     var wallet = s.wallet;
     var entries = s.entries || [];
     var cryptoWallets = s.cryptoWallets || [];
-    var cryptoSection = renderCryptoWallets(l, cryptoWallets);
+    var cryptoSection = renderCryptoWallets(l, cryptoWallets, s.cryptoCurrencies || []);
     if (!wallet) {
       return (
         '<section class="screen wallet" data-screen="wallet" lang="' + esc(l) + '"><h2>' + esc(tr(l, 'wallet.title')) + '</h2>' +

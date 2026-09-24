@@ -157,6 +157,16 @@ function buildPaymentGateway(input = {}) {
     return [...providers.values()].map((provider) => describeProvider(provider, provider.name === 'mvola' ? project : null));
   }
 
+  async function listCurrencies(providerName = 'nowpayments') {
+    const provider = getProvider(providerName);
+    ok(typeof provider.listCurrencies === 'function', 'E_NOT_IMPLEMENTED', 'provider does not expose currency catalog: ' + provider.name);
+    const credentials = credentialsFor(provider);
+    const missing = missingProviderCredentials(provider, credentials);
+    if (missing.length > 0) throw new DataError('E_PROVIDER_UNCONFIGURED', 'payment provider ' + provider.name + ' is missing credentials: ' + missing.join(', '));
+    const currencies = await provider.listCurrencies({ credentials, transport, nowIso: now, callbackUrl });
+    return { provider: provider.name, currencies: Array.from(new Set(currencies.map((v) => String(v).toLowerCase()).filter(Boolean))).sort() };
+  }
+
   function appendEvent(intent, eventType, status, providerRef, payload) {
     const prevRow = db
       .prepare('SELECT hash FROM payment_events WHERE intent_id = ? ORDER BY event_index DESC LIMIT 1')
@@ -842,6 +852,7 @@ function buildPaymentGateway(input = {}) {
     db,
     providers,
     listProviders,
+    listCurrencies,
     getProvider,
     initiatePayment,
     applyProviderStatus,

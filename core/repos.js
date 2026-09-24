@@ -22,13 +22,24 @@ const PHONE_RE = /^\+?[0-9]{8,15}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const CRYPTO_WALLET_PROVIDERS = ['metamask', 'trust_wallet', 'coinbase_wallet', 'walletconnect', 'ledger', 'trezor', 'other'];
-const CRYPTO_WALLET_ASSET_NETWORKS = {
-  BTC: ['bitcoin'],
-  ETH: ['ethereum'],
-  USDT: ['ethereum', 'tron', 'polygon'],
-  USDC: ['ethereum', 'polygon', 'solana'],
-  SOL: ['solana'],
-};
+const CRYPTO_NETWORKS = ['bitcoin', 'ethereum', 'tron', 'polygon', 'bsc', 'arbitrum', 'optimism', 'base', 'solana'];
+const CRYPTO_ASSET_RE = /^[A-Z][A-Z0-9._-]{1,31}$/;
+// Kept as a compatibility export for callers that still consume the legacy map.
+const CRYPTO_WALLET_ASSET_NETWORKS = Object.freeze({
+  BTC: ['bitcoin'], ETH: ['ethereum'], USDT: ['ethereum', 'tron', 'polygon'],
+  USDC: ['ethereum', 'polygon', 'solana'], SOL: ['solana'],
+});
+
+function validateCryptoAddress(network, address) {
+  const value = String(address || '').trim();
+  if (network === 'bitcoin') return /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,87}$/.test(value);
+  if (network === 'ethereum' || network === 'polygon' || network === 'bsc' || network === 'arbitrum' || network === 'optimism' || network === 'base') {
+    return /^0x[a-fA-F0-9]{40}$/.test(value);
+  }
+  if (network === 'tron') return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(value);
+  if (network === 'solana') return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
+  return false;
+}
 
 function buildRepositories(db) {
   function createUser(input) {
@@ -152,9 +163,9 @@ function buildRepositories(db) {
     const label = input.label === undefined || input.label === null ? null : String(input.label).trim();
 
     ok(CRYPTO_WALLET_PROVIDERS.includes(provider), 'E_CRYPTO_WALLET_INVALID', 'unsupported wallet provider: ' + provider);
-    ok(Object.prototype.hasOwnProperty.call(CRYPTO_WALLET_ASSET_NETWORKS, asset), 'E_CRYPTO_WALLET_INVALID', 'unsupported crypto asset: ' + asset);
-    ok(CRYPTO_WALLET_ASSET_NETWORKS[asset].includes(network), 'E_CRYPTO_WALLET_INVALID', 'network is not supported for ' + asset);
-    ok(address.length >= 20 && address.length <= 160, 'E_CRYPTO_WALLET_INVALID', 'invalid wallet address length');
+    ok(CRYPTO_ASSET_RE.test(asset), 'E_CRYPTO_WALLET_INVALID', 'invalid crypto asset: ' + asset);
+    ok(CRYPTO_NETWORKS.includes(network), 'E_CRYPTO_WALLET_INVALID', 'unsupported crypto network: ' + network);
+    ok(validateCryptoAddress(network, address), 'E_CRYPTO_WALLET_INVALID', 'invalid wallet address for network: ' + network);
     if (memo !== null) ok(memo.length <= 120, 'E_CRYPTO_WALLET_INVALID', 'wallet memo too long');
     if (label !== null) ok(label.length <= 80, 'E_CRYPTO_WALLET_INVALID', 'wallet label too long');
 

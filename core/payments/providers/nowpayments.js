@@ -62,12 +62,14 @@ function createNowPaymentsProvider(options = {}) {
       { key: 'callbackUrl', env: `${prefix}_IPN_CALLBACK_URL`, required: false, secret: false },
       { key: 'payCurrency', env: `${prefix}_PAY_CURRENCY`, required: false, secret: false },
       { key: 'baseUrl', env: `${prefix}_BASE_URL`, required: false, secret: false },
+      { key: 'payoutEmail', env: `${prefix}_PAYOUT_EMAIL`, required: false, secret: false },
+      { key: 'payoutPassword', env: `${prefix}_PAYOUT_PASSWORD`, required: false, secret: true },
       ...(sandbox ? [{ key: 'testCase', env: `${prefix}_CASE`, required: false, secret: false }] : []),
     ],
     async createPayment(request, ctx) {
       const credentials = ctx.credentials;
       const reference = request.reference || request.intent.id;
-      const payCurrency = credentials.payCurrency || 'usdttrc20';
+      const payCurrency = String(request.pay_currency || credentials.payCurrency || 'usdttrc20').trim().toLowerCase();
       const data = await sendJson(
         ctx.transport,
         {
@@ -112,9 +114,81 @@ function createNowPaymentsProvider(options = {}) {
         provider_ref: String(data && data.payment_id !== undefined ? data.payment_id : providerRef),
         status: normalizeStatus(data && data.payment_status, NOWPAYMENTS_STATUS_MAP),
         amount_milli: decimalToMilli(data && data.price_amount),
-        currency: 'USD',
+        currency: String(data && data.price_currency || 'USD').toUpperCase(),
         raw: data,
       };
+    },
+    async listCurrencies(ctx) {
+      const credentials = ctx.credentials;
+      const data = await sendJson(
+        ctx.transport,
+        { method: 'GET', url: credentials.baseUrl + '/v1/currencies', headers: { 'x-api-key': credentials.apiKey } },
+        name,
+      );
+      const raw = Array.isArray(data)
+        ? data
+        : (data && Array.isArray(data.currencies)
+          ? data.currencies
+          : (data && data.data && Array.isArray(data.data.currencies) ? data.data.currencies : []));
+      return raw.map((entry) => {
+        if (typeof entry === 'string') return entry.toLowerCase();
+        if (entry && typeof entry === 'object') return String(entry.code || entry.currency || entry.symbol || '').toLowerCase();
+        return '';
+      }).filter(Boolean);
+    },
+    async createPayout(request, ctx) {
+      const credentials = ctx.credentials;
+      if (!credentials.payoutEmail || !credentials.payoutPassword) {
+        throw new DataError('E_PROVIDER_UNCONFIGURED', '[nowpayments] payout email/password are not configured');
+      }
+      const auth = await sendJson(ctx.transport, {
+        method: 'POST',
+        url: credentials.baseUrl + '/v1/auth',
+        headers: {},
+        body: { email: credentials.payoutEmail, password: credentials.payoutPassword },
+      }, name);
+      if (!auth || !auth.token) throw new DataError('E_PAYMENT_TRANSPORT', '[nowpayments] payout auth response missing token');
+      const withdrawal = {
+        address: request.address,
+        currency: String(request.currency || '').trim().toLowerCase(),
+        amount: request.amount,
+        ...(request.extra_id ? { extra_id: request.extra_id } : {}),
+        ...(credentials.callbackUrl ? { ipn_callback_url: credentials.callbackUrl } : {}),
+      };
+      const data = await sendJson(ctx.transport, {
+        method: 'POST',
+        url: credentials.baseUrl + '/v1/payout',
+        headers: { 'x-api-key': credentials.apiKey, authorization: 'Bearer ' + auth.token },
+        body: { withdrawals: [withdrawal] },
+      }, name);
+      return { payout_id: data && (data.id || data.payout_id || data.batch_withdrawal_id), status: 'pending', raw: data };
+    },
+    async verifyPayout(payoutId, verificationCode, ctx) {
+      const credentials = ctx.credentials;
+      if (!credentials.payoutEmail || !credentials.payoutPassword) {
+        throw new DataError('E_PROVIDER_UNCONFIGURED', '[nowpayments] payout email/password are not configured');
+      }
+      const auth = await sendJson(ctx.transport, {
+        method: 'POST', url: credentials.baseUrl + '/v1/auth', headers: {},
+        body: { email: credentials.payoutEmail, password: credentials.payoutPassword },
+      }, name);
+      if (!auth || !auth.token) throw new DataError('E_PAYMENT_TRANSPORT', '[nowpayments] payout auth response missing token');
+      const data = await sendJson(ctx.transport, {
+        method: 'POST',
+        url: credentials.baseUrl + '/v1/payout/' + encodeURIComponent(String(payoutId)) + '/verify',
+        headers: { 'x-api-key': credentials.apiKey, authorization: 'Bearer ' + auth.token },
+        body: { verification_code: String(verificationCode || '') },
+      }, name);
+      return { raw: data };
+    },
+    async getPayout(payoutId, ctx) {
+      const credentials = ctx.credentials;
+      const data = await sendJson(ctx.transport, {
+        method: 'GET',
+        url: credentials.baseUrl + '/v1/payout/' + encodeURIComponent(String(payoutId)),
+        headers: { 'x-api-key': credentials.apiKey },
+      }, name);
+      return { status: normalizeStatus(data && (data.status || data.payment_status), NOWPAYMENTS_STATUS_MAP), raw: data };
     },
     parseCallback(payload, headers, ctx) {
       if (!payload || typeof payload !== 'object') {

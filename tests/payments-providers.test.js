@@ -461,6 +461,29 @@ test('gateway polling reconciles a non-mvola provider end to end', async (t) => 
   assert.equal(outcome.attempt.provider_ref, 'airtel-ref-9');
   assert.equal(layer.payments.verifyIntents().ok, true);
 });
+test('nowpayments accepts a requested pay currency and exposes the live currency catalog', async () => {
+  const provider = createNowPaymentsProvider();
+  const transport = routeTransport([
+    [/\/v1\/payment$/, (spec) => {
+      assert.equal(spec.body.pay_currency, 'btc');
+      return ok({ payment_id: 992, payment_status: 'waiting', price_amount: 10, price_currency: 'USD', pay_currency: 'BTC' });
+    }],
+    [/\/v1\/currencies$/, (spec) => {
+      assert.equal(spec.method, 'GET');
+      return ok({ currencies: ['BTC', 'USDTTRC20', { code: 'USDC' }, ''] });
+    }],
+  ]);
+  const ctx = makeCtx('nowpayments', { transport });
+  const created = await provider.createPayment({
+    reference: 'NP-2',
+    amount_milli: 10000,
+    description: 'BTC test',
+    pay_currency: 'BTC',
+    intent: { id: 'intent-np-2' },
+  }, ctx);
+  assert.equal(created.provider_ref, '992');
+  assert.deepEqual(await provider.listCurrencies(ctx), ['btc', 'usdttrc20', 'usdc']);
+});
 test('nowpayments creates payments, polls status and verifies IPN signatures', async () => {
   const provider = createNowPaymentsProvider();
   const transport = routeTransport([

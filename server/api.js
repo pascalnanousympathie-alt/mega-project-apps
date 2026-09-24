@@ -321,6 +321,11 @@ function buildApiHandlers(layer) {
     return repos.listCryptoWallets(user.id).map(publicCryptoWallet);
   };
 
+  handlers['crypto.currencies'] = async (ctx) => {
+    session(ctx);
+    return layer.payments.listCurrencies('nowpayments');
+  };
+
   handlers['crypto-wallets.create'] = (ctx) => {
     const { user } = session(ctx);
     const wallet = repos.createCryptoWallet(user.id, {
@@ -436,6 +441,7 @@ function buildApiHandlers(layer) {
       direction: 'payin',
       amount_milli: ctx.body.amount_milli,
       currency: ctx.body.currency,
+      pay_currency: ctx.body.pay_currency,
       wallet_id: walletId,
       project: ctx.body.project,
       reference: ctx.body.reference,

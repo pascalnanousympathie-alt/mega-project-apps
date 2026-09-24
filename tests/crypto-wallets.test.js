@@ -78,6 +78,7 @@ test('crypto wallet can be disabled and cannot be changed by another user', (t) 
 });
 test('crypto wallet REST routes are exposed with authenticated contracts', () => {
   assert.ok(contracts.matchRoute('v1', 'GET', '/api/v1/crypto/wallets'));
+  assert.ok(contracts.matchRoute('v1', 'GET', '/api/v1/crypto/currencies'));
   assert.ok(contracts.matchRoute('v1', 'POST', '/api/v1/crypto/wallets'));
   const route = contracts.matchRoute('v1', 'DELETE', '/api/v1/crypto/wallets/test-id');
   assert.ok(route);

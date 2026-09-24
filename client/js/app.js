@@ -56,6 +56,7 @@
     walletDetail: null,
     entries: [],
     cryptoWallets: [],
+    cryptoCurrencies: [],
     snapshot: null,
     gameSnapshot: null,
     selectedTile: null,
@@ -171,6 +172,7 @@
           balances: data.walletDetail && data.walletDetail.balances,
           entries: data.entries,
           cryptoWallets: data.cryptoWallets,
+          cryptoCurrencies: data.cryptoCurrencies,
           locale: locale,
         })
       );
@@ -231,6 +233,18 @@
     }, function (err) {
       data.error = err.message;
       render();
+    });
+  }
+
+  function loadCryptoCurrencies() {
+    return api.cryptoCurrencies().then(function (result) {
+      data.cryptoCurrencies = (result && result.currencies) || [];
+      render();
+      return data.cryptoCurrencies;
+    }, function () {
+      data.cryptoCurrencies = [];
+      render();
+      return [];
     });
   }
 
@@ -435,7 +449,71 @@
     );
   }
 
+  function connectCryptoWallet(el) {
+    var form = el && el.form;
+    var set = function (name, value) {
+      if (!form || value === undefined || value === null || value === '') return;
+      var field = form.elements[name];
+      if (field) field.value = String(value);
+    };
+    var ethereum = root.ethereum;
+    if (ethereum && typeof ethereum.request === 'function') {
+      ethereum.request({ method: 'eth_requestAccounts' }).then(function (accounts) {
+        var address = accounts && accounts[0];
+        return ethereum.request({ method: 'eth_chainId' }).then(function (chainId) {
+          var network = { '0x1': 'ethereum', '0x89': 'polygon', '0x38': 'bsc', '0xa4b1': 'arbitrum', '0xa': 'optimism', '0x2105': 'base' }[String(chainId).toLowerCase()];
+          set('provider', 'other');
+          set('address', address);
+          if (network) set('network', network);
+          data.notice = { i18n: 'app.crypto_wallet_connected' };
+          render();
+        });
+      }).catch(function (err) {
+        data.error = (err && err.message) || 'wallet connection failed';
+        render();
+      });
+      return;
+    }
+    var tron = root.tronLink;
+    if (tron && typeof tron.request === 'function') {
+      tron.request({ method: 'tron_requestAccounts' }).then(function () {
+        var address = root.tronWeb && root.tronWeb.defaultAddress && root.tronWeb.defaultAddress.base58;
+        if (!address) throw new Error('TRON wallet address unavailable');
+        set('provider', 'other');
+        set('network', 'tron');
+        set('address', address);
+        data.notice = { i18n: 'app.crypto_wallet_connected' };
+        render();
+      }).catch(function (err) {
+        data.error = (err && err.message) || 'wallet connection failed';
+        render();
+      });
+      return;
+    }
+    var solana = root.solana;
+    if (solana && typeof solana.connect === 'function') {
+      solana.connect().then(function (result) {
+        var address = result && result.publicKey ? String(result.publicKey) : '';
+        if (!address) throw new Error('Solana wallet address unavailable');
+        set('provider', 'other');
+        set('network', 'solana');
+        set('address', address);
+        data.notice = { i18n: 'app.crypto_wallet_connected' };
+        render();
+      }).catch(function (err) {
+        data.error = (err && err.message) || 'wallet connection failed';
+        render();
+      });
+      return;
+    }
+    data.error = 'No compatible wallet provider found. Open LudoMada inside your wallet app or enter a public address manually.';
+    render();
+  }
+
   var ACTIONS = {
+    'connect-wallet': function (el) {
+      connectCryptoWallet(el);
+    },
     'logout': function () {
       var done = function () {
         setSession(null);
@@ -592,7 +670,7 @@
       return;
     }
     if (route.name === 'wallet') {
-      refreshMe().then(loadWallet);
+      refreshMe().then(function () { return Promise.all([loadWallet(), loadCryptoCurrencies()]); });
     } else if (route.name === 'lobby') {
       loadRooms();
     } else if (route.name === 'room' || route.name === 'game') {
@@ -610,7 +688,7 @@
     }
     refreshMe().then(function () {
       var route = currentRoute();
-      if (route.name === 'wallet') loadWallet();
+      if (route.name === 'wallet') Promise.all([loadWallet(), loadCryptoCurrencies()]);
       else if (route.name === 'lobby') loadRooms();
       else if (route.name === 'room' || route.name === 'game') enterRoom(data.roomId);
     });

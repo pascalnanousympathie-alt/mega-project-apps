@@ -50,10 +50,15 @@ test('complete provider credentials and production-safe URLs clear readiness wit
   for (const row of result.providers) {
     assert.equal(row.ready, true, row.name);
     assert.deepEqual(row.missing_credentials, []);
-    assert.equal(row.callback_secret, 'SET');
+    if (row.name === 'nowpayments-sandbox') {
+      assert.equal(row.callback_secret, 'N/A_SANDBOX');
+    } else {
+      assert.equal(row.callback_secret, 'SET');
+    }
     assert.equal(row.callback, 'SUPPORTED');
     assert.equal(row.polling, 'SUPPORTED');
-    assert.equal(row.reasons.length, 0);
+    if (row.name === 'nowpayments-sandbox') assert.deepEqual(row.reasons, ['sandbox_provider_excluded_from_production_gate']);
+    else assert.equal(row.reasons.length, 0);
   }
 });
 

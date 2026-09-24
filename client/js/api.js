@@ -111,6 +111,9 @@
       paymentProviders: function () {
         return request('GET', '/payments/providers');
       },
+      cryptoCurrencies: function () {
+        return request('GET', '/crypto/currencies');
+      },
       createDeposit: function (body, key) {
         return request('POST', '/payments/intents', { body: body, idempotency: key || true });
       },
