@@ -2,6 +2,14 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { makeDataLayer, makeUser } = require('./helpers');
+const { validateTicket } = require('../core/loto');
+
+const VALID_LOTO_TICKET = [
+  [1, 14, null, 36, null, null, 63, null, 88],
+  [5, null, 21, null, 47, 58, null, 71, null],
+  [null, 18, 27, 32, 41, 52, null, null, null],
+];
+
 
 function fundMGA(layer, user, amount) {
   const wallet = layer.createWallet(user.id);
@@ -46,6 +54,59 @@ test('crypto to MGA and MGA to crypto are atomic, balanced and idempotent', (t) 
   assert.equal(layer.cryptoConversion.verify().ok,true);
   assert.equal(layer.cryptoLedger.verify().ok,true);
   layer.ledger.verify();
+});
+
+test('loto and rami crypto stakes retain exactly 10% as admin revenue', (t) => {
+  const { layer } = makeDataLayer(t);
+  assert.equal(validateTicket(VALID_LOTO_TICKET).ok, true);
+
+  const lotoUser = makeUser(layer, 'crypto_loto_user');
+  fundCrypto(layer, lotoUser, '1');
+  const lotoGame = layer.createGame({ kind:'loto' });
+  const lotoRoom = layer.createRoom({ gameId:lotoGame.id, hostUserId:lotoUser.id, name:'crypto-loto', capacity:1 });
+  layer.joinRoom(lotoRoom.id, lotoUser.id);
+  layer.setRoomStatus(lotoRoom.id, 'active');
+  const draw0 = layer.loto.createDraw({ mode:'online', userId:lotoUser.id, roomId:lotoRoom.id, settings:{ mode:'crypto', stakeUsdCents:10, asset:'USDT', network:'tron', maxBalls:90, stopOnCarton:false } });
+  layer.loto.purchaseTicket(draw0.id, lotoUser.id, { grid: VALID_LOTO_TICKET });
+  layer.loto.startDraw(draw0.id, lotoUser.id);
+  let draw = layer.loto.getDraw(draw0.id);
+  for (let ball = 1; ball <= 90 && draw.state.status === 'active'; ball += 1) draw = layer.loto.nextBall(draw.id, lotoUser.id);
+  if (draw.state.status !== 'finished') draw = layer.loto.settleDraw(draw.id, lotoUser.id);
+  assert.equal(draw.state.status, 'finished');
+  assert.equal(draw.state.crypto_commission_usd_cents, 1);
+  const lotoAudit = layer.db.prepare("SELECT * FROM audit_entries WHERE action='game.crypto_commission.credited' AND target_id=?").get(draw.id);
+  assert.ok(lotoAudit);
+  assert.equal(JSON.parse(lotoAudit.detail_json).admin_revenue, true);
+  assert.equal(layer.loto.verifyDraw(draw.id).ok, true);
+
+});
+
+test('rami crypto stakes settle with the fixed 10% admin commission audit', (t) => {
+  const { layer } = makeDataLayer(t);
+  const host = makeUser(layer, 'crypto_rami_host');
+  const guest = makeUser(layer, 'crypto_rami_guest');
+  fundCrypto(layer, host, '1');
+  fundCrypto(layer, guest, '1');
+  const game = layer.createGame({ kind:'rami' });
+  const room = layer.createRoom({ gameId:game.id, hostUserId:host.id, name:'crypto-rami', capacity:2 });
+  layer.joinRoom(room.id, host.id); layer.joinRoom(room.id, guest.id); layer.setRoomStatus(room.id, 'active');
+  const r0 = layer.rami.createGame({ mode:'online', userId:host.id, roomId:room.id, settings:{ handSize:3, seed:'rami-econ-49', mode:'crypto', stakeUsdCents:10, asset:'USDT', network:'tron' } });
+  layer.rami.joinGame(r0.id, host.id); layer.rami.joinGame(r0.id, guest.id);
+  let r = layer.rami.startGame(r0.id, { byUserId:host.id });
+  assert.equal(layer.cryptoLedger.getBalance(host.id,'USDT','tron').available_amount,'0.9');
+  assert.equal(layer.cryptoLedger.getBalance(guest.id,'USDT','tron').available_amount,'0.9');
+  r = layer.rami.applyAction(r.id, host.id, { type:'draw', source:'stock' });
+  r = layer.rami.applyAction(r.id, host.id, { type:'meld', melds:[['H:11','H:12','H:13']] });
+  const remaining = r.state.hands[host.id][0];
+  r = layer.rami.applyAction(r.id, host.id, { type:'discard', card:remaining });
+  assert.equal(r.state.status,'finished');
+  const audit = layer.db.prepare("SELECT * FROM audit_entries WHERE action='game.crypto_commission.credited' AND target_id=?").get(r.id);
+  assert.ok(audit);
+  const detail = JSON.parse(audit.detail_json);
+  assert.equal(detail.commission_usd_cents,2);
+  assert.equal(detail.commission_fraction,0.1);
+  assert.equal(detail.admin_revenue,true);
+  assert.equal(layer.rami.verifyGame(r.id).ok,true);
 });
 
 test('domino accepts crypto stakes and settles the crypto pot with audit verification', (t) => {

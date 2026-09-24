@@ -363,7 +363,7 @@
 
   function gameSettingsPayload() {
     var s = data.gameSettings || {};
-    if (s.mode !== 'crypto') return { mode: 'mga' };
+    if (s.mode !== 'crypto') return { mode: 'mga', entryFee: Number(s.entryFeeMilli || 1000) };
     return { mode: 'crypto', stakeUsdCents: Number(s.stakeUsdCents), asset: s.asset || 'USDT', network: s.network || 'tron' };
   }
 
@@ -560,6 +560,7 @@
     var cents = parseInt(values.stake_usd_cents || '10', 10);
     data.gameSettings = {
       mode: mode === 'crypto' ? 'crypto' : 'mga',
+      entryFeeMilli: parseInt(values.entry_fee_milli || '1000', 10),
       stakeUsdCents: cents,
       asset: String(values.asset || 'USDT').toUpperCase(),
       network: String(values.network || 'tron').toLowerCase(),
@@ -794,6 +795,8 @@
     else if (kind === 'crypto-deposit') handleCryptoDeposit(form);
     else if (kind === 'crypto-withdraw') handleCryptoWithdrawal(form);
     else if (kind === 'crypto-withdraw-verify') handleCryptoWithdrawalVerify(form);
+    else if (kind === 'crypto-conversion') handleCryptoConversion(form);
+    else if (kind === 'game-economy') applyGameEconomyForm(form);
     else if (kind === 'create-room') handleCreateRoom(form);
   });
 

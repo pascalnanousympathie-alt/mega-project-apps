@@ -172,10 +172,6 @@
         (depositDetails.invoice_url ? '<br><a class="btn" target="_blank" rel="noopener noreferrer" href="' + esc(depositDetails.invoice_url) + '">' + esc(tr(l, 'crypto.open_payment')) + '</a>' : '') +
         '</div>' : '';
     var eco = cryptoEconomy || {};
-    var stakeChoices = (eco.allowed_stake_usd || [0.1, 0.5, 1, 2, 5]).map(function (usd) {
-      var cents = Math.round(Number(usd) * 100);
-      return '<option value="' + esc(cents) + '">$' + esc(Number(usd).toFixed(2).replace(/0+$/, '').replace(/\\.$/, '')) + '</option>';
-    }).join('');
     var conversionRows = (conversions || []).slice(0, 12).map(function (c) {
       return '<li><strong>' + esc(c.direction) + '</strong> · ' + esc(c.amount_crypto) + ' ' + esc(c.asset) + ' → ' + esc(String(c.amount_mga_milli)) + ' Ar · ' + esc(String(c.created_at || '')) + '</li>';
     }).join('');
@@ -287,6 +283,8 @@
     var snapshot = s.snapshot || {};
     var room = snapshot.room || {};
     var players = snapshot.players || [];
+    var settings = s.gameSettings || {};
+    var isCrypto = settings.mode === 'crypto';
     var actions = waitingActions(snapshot, s.userId);
     var rows = players.map(function (p) {
       return (
@@ -305,9 +303,13 @@
       '<ul class="players" data-testid="players">' + (rows || '<li class="empty">' + esc(tr(l, 'waiting.solo')) + '</li>') + '</ul>' +
       '<form class="game-economy" data-form="game-economy">' +
       '<h3>' + esc(tr(l, 'waiting.mise_title')) + '</h3>' +
-      '<label>' + esc(tr(l, 'waiting.mise_mode')) + ' <select name="mode"><option value="mga">MGA</option><option value="crypto">Crypto</option></select></label>' +
-      '<label>' + esc(tr(l, 'waiting.mga_stake')) + ' <select name="entry_fee_milli"><option value="500">500 Ar</option><option value="1000" selected>1 000 Ar</option><option value="2000">2 000 Ar</option><option value="5000">5 000 Ar</option><option value="10000">10 000 Ar</option><option value="20000">20 000 Ar</option></select></label>' +
-      '<label>' + esc(tr(l, 'waiting.crypto_stake')) + ' <select name="stake_usd_cents"><option value="10">$0.10</option><option value="50">$0.50</option><option value="100">$1</option><option value="200">$2</option><option value="500">$5</option></select></label>' +
+      '<label>' + esc(tr(l, 'waiting.mise_mode')) + ' <select name="mode"><option value="mga"' + (!isCrypto ? ' selected' : '') + '>MGA</option><option value="crypto"' + (isCrypto ? ' selected' : '') + '>Crypto</option></select></label>' +
+      '<label>' + esc(tr(l, 'waiting.mga_stake')) + ' <select name="entry_fee_milli">' +
+        [500,1000,2000,5000,10000,20000].map(function (v) { return '<option value="' + v + '"' + (Number(settings.entryFeeMilli || 1000) === v && !isCrypto ? ' selected' : '') + '>' + v.toLocaleString('fr-FR') + ' Ar</option>'; }).join('') +
+      '</select></label>' +
+      '<label>' + esc(tr(l, 'waiting.crypto_stake')) + ' <select name="stake_usd_cents">' +
+        [10,50,100,200,500].map(function (v) { var selected = Number(settings.stakeUsdCents || 10) === v && isCrypto; var usd = v / 100; return '<option value="' + v + '"' + (selected ? ' selected' : '') + '>$' + usd.toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + '</option>'; }).join('') +
+      '</select></label>' +
       '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="asset" value="USDT" required></label>' +
       '<label>' + esc(tr(l, 'crypto.network')) + ' <select name="network"><option value="tron">TRON</option><option value="ethereum">Ethereum</option><option value="polygon">Polygon</option><option value="bsc">BSC</option><option value="solana">Solana</option><option value="base">Base</option></select></label>' +
       '<button type="submit">' + esc(tr(l, 'waiting.mise_save')) + '</button></form>' +
