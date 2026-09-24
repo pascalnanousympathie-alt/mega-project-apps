@@ -51,6 +51,7 @@ const BASE_CREDENTIALS = {
   nowpayments: {
     apiKey: 'test-now-api-key',
     callbackSecret: 'callback-secret-value',
+    callbackUrl: 'https://acep.test/payments/callback/nowpayments',
     payCurrency: 'usdttrc20',
     baseUrl: 'https://nowpayments.test',
   },
@@ -499,6 +500,7 @@ test('nowpayments creates payments, polls status and verifies IPN signatures', a
   }, ctx);
   assert.equal(created.provider_ref, '991');
   assert.equal(created.status, 'pending');
+  assert.equal(transport.calls[0].body.ipn_callback_url, 'https://acep.test/payments/callback/nowpayments');
   assert.equal(created.raw.pay_address, 'T' + '9'.repeat(33));
 
   const paid = await provider.getPayment('991', ctx);

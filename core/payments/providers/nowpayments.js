@@ -56,6 +56,7 @@ function createNowPaymentsProvider() {
     credentialSpec: [
       { key: 'apiKey', env: 'NOWPAYMENTS_API_KEY', secret: true },
       { key: 'callbackSecret', env: 'NOWPAYMENTS_IPN_SECRET', secret: true },
+      { key: 'callbackUrl', env: 'NOWPAYMENTS_IPN_CALLBACK_URL', required: false, secret: false },
       { key: 'payCurrency', env: 'NOWPAYMENTS_PAY_CURRENCY', required: false, secret: false },
       { key: 'baseUrl', env: 'NOWPAYMENTS_BASE_URL', required: false, secret: false },
     ],
@@ -73,7 +74,7 @@ function createNowPaymentsProvider() {
             price_amount: request.amount_milli / 1000,
             price_currency: 'usd',
             pay_currency: payCurrency,
-            ipn_callback_url: ctx.callbackUrl || null,
+            ipn_callback_url: credentials.callbackUrl || ctx.callbackUrl || null,
             order_id: reference,
             order_description: request.description || 'ACEP crypto payment',
           },
