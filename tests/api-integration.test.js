@@ -591,7 +591,6 @@ test('HTTP integration: mvola callbacks apply once and reconcile stays service s
   assert.equal(badSignature.error.code, 'E_PAYMENT_SIGNATURE');
 
   const applied = await call(base, 'POST', callbackPath, {
-    idempotency: 'p18-cb-applied1',
     headers: { 'x-content-signature': CALLBACK_SECRET },
     body: callbackBody,
   });
@@ -604,7 +603,6 @@ test('HTTP integration: mvola callbacks apply once and reconcile stays service s
   assert.equal(layer.payments.getIntent(intent.id).status, 'succeeded');
 
   const duplicate = await call(base, 'POST', callbackPath, {
-    idempotency: 'p18-cb-applied2',
     headers: { 'x-content-signature': CALLBACK_SECRET },
     body: callbackBody,
   });
