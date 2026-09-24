@@ -183,7 +183,7 @@
       '<button type="submit">' + esc(tr(l, 'crypto.deposit_submit')) + '</button></form>' +
       '<h4>' + esc(tr(l, 'crypto.withdraw')) + '</h4>' +
       '<form data-form="crypto-withdraw"><label>' + esc(tr(l, 'crypto.wallet_target')) + ' <select name="crypto_wallet_id" required>' +
-      (withdrawOptions || '<option value="">No supported payout wallet</option>') + '</select></label>' +
+      (withdrawOptions || '<option value="">' + esc(tr(l, 'crypto.no_supported_payout')) + '</option>') + '</select></label>' +
       '<label>' + esc(tr(l, 'crypto.amount')) + ' <input name="amount" inputmode="decimal" placeholder="0.1" required></label>' +
       '<input type="hidden" name="payout_currency" value="">' +
       '<button type="submit">' + esc(tr(l, 'crypto.withdraw_submit')) + '</button></form>' +
