@@ -4,6 +4,7 @@ const { DataError } = require('../../db');
 const { createProvider, normalizeStatus } = require('../base');
 const { hmacSha512Hex, constantTimeEqual } = require('../sign');
 const { sendJson } = require('./helpers');
+const { MIN_CRYPTO_DEPOSIT_USD_CENTS } = require('../../crypto-economy');
 
 const NOWPAYMENTS_STATUS_MAP = {
   waiting: 'pending',
@@ -54,7 +55,7 @@ function createNowPaymentsProvider(options = {}) {
     directions: ['payin'],
     defaultBaseUrl: sandbox ? 'https://api-sandbox.nowpayments.io' : 'https://api.nowpayments.io',
     capabilities: { callback: true, polling: true, refund: false },
-    limits: { min_milli: 1, max_milli: 100000000000 },
+    limits: { min_milli: MIN_CRYPTO_DEPOSIT_USD_CENTS * 10, max_milli: 100000000000 },
     statusMap: NOWPAYMENTS_STATUS_MAP,
     credentialSpec: [
       { key: 'apiKey', env: `${prefix}_API_KEY`, secret: true },

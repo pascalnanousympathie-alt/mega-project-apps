@@ -2,6 +2,7 @@
 const { DataError, ok } = require('../core/db');
 const contracts = require('../core/contracts');
 const { readiness } = require('../core/observability');
+const { MIN_CRYPTO_DEPOSIT_USD_CENTS, MIN_CRYPTO_WITHDRAW_USD_CENTS } = require('../core/crypto-economy');
 
 const GAME_LABELS = {
   domino: 'DominoMada',
@@ -371,6 +372,8 @@ function buildApiHandlers(layer) {
       default_asset: 'USDT',
       default_network: 'tron',
       stablecoin_usd_rate: 1,
+      min_deposit_usd: MIN_CRYPTO_DEPOSIT_USD_CENTS / 100,
+      min_withdraw_usd: MIN_CRYPTO_WITHDRAW_USD_CENTS / 100,
       mga_per_usd: mgaPerUsd,
       conversion_ready: conversionReady,
       supported_networks: ['bitcoin', 'ethereum', 'tron', 'polygon', 'bsc', 'arbitrum', 'optimism', 'base', 'solana'],

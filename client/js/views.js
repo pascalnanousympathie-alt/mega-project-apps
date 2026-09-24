@@ -176,6 +176,8 @@
       return '<li><strong>' + esc(c.direction) + '</strong> · ' + esc(c.amount_crypto) + ' ' + esc(c.asset) + ' → ' + esc(String(c.amount_mga_milli)) + ' Ar · ' + esc(String(c.created_at || '')) + '</li>';
     }).join('');
     var conversionRate = eco && eco.mga_per_usd ? ' · 1 USD = ' + String(eco.mga_per_usd) + ' Ar' : '';
+    var minDeposit = eco && eco.min_deposit_usd ? String(eco.min_deposit_usd) : '0.5';
+    var minWithdraw = eco && eco.min_withdraw_usd ? String(eco.min_withdraw_usd) : '0.5';
     return '<section class="crypto-wallets" data-testid="crypto-wallets">' +
       '<h3>' + esc(tr(l, 'crypto.title')) + '</h3>' +
       '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' + depositBox +
@@ -193,11 +195,13 @@
       '<h4>' + esc(tr(l, 'crypto.balances')) + '</h4>' +
       '<ul>' + (balanceRows || '<li class="empty">' + esc(tr(l, 'crypto.no_balances')) + '</li>') + '</ul>' +
       '<h4>' + esc(tr(l, 'crypto.deposit')) + '</h4>' +
-      '<form data-form="crypto-deposit"><label>USD <input name="amount_milli" inputmode="decimal" placeholder="20" required></label>' +
+      '<p class="hint">Minimum dépôt crypto: $' + esc(minDeposit) + '</p>' +
+      '<form data-form="crypto-deposit"><label>USD <input name="amount_milli" inputmode="decimal" placeholder="0.5" min="0.5" step="0.001" required></label>' +
       '<label>' + esc(tr(l, 'crypto.asset')) + ' <input name="pay_currency" list="crypto-currency-catalog" placeholder="usdttrc20" required></label>' +
       '<datalist id="crypto-currency-catalog">' + currencyOptions + '</datalist>' +
       '<button type="submit">' + esc(tr(l, 'crypto.deposit_submit')) + '</button></form>' +
       '<h4>' + esc(tr(l, 'crypto.withdraw')) + '</h4>' +
+      '<p class="hint">Minimum retrait: $' + esc(minWithdraw) + ' (équivalent USD)</p>' +
       '<form data-form="crypto-withdraw"><label>' + esc(tr(l, 'crypto.wallet_target')) + ' <select name="crypto_wallet_id" required>' +
       (withdrawOptions || '<option value="">' + esc(tr(l, 'crypto.no_supported_payout')) + '</option>') + '</select></label>' +
       '<label>' + esc(tr(l, 'crypto.amount')) + ' <input name="amount" inputmode="decimal" placeholder="0.1" required></label>' +

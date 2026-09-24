@@ -27,6 +27,7 @@ const { normalizeMvolaProject, resolveMvolaProjectCredentials } = require('./pro
 const { appendWithinTx } = require('../ledger');
 const { stripSecrets, redactText, containsSecretLike } = require('./redact');
 const { createHttpTransport } = require('./transport');
+const { MIN_CRYPTO_DEPOSIT_USD_CENTS, MIN_CRYPTO_WITHDRAW_USD_CENTS, resolveUsdRate, cryptoToUsd, usdAtLeastCents } = require('../crypto-economy');
 
 const GENESIS_HASH = '0'.repeat(64);
 
@@ -175,7 +176,10 @@ function buildPaymentGateway(input = {}) {
       currency: provider.currency,
       directions: [...provider.directions],
       capabilities: { ...provider.capabilities },
-      limits: { ...provider.limits },
+      limits: {
+        ...provider.limits,
+        ...(provider.name === 'nowpayments' || provider.name === 'nowpayments-sandbox' ? { min_milli: Math.max(provider.limits.min_milli, MIN_CRYPTO_DEPOSIT_USD_CENTS * 10) } : {}),
+      },
       status: envDisabled || (config && config.status === 'disabled') ? 'disabled' : 'active',
       configured: missing.length === 0,
       missing_credentials: missing,
@@ -203,6 +207,9 @@ function buildPaymentGateway(input = {}) {
     const info = nowCurrencyInfo(payoutCurrency);
     ok(info, 'E_CRYPTO_WITHDRAWAL_CURRENCY', 'unsupported payout currency code: ' + payoutCurrency);
     ok(info.asset === cryptoWallet.asset && info.network === cryptoWallet.network, 'E_CRYPTO_WALLET_INVALID', 'payout currency does not match wallet asset/network');
+    const usdRate = resolveUsdRate(info.asset, info.network, env);
+    const usdAmount = cryptoToUsd(amount, usdRate);
+    ok(usdAtLeastCents(usdAmount, MIN_CRYPTO_WITHDRAW_USD_CENTS), 'E_PAYMENT_LIMIT', 'crypto withdrawal minimum is $0.50');
     const balance = cryptoLedger.getBalance(userId, info.asset, info.network);
     ok(balance, 'E_CRYPTO_BALANCE_NOT_FOUND', 'no crypto balance for ' + info.asset + '/' + info.network);
     ok(cryptoLedger.compareDecimal(balance.available_amount, amount) >= 0, 'E_CRYPTO_INSUFFICIENT_FUNDS', 'insufficient crypto balance');

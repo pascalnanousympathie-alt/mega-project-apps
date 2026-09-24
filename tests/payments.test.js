@@ -134,6 +134,11 @@ test('all payment providers are registered behind one uniform interface', () => 
   );
 });
 
+test('NOWPayments enforces the fixed $0.50 crypto deposit minimum', () => {
+  assert.equal(createNowPaymentsProvider().limits.min_milli, 500);
+  assert.equal(createNowPaymentsProvider({ sandbox: true }).limits.min_milli, 500);
+});
+
 test('provider status maps normalize vendor-specific codes', () => {
   const airtel = createAirtelProvider();
   assert.equal(normalizeStatus('TS', airtel.statusMap), 'succeeded');
@@ -151,6 +156,68 @@ test('provider status maps normalize vendor-specific codes', () => {
   assert.equal(normalizeStatus('finished', nowpayments.statusMap), 'succeeded');
   assert.equal(normalizeStatus('expired', nowpayments.statusMap), 'expired');
   assert.equal(normalizeStatus(null, mvola.statusMap), 'pending');
+});
+
+test('crypto withdrawal enforces the fixed $0.50 USD-equivalent minimum', async (t) => {
+  const fallback = makeFakeTransport();
+  const transport = async (spec) => {
+    if (spec.url.endsWith('/v1/auth')) return ok({ token: 'test-payout-token' });
+    if (spec.url.endsWith('/v1/payout')) return ok({ id: 'payout-0.50' });
+    return fallback(spec);
+  };
+  const credentials = {
+    ...CREDENTIALS,
+    nowpayments: {
+      ...CREDENTIALS.nowpayments,
+      payoutEmail: 'payout@example.mg',
+      payoutPassword: 'test-payout-password',
+    },
+  };
+  const { layer } = makePaymentLayer(t, { credentials, transport });
+  layer.payments = require('../core/payments').buildPaymentGateway({
+    db: layer.db,
+    repos: layer,
+    cryptoLedger: layer.cryptoLedger,
+    credentials,
+    env: {},
+    transport,
+    callbackUrl: 'https://acep.test/payments/callback',
+  });
+  const user = layer.createUser({ username: 'crypto_withdraw_min', phone: '+261340000099', email: 'crypto_withdraw_min@example.mg' });
+  const wallet = layer.createCryptoWallet(user.id, {
+    provider: 'other',
+    asset: 'USDT',
+    network: 'tron',
+    address: 'T' + '7'.repeat(33),
+  });
+  layer.cryptoLedger.credit({
+    user_id: user.id,
+    asset: 'USDT',
+    network: 'tron',
+    amount: '1',
+    idempotency_key: 'fund-withdraw-min',
+  });
+
+  await assert.rejects(
+    () => layer.payments.createCryptoWithdrawal({
+      provider: 'nowpayments',
+      user_id: user.id,
+      crypto_wallet_id: wallet.id,
+      amount: '0.49',
+      payout_currency: 'usdttrc20',
+    }),
+    (err) => err && err.code === 'E_PAYMENT_LIMIT',
+  );
+
+  const result = await layer.payments.createCryptoWithdrawal({
+    provider: 'nowpayments',
+    user_id: user.id,
+    crypto_wallet_id: wallet.id,
+    amount: '0.50',
+    payout_currency: 'usdttrc20',
+  });
+  assert.equal(result.withdrawal.status, 'awaiting_2fa');
+  assert.equal(result.withdrawal.amount, '0.5');
 });
 
 test('gateway lists provider capabilities without leaking credentials', (t) => {

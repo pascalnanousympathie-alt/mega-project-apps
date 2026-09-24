@@ -2,6 +2,8 @@
 const { DataError, ok } = require('./db');
 
 const STAKE_USD_CENTS = Object.freeze([10, 50, 100, 200, 500]);
+const MIN_CRYPTO_DEPOSIT_USD_CENTS = 50;
+const MIN_CRYPTO_WITHDRAW_USD_CENTS = 50;
 const SCALE = 18n;
 const TEN = 10n;
 const SCALE_FACTOR = TEN ** SCALE;
@@ -86,6 +88,10 @@ function usdToCrypto(usd, usdRate) {
   return out;
 }
 function cryptoToUsd(crypto, usdRate) { return multiplyDecimal(crypto, usdRate); }
+function usdAtLeastCents(usd, cents) {
+  ok(Number.isInteger(cents) && cents > 0, 'E_FX_RATE_INVALID', 'USD cents threshold must be positive');
+  return scaled(usd) >= BigInt(cents) * (SCALE_FACTOR / 100n);
+}
 function usdToMgaMilli(usd, rate) {
   const mga = multiplyDecimal(usd, rate);
   return Number((scaled(mga) * 1000n) / SCALE_FACTOR);
@@ -126,4 +132,4 @@ function buildCryptoEconomy(options = {}) {
   return { stake, quoteCryptoToMga, quoteMgaToCrypto, resolveUsdRate: (a,n)=>resolveUsdRate(a,n,env), mgaPerUsd: ()=>mgaPerUsd(env), validateStakeUsdCents };
 }
 
-module.exports = { STAKE_USD_CENTS, buildCryptoEconomy, normalizeAsset, normalizeNetwork, rateKey, resolveUsdRate, mgaPerUsd, centsToUsd, usdToCrypto, cryptoToUsd, usdToMgaMilli, mgaMilliToUsd, validateStakeUsdCents };
+module.exports = { STAKE_USD_CENTS, MIN_CRYPTO_DEPOSIT_USD_CENTS, MIN_CRYPTO_WITHDRAW_USD_CENTS, buildCryptoEconomy, normalizeAsset, normalizeNetwork, rateKey, resolveUsdRate, mgaPerUsd, centsToUsd, usdToCrypto, cryptoToUsd, usdAtLeastCents, usdToMgaMilli, mgaMilliToUsd, validateStakeUsdCents };
