@@ -92,6 +92,16 @@ function buildPaymentGateway(input = {}) {
     ok(key.length > 0, 'E_ARG', 'provider is required');
     const provider = providers.get(key);
     ok(provider, 'E_PROVIDER_UNKNOWN', 'unknown payment provider: ' + key);
+    const envFlag = {
+      mvola: 'MVOLA_ENABLED',
+      airtel: 'AIRTEL_ENABLED',
+      orange: 'ORANGE_ENABLED',
+      nowpayments: 'NOWPAYMENTS_ENABLED',
+      'nowpayments-sandbox': 'NOWPAYMENTS_SANDBOX_ENABLED',
+    }[key];
+    if (envFlag && String(env[envFlag] || '').trim() === '0') {
+      throw new DataError('E_PROVIDER_DISABLED', 'payment provider is disabled: ' + key);
+    }
     const config = providerConfigRow(key);
     if (config && config.status === 'disabled') {
       throw new DataError('E_PROVIDER_DISABLED', 'payment provider is disabled: ' + key);
@@ -151,6 +161,14 @@ function buildPaymentGateway(input = {}) {
     const credentials = credentialsFor(provider, project);
     const missing = missingProviderCredentials(provider, credentials);
     const config = providerConfigRow(provider.name);
+    const envFlag = {
+      mvola: 'MVOLA_ENABLED',
+      airtel: 'AIRTEL_ENABLED',
+      orange: 'ORANGE_ENABLED',
+      nowpayments: 'NOWPAYMENTS_ENABLED',
+      'nowpayments-sandbox': 'NOWPAYMENTS_SANDBOX_ENABLED',
+    }[provider.name];
+    const envDisabled = envFlag && String(env[envFlag] || '').trim() === '0';
     return {
       name: provider.name,
       display_name: provider.displayName,
@@ -158,7 +176,7 @@ function buildPaymentGateway(input = {}) {
       directions: [...provider.directions],
       capabilities: { ...provider.capabilities },
       limits: { ...provider.limits },
-      status: config && config.status === 'disabled' ? 'disabled' : 'active',
+      status: envDisabled || (config && config.status === 'disabled') ? 'disabled' : 'active',
       configured: missing.length === 0,
       missing_credentials: missing,
     };

@@ -99,7 +99,7 @@ function makePaymentLayer(t, options = {}) {
     db: layer.db,
     repos: layer,
     credentials: options.credentials || CREDENTIALS,
-    env: {},
+    env: options.env || {},
     transport,
     callbackUrl: 'https://acep.test/payments/callback',
   });
@@ -182,6 +182,34 @@ test('unconfigured and unknown providers are rejected before any transport call'
     (err) => err.code === 'E_PROVIDER_UNKNOWN',
   );
   assert.equal(transport.calls.length, 0);
+});
+
+test('environment provider flags can disable mobile money without disabling crypto', async (t) => {
+  const { layer } = makePaymentLayer(t, {
+    env: {
+      MVOLA_ENABLED: '0',
+      AIRTEL_ENABLED: '0',
+      ORANGE_ENABLED: '0',
+      NOWPAYMENTS_ENABLED: '1',
+    },
+  });
+  const providers = layer.payments.listProviders();
+  assert.equal(providers.find((p) => p.name === 'mvola').status, 'disabled');
+  assert.equal(providers.find((p) => p.name === 'airtel').status, 'disabled');
+  assert.equal(providers.find((p) => p.name === 'orange').status, 'disabled');
+  assert.equal(providers.find((p) => p.name === 'nowpayments').status, 'active');
+  await assert.rejects(
+    () => layer.payments.initiatePayment({ provider: 'mvola', amount_milli: 5000, idempotency_key: 'env-disabled-mvola' }),
+    (err) => err.code === 'E_PROVIDER_DISABLED',
+  );
+  await assert.rejects(
+    () => layer.payments.initiatePayment({ provider: 'airtel', amount_milli: 5000, idempotency_key: 'env-disabled-airtel' }),
+    (err) => err.code === 'E_PROVIDER_DISABLED',
+  );
+  await assert.rejects(
+    () => layer.payments.initiatePayment({ provider: 'orange', amount_milli: 5000, idempotency_key: 'env-disabled-orange' }),
+    (err) => err.code === 'E_PROVIDER_DISABLED',
+  );
 });
 
 test('disabled providers are rejected even when credentials exist', async (t) => {
