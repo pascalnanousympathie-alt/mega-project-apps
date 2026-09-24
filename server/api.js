@@ -424,7 +424,7 @@ function buildApiHandlers(layer) {
     const key = contracts.idempotencyKeyFrom(ctx.headers);
     ok(key, 'E_IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header is required');
     let walletId = ctx.body.wallet_id;
-    if (!walletId && ctx.body.provider !== 'nowpayments') {
+    if (!walletId && !['nowpayments', 'nowpayments-sandbox'].includes(ctx.body.provider)) {
       const own = ownWallet(user.id);
       ok(own, 'E_NO_WALLET', 'create a wallet before depositing');
       walletId = own.id;
@@ -444,7 +444,7 @@ function buildApiHandlers(layer) {
       customer: paymentCustomer(ctx.body, user),
     });
     let details = null;
-    if (result.intent && result.intent.provider === 'nowpayments') {
+    if (result.intent && ['nowpayments', 'nowpayments-sandbox'].includes(result.intent.provider)) {
       try {
         details = publicNowPaymentsDetails(JSON.parse(result.intent.response_json || '{}'));
       } catch (_) {
@@ -468,7 +468,7 @@ function buildApiHandlers(layer) {
       ok(wallet.user_id === user.id, 'E_FORBIDDEN', 'payment wallet does not belong to this user');
     }
     let details = null;
-    if (intent.provider === 'nowpayments') {
+    if (['nowpayments', 'nowpayments-sandbox'].includes(intent.provider)) {
       try {
         details = publicNowPaymentsDetails(JSON.parse(intent.response_json || '{}'));
       } catch (_) {
