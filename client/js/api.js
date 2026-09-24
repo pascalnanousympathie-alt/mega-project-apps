@@ -86,6 +86,15 @@
         var q = limit ? '?limit=' + encodeURIComponent(String(limit)) : '';
         return request('GET', '/wallets/' + encodeURIComponent(walletId) + '/entries' + q);
       },
+      cryptoWallets: function () {
+        return request('GET', '/crypto/wallets');
+      },
+      createCryptoWallet: function (body, key) {
+        return request('POST', '/crypto/wallets', { body: body, idempotency: key || true });
+      },
+      disableCryptoWallet: function (walletId) {
+        return request('DELETE', '/crypto/wallets/' + encodeURIComponent(walletId), { body: {} });
+      },
       transfer: function (walletId, body, key) {
         return request('POST', '/wallets/' + encodeURIComponent(walletId) + '/transfers', {
           body: body,

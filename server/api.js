@@ -31,6 +31,23 @@ function publicWallet(wallet) {
   };
 }
 
+function publicCryptoWallet(wallet) {
+  if (!wallet) return null;
+  return {
+    id: wallet.id,
+    user_id: wallet.user_id,
+    provider: wallet.provider,
+    asset: wallet.asset,
+    network: wallet.network,
+    address: wallet.address,
+    address_memo: wallet.address_memo || null,
+    label: wallet.label || null,
+    status: wallet.status,
+    created_at: wallet.created_at,
+    updated_at: wallet.updated_at,
+  };
+}
+
 function publicEntry(entry) {
   if (!entry) return null;
   return {
@@ -224,6 +241,7 @@ function buildApiHandlers(layer) {
       user: publicUser(user),
       session: { id: sess.id, expires_at: sess.expires_at },
       wallet: wallet ? publicWallet(wallet) : null,
+      crypto_wallets: repos.listCryptoWallets(user.id).map(publicCryptoWallet),
       games: catalog(),
     };
   };
@@ -285,6 +303,54 @@ function buildApiHandlers(layer) {
       credit: publicEntry(result.in),
       balance_milli: repos.getWallet(source.id).balance_milli,
     };
+  };
+
+  handlers['crypto-wallets.list'] = (ctx) => {
+    const { user } = session(ctx);
+    return repos.listCryptoWallets(user.id).map(publicCryptoWallet);
+  };
+
+  handlers['crypto-wallets.create'] = (ctx) => {
+    const { user } = session(ctx);
+    const wallet = repos.createCryptoWallet(user.id, {
+      provider: ctx.body.provider,
+      asset: ctx.body.asset,
+      network: ctx.body.network,
+      address: ctx.body.address,
+      addressMemo: ctx.body.address_memo,
+      label: ctx.body.label,
+    });
+    try {
+      repos.recordAudit({
+        actorType: 'user',
+        actorId: user.id,
+        action: 'crypto_wallet.create',
+        targetType: 'crypto_wallet',
+        targetId: wallet.id,
+        detail: { provider: wallet.provider, asset: wallet.asset, network: wallet.network },
+      });
+    } catch (_) {
+      // audit must not break wallet registration
+    }
+    return { wallet: publicCryptoWallet(wallet), created: true };
+  };
+
+  handlers['crypto-wallets.disable'] = (ctx) => {
+    const { user } = session(ctx);
+    const wallet = repos.disableCryptoWallet(user.id, ctx.params.cryptoWalletId);
+    try {
+      repos.recordAudit({
+        actorType: 'user',
+        actorId: user.id,
+        action: 'crypto_wallet.disable',
+        targetType: 'crypto_wallet',
+        targetId: wallet.id,
+        detail: { provider: wallet.provider, asset: wallet.asset, network: wallet.network },
+      });
+    } catch (_) {
+      // audit must not break wallet disabling
+    }
+    return { wallet: publicCryptoWallet(wallet), disabled: wallet.status === 'disabled' };
   };
 
   handlers['ledger.entries'] = (ctx) => {

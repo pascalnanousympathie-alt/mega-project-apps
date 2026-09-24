@@ -55,6 +55,7 @@
     wallet: null,
     walletDetail: null,
     entries: [],
+    cryptoWallets: [],
     snapshot: null,
     gameSnapshot: null,
     selectedTile: null,
@@ -169,6 +170,7 @@
           wallet: data.wallet,
           balances: data.walletDetail && data.walletDetail.balances,
           entries: data.entries,
+          cryptoWallets: data.cryptoWallets,
           locale: locale,
         })
       );
@@ -211,6 +213,7 @@
   function refreshMe() {
     return api.me().then(function (me) {
       data.me = me;
+      data.cryptoWallets = (me && me.crypto_wallets) || [];
       render();
       return me;
     }, function (err) {
@@ -393,6 +396,25 @@
     });
   }
 
+  function handleCryptoWallet(form) {
+    var values = formValues(form);
+    var body = {
+      provider: values.provider,
+      asset: values.asset,
+      network: values.network,
+      address: values.address,
+      address_memo: values.address_memo || undefined,
+      label: values.label || undefined,
+    };
+    api.createCryptoWallet(body).then(function (result) {
+      data.notice = { i18n: 'app.crypto_wallet_added', params: { asset: result.wallet && result.wallet.asset } };
+      return refreshMe().then(loadWallet);
+    }, function (err) {
+      data.error = err.message;
+      render();
+    });
+  }
+
   function handleCreateRoom(form) {
     var values = formValues(form);
     var games = (data.me && data.me.games) || [];
@@ -433,6 +455,16 @@
     },
     'join-room': function (el) {
       enterRoom(el.getAttribute('data-room-id'));
+    },
+    'disable-crypto-wallet': function (el) {
+      var walletId = el.getAttribute('data-crypto-wallet-id');
+      api.disableCryptoWallet(walletId).then(function () {
+        data.notice = { i18n: 'app.crypto_wallet_disabled' };
+        return refreshMe().then(loadWallet);
+      }, function (err) {
+        data.error = err.message;
+        render();
+      });
     },
     'ready': function () {
       if (socket) socket.emit('room:ready', { ready: true });
@@ -530,6 +562,7 @@
     if (kind === 'login') handleLogin(form);
     else if (kind === 'register') handleRegister(form);
     else if (kind === 'deposit') handleDeposit(form);
+    else if (kind === 'crypto-wallet') handleCryptoWallet(form);
     else if (kind === 'create-room') handleCreateRoom(form);
   });
 

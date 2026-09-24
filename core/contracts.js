@@ -4,7 +4,7 @@ const { DataError, ok, sha256hex } = require('./db');
 const API_VERSION = 'v1';
 const API_VERSIONS = ['v1'];
 const API_PREFIX = '/api/' + API_VERSION;
-const CONTRACTS_REVISION = 1;
+const CONTRACTS_REVISION = 2;
 
 const ERROR_STATUS = {
   E_ARG: 400,
@@ -32,6 +32,9 @@ const ERROR_STATUS = {
   E_NO_WALLET: 404,
   E_WALLET_INACTIVE: 409,
   E_WALLET_CLOSED: 409,
+  E_CRYPTO_WALLET_NOT_FOUND: 404,
+  E_CRYPTO_WALLET_INVALID: 400,
+  E_CRYPTO_WALLET_CREATE: 409,
   E_NO_ENTRY: 404,
   E_NOT_PENDING: 409,
   E_ALREADY_SETTLED: 409,
@@ -251,6 +254,26 @@ const WALLET_ID_PARAMS = {
   properties: { walletId: { type: 'string', minLength: 1 } },
 };
 
+const CRYPTO_WALLET_ID_PARAMS = {
+  type: 'object',
+  required: ['cryptoWalletId'],
+  properties: { cryptoWalletId: { type: 'string', minLength: 1 } },
+};
+
+const CRYPTO_WALLET_BODY = {
+  type: 'object',
+  required: ['provider', 'asset', 'network', 'address'],
+  properties: {
+    provider: { type: 'string', enum: ['metamask', 'trust_wallet', 'coinbase_wallet', 'walletconnect', 'ledger', 'trezor', 'other'] },
+    asset: { type: 'string', enum: ['BTC', 'ETH', 'USDT', 'USDC', 'SOL'] },
+    network: { type: 'string', enum: ['bitcoin', 'ethereum', 'tron', 'polygon', 'solana'] },
+    address: { type: 'string', minLength: 20, maxLength: 160 },
+    address_memo: { type: 'string', maxLength: 120 },
+    label: { type: 'string', maxLength: 80 },
+  },
+  additionalProperties: false,
+};
+
 const REST_ROUTES = [
   {
     id: 'health.get',
@@ -382,6 +405,37 @@ const REST_ROUTES = [
       },
       additionalProperties: false,
     },
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto-wallets.list',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/crypto/wallets',
+    auth: 'bearer',
+    idempotent: false,
+    query: { type: 'object' },
+    response: { type: 'array' },
+  },
+  {
+    id: 'crypto-wallets.create',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/crypto/wallets',
+    auth: 'bearer',
+    idempotent: true,
+    body: CRYPTO_WALLET_BODY,
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto-wallets.disable',
+    version: API_VERSION,
+    method: 'DELETE',
+    path: '/crypto/wallets/:cryptoWalletId',
+    auth: 'bearer',
+    idempotent: false,
+    params: CRYPTO_WALLET_ID_PARAMS,
+    body: { type: 'object', additionalProperties: false },
     response: { type: 'object' },
   },
   {

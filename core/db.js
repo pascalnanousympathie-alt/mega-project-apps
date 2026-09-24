@@ -419,7 +419,26 @@ BEGIN
 END;
 `;
 
-const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8];
+const SCHEMA_V9 = `
+CREATE TABLE crypto_wallets (
+  id             TEXT PRIMARY KEY,
+  user_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider       TEXT NOT NULL,
+  asset          TEXT NOT NULL,
+  network        TEXT NOT NULL,
+  address        TEXT NOT NULL,
+  address_memo   TEXT,
+  label          TEXT,
+  status         TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','disabled')),
+  created_at     TEXT NOT NULL,
+  updated_at     TEXT NOT NULL,
+  UNIQUE (user_id, provider, asset, network, address)
+);
+CREATE INDEX idx_crypto_wallets_user ON crypto_wallets (user_id, created_at);
+CREATE INDEX idx_crypto_wallets_asset ON crypto_wallets (user_id, asset, network);
+`;
+
+const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8, SCHEMA_V9];
 
 function migrate(db) {
   const has = db.prepare(

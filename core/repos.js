@@ -21,6 +21,15 @@ const USERNAME_RE = /^[A-Za-z0-9_.]{3,32}$/;
 const PHONE_RE = /^\+?[0-9]{8,15}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const CRYPTO_WALLET_PROVIDERS = ['metamask', 'trust_wallet', 'coinbase_wallet', 'walletconnect', 'ledger', 'trezor', 'other'];
+const CRYPTO_WALLET_ASSET_NETWORKS = {
+  BTC: ['bitcoin'],
+  ETH: ['ethereum'],
+  USDT: ['ethereum', 'tron', 'polygon'],
+  USDC: ['ethereum', 'polygon', 'solana'],
+  SOL: ['solana'],
+};
+
 function buildRepositories(db) {
   function createUser(input) {
     const username = String(input && input.username || '').trim();
@@ -131,6 +140,62 @@ function buildRepositories(db) {
     const ts = nowIso();
     db.prepare('UPDATE wallets SET status = ?, updated_at = ?, version = version + 1 WHERE id = ?').run(status, ts, id);
     return { ...row, status, updated_at: ts };
+  }
+
+  function createCryptoWallet(userId, input = {}) {
+    getById(userId);
+    const provider = String(input.provider || '').trim().toLowerCase();
+    const asset = String(input.asset || '').trim().toUpperCase();
+    const network = String(input.network || '').trim().toLowerCase();
+    const address = String(input.address || '').trim();
+    const memo = input.addressMemo === undefined || input.addressMemo === null ? null : String(input.addressMemo).trim();
+    const label = input.label === undefined || input.label === null ? null : String(input.label).trim();
+
+    ok(CRYPTO_WALLET_PROVIDERS.includes(provider), 'E_CRYPTO_WALLET_INVALID', 'unsupported wallet provider: ' + provider);
+    ok(Object.prototype.hasOwnProperty.call(CRYPTO_WALLET_ASSET_NETWORKS, asset), 'E_CRYPTO_WALLET_INVALID', 'unsupported crypto asset: ' + asset);
+    ok(CRYPTO_WALLET_ASSET_NETWORKS[asset].includes(network), 'E_CRYPTO_WALLET_INVALID', 'network is not supported for ' + asset);
+    ok(address.length >= 20 && address.length <= 160, 'E_CRYPTO_WALLET_INVALID', 'invalid wallet address length');
+    if (memo !== null) ok(memo.length <= 120, 'E_CRYPTO_WALLET_INVALID', 'wallet memo too long');
+    if (label !== null) ok(label.length <= 80, 'E_CRYPTO_WALLET_INVALID', 'wallet label too long');
+
+    const id = genId();
+    const ts = nowIso();
+    try {
+      db.prepare(
+        `INSERT INTO crypto_wallets
+          (id, user_id, provider, asset, network, address, address_memo, label, status, created_at, updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      ).run(id, userId, provider, asset, network, address, memo || null, label || null, 'active', ts, ts);
+    } catch (err) {
+      throw toDataError(err, 'E_CRYPTO_WALLET_CREATE', 'crypto wallet create failed');
+    }
+    return getCryptoWallet(id);
+  }
+
+  function getCryptoWallet(id) {
+    const row = db.prepare('SELECT * FROM crypto_wallets WHERE id = ?').get(String(id || ''));
+    ok(row, 'E_CRYPTO_WALLET_NOT_FOUND', 'crypto wallet not found: ' + id);
+    return row;
+  }
+
+  function listCryptoWallets(userId, options = {}) {
+    getById(userId);
+    const limit = Number.isSafeInteger(options.limit) ? Math.min(Math.max(options.limit, 1), 100) : 100;
+    const offset = Number.isSafeInteger(options.offset) && options.offset >= 0 ? options.offset : 0;
+    return db
+      .prepare(
+        "SELECT * FROM crypto_wallets WHERE user_id = ? AND status = 'active' ORDER BY created_at ASC, id ASC LIMIT ? OFFSET ?",
+      )
+      .all(userId, limit, offset);
+  }
+
+  function disableCryptoWallet(userId, id) {
+    const wallet = getCryptoWallet(id);
+    ok(wallet.user_id === userId, 'E_FORBIDDEN', 'crypto wallet does not belong to this user');
+    if (wallet.status === 'disabled') return wallet;
+    const ts = nowIso();
+    db.prepare('UPDATE crypto_wallets SET status = ?, updated_at = ? WHERE id = ?').run('disabled', ts, id);
+    return getCryptoWallet(id);
   }
 
   function createGame(input) {
@@ -361,6 +426,10 @@ function buildRepositories(db) {
     getWalletByUser,
     listWallets,
     setWalletStatus,
+    createCryptoWallet,
+    getCryptoWallet,
+    listCryptoWallets,
+    disableCryptoWallet,
     createGame,
     getGame,
     setGameStatus,
@@ -387,4 +456,6 @@ module.exports = {
   GAME_STATUSES,
   ROOM_STATUSES,
   AUDIT_ACTOR_TYPES,
+  CRYPTO_WALLET_PROVIDERS,
+  CRYPTO_WALLET_ASSET_NETWORKS,
 };

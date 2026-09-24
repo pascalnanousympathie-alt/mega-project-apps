@@ -124,16 +124,61 @@
     );
   }
 
+  function renderCryptoWallets(l, wallets) {
+    var rows = (wallets || []).map(function (wallet) {
+      var shortAddress = wallet.address.length > 18
+        ? wallet.address.slice(0, 10) + '…' + wallet.address.slice(-8)
+        : wallet.address;
+      return (
+        '<li class="crypto-wallet" data-crypto-wallet-id="' + esc(wallet.id) + '">' +
+        '<strong>' + esc(wallet.asset) + '</strong> · <span>' + esc(wallet.network) + '</span> · <span>' + esc(wallet.provider) + '</span>' +
+        '<code title="' + esc(wallet.address) + '">' + esc(shortAddress) + '</code>' +
+        (wallet.label ? '<small>' + esc(wallet.label) + '</small>' : '') +
+        '<button type="button" data-action="disable-crypto-wallet" data-crypto-wallet-id="' + esc(wallet.id) + '">' +
+        esc(tr(l, 'crypto.disable')) + '</button>' +
+        '</li>'
+      );
+    }).join('');
+    return (
+      '<section class="crypto-wallets" data-testid="crypto-wallets">' +
+      '<h3>' + esc(tr(l, 'crypto.title')) + '</h3>' +
+      '<p class="hint">' + esc(tr(l, 'crypto.warning')) + '</p>' +
+      '<ul>' + (rows || '<li class="empty">' + esc(tr(l, 'crypto.none')) + '</li>') + '</ul>' +
+      '<form data-form="crypto-wallet">' +
+      '<label>' + esc(tr(l, 'crypto.provider')) + ' <select name="provider" required>' +
+      '<option value="metamask">MetaMask</option><option value="trust_wallet">Trust Wallet</option>' +
+      '<option value="coinbase_wallet">Coinbase Wallet</option><option value="walletconnect">WalletConnect</option>' +
+      '<option value="ledger">Ledger</option><option value="trezor">Trezor</option><option value="other">Other</option>' +
+      '</select></label>' +
+      '<label>' + esc(tr(l, 'crypto.asset')) + ' <select name="asset" required>' +
+      '<option value="BTC">BTC</option><option value="ETH">ETH</option><option value="USDT">USDT</option>' +
+      '<option value="USDC">USDC</option><option value="SOL">SOL</option>' +
+      '</select></label>' +
+      '<label>' + esc(tr(l, 'crypto.network')) + ' <select name="network" required>' +
+      '<option value="bitcoin">Bitcoin</option><option value="ethereum">Ethereum</option><option value="tron">TRON</option>' +
+      '<option value="polygon">Polygon</option><option value="solana">Solana</option>' +
+      '</select></label>' +
+      '<label>' + esc(tr(l, 'crypto.address')) + ' <input name="address" autocomplete="off" required minlength="20" maxlength="160"></label>' +
+      '<label>' + esc(tr(l, 'crypto.memo')) + ' <input name="address_memo" maxlength="120"></label>' +
+      '<label>' + esc(tr(l, 'crypto.label')) + ' <input name="label" maxlength="80"></label>' +
+      '<button type="submit">' + esc(tr(l, 'crypto.add')) + '</button>' +
+      '</form>' +
+      '</section>'
+    );
+  }
+
   function renderWallet(state) {
     var s = state || {};
     var l = loc(s);
     var wallet = s.wallet;
     var entries = s.entries || [];
+    var cryptoWallets = s.cryptoWallets || [];
+    var cryptoSection = renderCryptoWallets(l, cryptoWallets);
     if (!wallet) {
       return (
         '<section class="screen wallet" data-screen="wallet" lang="' + esc(l) + '"><h2>' + esc(tr(l, 'wallet.title')) + '</h2>' +
         '<p data-testid="no-wallet">' + esc(tr(l, 'wallet.none')) + '</p>' +
-        '<button data-action="create-wallet">' + esc(tr(l, 'wallet.open')) + '</button></section>'
+        '<button data-action="create-wallet">' + esc(tr(l, 'wallet.open')) + '</button>' + cryptoSection + '</section>'
       );
     }
     var rows = entries.map(function (entry) {
@@ -155,6 +200,7 @@
       '</form>' +
       '<table class="entries" data-testid="entries"><thead><tr><th>' + esc(tr(l, 'wallet.col_date')) + '</th><th>' + esc(tr(l, 'wallet.col_label')) + '</th><th>' + esc(tr(l, 'wallet.col_amount')) + '</th></tr></thead>' +
       '<tbody>' + (rows || '<tr class="empty"><td colspan="3">' + esc(tr(l, 'wallet.no_entries')) + '</td></tr>') + '</tbody></table>' +
+      cryptoSection +
       '</section>'
     );
   }
