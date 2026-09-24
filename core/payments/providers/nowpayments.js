@@ -43,22 +43,26 @@ function verifyIpnSignature(payload, provided, secret) {
   return constantTimeEqual(hmacSha512Hex(secret, canonical), provided);
 }
 
-function createNowPaymentsProvider() {
+function createNowPaymentsProvider(options = {}) {
+  const sandbox = options.sandbox === true;
+  const name = sandbox ? 'nowpayments-sandbox' : 'nowpayments';
+  const prefix = sandbox ? 'NOWPAYMENTS_SANDBOX' : 'NOWPAYMENTS';
   return createProvider({
-    name: 'nowpayments',
-    displayName: 'NOWPayments',
+    name,
+    displayName: sandbox ? 'NOWPayments Sandbox' : 'NOWPayments',
     currency: 'USD',
     directions: ['payin'],
-    defaultBaseUrl: 'https://api.nowpayments.io',
+    defaultBaseUrl: sandbox ? 'https://api-sandbox.nowpayments.io' : 'https://api.nowpayments.io',
     capabilities: { callback: true, polling: true, refund: false },
     limits: { min_milli: 1, max_milli: 100000000000 },
     statusMap: NOWPAYMENTS_STATUS_MAP,
     credentialSpec: [
-      { key: 'apiKey', env: 'NOWPAYMENTS_API_KEY', secret: true },
-      { key: 'callbackSecret', env: 'NOWPAYMENTS_IPN_SECRET', secret: true },
-      { key: 'callbackUrl', env: 'NOWPAYMENTS_IPN_CALLBACK_URL', required: false, secret: false },
-      { key: 'payCurrency', env: 'NOWPAYMENTS_PAY_CURRENCY', required: false, secret: false },
-      { key: 'baseUrl', env: 'NOWPAYMENTS_BASE_URL', required: false, secret: false },
+      { key: 'apiKey', env: `${prefix}_API_KEY`, secret: true },
+      { key: 'callbackSecret', env: `${prefix}_IPN_SECRET`, secret: true },
+      { key: 'callbackUrl', env: `${prefix}_IPN_CALLBACK_URL`, required: false, secret: false },
+      { key: 'payCurrency', env: `${prefix}_PAY_CURRENCY`, required: false, secret: false },
+      { key: 'baseUrl', env: `${prefix}_BASE_URL`, required: false, secret: false },
+      ...(sandbox ? [{ key: 'testCase', env: `${prefix}_CASE`, required: false, secret: false }] : []),
     ],
     async createPayment(request, ctx) {
       const credentials = ctx.credentials;
@@ -77,9 +81,10 @@ function createNowPaymentsProvider() {
             ipn_callback_url: credentials.callbackUrl || ctx.callbackUrl || null,
             order_id: reference,
             order_description: request.description || 'ACEP crypto payment',
+            ...(sandbox ? { case: credentials.testCase || 'success' } : {}),
           },
         },
-        'nowpayments',
+        name,
       );
       const paymentId = data && data.payment_id;
       if (paymentId === undefined || paymentId === null) {
@@ -101,7 +106,7 @@ function createNowPaymentsProvider() {
           url: credentials.baseUrl + '/v1/payment/' + encodeURIComponent(providerRef),
           headers: { 'x-api-key': credentials.apiKey },
         },
-        'nowpayments',
+        name,
       );
       return {
         provider_ref: String(data && data.payment_id !== undefined ? data.payment_id : providerRef),

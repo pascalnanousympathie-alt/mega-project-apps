@@ -114,7 +114,7 @@ function makeWallet(layer, name = 'payer') {
 
 test('all payment providers are registered behind one uniform interface', () => {
   const registry = buildProviderRegistry();
-  assert.deepEqual([...registry.keys()].sort(), ['airtel', 'binance', 'mvola', 'nowpayments', 'orange']);
+  assert.deepEqual([...registry.keys()].sort(), ['airtel', 'binance', 'mvola', 'nowpayments', 'nowpayments-sandbox', 'orange']);
   for (const provider of registry.values()) {
     assert.equal(typeof provider.name, 'string');
     assert.equal(typeof provider.displayName, 'string');
@@ -130,7 +130,7 @@ test('all payment providers are registered behind one uniform interface', () => 
   }
   assert.deepEqual(
     [createMvolaProvider(), createAirtelProvider(), createOrangeProvider(), createBinanceProvider(), createNowPaymentsProvider()].map((p) => p.name),
-    ['mvola', 'airtel', 'orange', 'binance', 'nowpayments'],
+    ['mvola', 'airtel', 'orange', 'binance', 'nowpayments', 'nowpayments-sandbox'],
   );
 });
 
@@ -235,8 +235,8 @@ test('every provider adapter satisfies the same gateway contract', async (t) => 
       provider: scenario.provider,
       amount_milli: scenario.amount_milli,
       currency: scenario.currency,
-      wallet_id: ['binance', 'nowpayments'].includes(scenario.provider) ? undefined : wallet.id,
-      customer: ['binance', 'nowpayments'].includes(scenario.provider) ? undefined : { msisdn: '0340000002' },
+      wallet_id: ['binance', 'nowpayments', 'nowpayments-sandbox'].includes(scenario.provider) ? undefined : wallet.id,
+      customer: ['binance', 'nowpayments', 'nowpayments-sandbox'].includes(scenario.provider) ? undefined : { msisdn: '0340000002' },
       idempotency_key: scenario.provider + '-key-0001',
     });
     assert.equal(result.intent.status, 'succeeded', scenario.provider);

@@ -31,7 +31,7 @@ function normalizeStatus(raw, statusMap) {
 function createProvider(definition) {
   ok(definition && typeof definition === 'object', 'E_ARG', 'provider definition required');
   const name = String(definition.name || '').trim();
-  ok(/^[a-z][a-z0-9_]{1,30}$/.test(name), 'E_ARG', 'invalid provider name: ' + definition.name);
+  ok(/^[a-z][a-z0-9_-]{1,30}$/.test(name), 'E_ARG', 'invalid provider name: ' + definition.name);
   ok(typeof definition.displayName === 'string' && definition.displayName.length > 0, 'E_ARG', 'provider displayName required');
   const currency = String(definition.currency || 'MGA').toUpperCase();
   const directions = Array.isArray(definition.directions) ? definition.directions : ['payin'];

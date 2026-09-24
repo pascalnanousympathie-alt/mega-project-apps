@@ -11,6 +11,7 @@ const PROVIDER_FACTORIES = [
   createOrangeProvider,
   createBinanceProvider,
   createNowPaymentsProvider,
+  () => createNowPaymentsProvider({ sandbox: true }),
 ];
 
 function buildProviderRegistry() {
