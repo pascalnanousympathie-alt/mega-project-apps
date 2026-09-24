@@ -30,6 +30,18 @@ const { createHttpTransport } = require('./transport');
 
 const GENESIS_HASH = '0'.repeat(64);
 
+const NOW_CURRENCY_MAP = Object.freeze({
+  btc: ['BTC', 'bitcoin'], eth: ['ETH', 'ethereum'], ethbase: ['ETH', 'base'], sol: ['SOL', 'solana'], trx: ['TRX', 'tron'],
+  usdttrc20: ['USDT', 'tron'], usdterc20: ['USDT', 'ethereum'], usdtbsc: ['USDT', 'bsc'], usdtmatic: ['USDT', 'polygon'], usdtsol: ['USDT', 'solana'],
+  usdc: ['USDC', 'ethereum'], usdcmatic: ['USDC', 'polygon'], usdcsol: ['USDC', 'solana'], usdcbase: ['USDC', 'base'],
+});
+
+function nowCurrencyInfo(code) {
+  const key = String(code || '').trim().toLowerCase();
+  const mapped = NOW_CURRENCY_MAP[key];
+  return mapped ? { code: key, asset: mapped[0], network: mapped[1] } : null;
+}
+
 const INSERT_INTENT = `INSERT INTO payment_intents
   (id, provider, direction, user_id, wallet_id, amount_milli, currency, status,
    provider_ref, idempotency_key, customer_ref, request_json, response_json, created_at, updated_at)
@@ -48,6 +60,7 @@ function buildPaymentGateway(input = {}) {
   const db = input.db;
   ok(db, 'E_ARG', 'payment gateway requires a database');
   const repos = input.repos || null;
+  const cryptoLedger = input.cryptoLedger || null;
   const now = typeof input.now === 'function' ? input.now : nowIso;
   const transport = input.transport || createHttpTransport(input.transportOptions || {});
   const providerCredentials = input.credentials || {};
@@ -155,6 +168,118 @@ function buildPaymentGateway(input = {}) {
     const project = options && options.project ? normalizeMvolaProject(options.project) : null;
     if (options && options.project && !project) throw new DataError('E_PAYMENT_PROJECT_INVALID', 'unknown MVola project: ' + options.project);
     return [...providers.values()].map((provider) => describeProvider(provider, provider.name === 'mvola' ? project : null));
+  }
+
+  async function createCryptoWithdrawal(input = {}) {
+    ok(cryptoLedger && repos, 'E_NOT_IMPLEMENTED', 'crypto withdrawal ledger is not available');
+    const providerName = String(input.provider || 'nowpayments').toLowerCase();
+    const provider = getProvider(providerName);
+    ok(typeof provider.createPayout === 'function', 'E_NOT_IMPLEMENTED', 'provider does not support crypto payouts');
+    const userId = String(input.user_id || '');
+    ok(userId, 'E_ARG', 'user_id is required');
+    const cryptoWallet = repos.getCryptoWallet(input.crypto_wallet_id);
+    ok(cryptoWallet.user_id === userId, 'E_FORBIDDEN', 'crypto wallet does not belong to user');
+    ok(cryptoWallet.status === 'active', 'E_CRYPTO_WALLET_INVALID', 'crypto wallet is disabled');
+    const amount = cryptoLedger.cryptoAmount(input.amount);
+    const payoutCurrency = String(input.payout_currency || '').trim().toLowerCase();
+    const info = nowCurrencyInfo(payoutCurrency);
+    ok(info, 'E_CRYPTO_WITHDRAWAL_CURRENCY', 'unsupported payout currency code: ' + payoutCurrency);
+    ok(info.asset === cryptoWallet.asset && info.network === cryptoWallet.network, 'E_CRYPTO_WALLET_INVALID', 'payout currency does not match wallet asset/network');
+    const balance = cryptoLedger.getBalance(userId, info.asset, info.network);
+    ok(balance, 'E_CRYPTO_BALANCE_NOT_FOUND', 'no crypto balance for ' + info.asset + '/' + info.network);
+    ok(cryptoLedger.compareDecimal(balance.available_amount, amount) >= 0, 'E_CRYPTO_INSUFFICIENT_FUNDS', 'insufficient crypto balance');
+    const withdrawal = cryptoLedger.createWithdrawal({
+      user_id: userId,
+      balance_id: balance.id,
+      crypto_wallet_id: cryptoWallet.id,
+      provider: providerName,
+      asset: info.asset,
+      network: info.network,
+      payout_currency: payoutCurrency,
+      amount,
+    });
+    try {
+      cryptoLedger.reserve({
+        user_id: userId,
+        asset: info.asset,
+        network: info.network,
+        amount,
+        idempotency_key: 'withdrawal:reserve:' + withdrawal.id,
+        meta: { kind: 'crypto_withdrawal_reserve', withdrawal_id: withdrawal.id, wallet_id: cryptoWallet.id },
+      });
+      const credentials = credentialsFor(provider);
+      const result = await provider.createPayout({
+        address: cryptoWallet.address,
+        extra_id: cryptoWallet.address_memo || null,
+        currency: payoutCurrency,
+        amount,
+      }, { credentials, transport, nowIso: now, callbackUrl });
+      ok(result && result.payout_id, 'E_PAYMENT_TRANSPORT', 'provider payout response missing payout id');
+      const updated = cryptoLedger.updateWithdrawal(withdrawal.id, {
+        status: 'awaiting_2fa',
+        provider_ref: String(result.payout_id),
+      });
+      recordAudit('crypto.withdrawal.awaiting_2fa', updated, { amount: updated.amount, asset: updated.asset, network: updated.network, provider_ref: updated.provider_ref });
+      return { withdrawal: updated, provider: providerName };
+    } catch (err) {
+      try {
+        cryptoLedger.release({
+          user_id: userId,
+          asset: info.asset,
+          network: info.network,
+          amount,
+          idempotency_key: 'withdrawal:release:' + withdrawal.id,
+          meta: { kind: 'crypto_withdrawal_release', withdrawal_id: withdrawal.id },
+        });
+      } catch (_) {}
+      const failed = cryptoLedger.updateWithdrawal(withdrawal.id, { status: 'failed', error: err && err.code ? err.code : 'E_PAYMENT_TRANSPORT' });
+      throw Object.assign(err, { withdrawal: failed });
+    }
+  }
+
+  async function verifyCryptoWithdrawal(withdrawalId, userId, verificationCode) {
+    const withdrawal = cryptoLedger.getWithdrawal(withdrawalId);
+    ok(withdrawal.user_id === String(userId), 'E_FORBIDDEN', 'crypto withdrawal does not belong to user');
+    ok(withdrawal.status === 'awaiting_2fa', 'E_CRYPTO_WITHDRAWAL_STATUS', 'crypto withdrawal is not awaiting 2FA');
+    const provider = getProvider(withdrawal.provider);
+    ok(typeof provider.verifyPayout === 'function', 'E_NOT_IMPLEMENTED', 'provider does not support payout verification');
+    const credentials = credentialsFor(provider);
+    await provider.verifyPayout(withdrawal.provider_ref, verificationCode, { credentials, transport, nowIso: now, callbackUrl });
+    return cryptoLedger.updateWithdrawal(withdrawal.id, { status: 'processing' });
+  }
+
+  async function syncCryptoWithdrawal(withdrawalId, userId) {
+    const withdrawal = cryptoLedger.getWithdrawal(withdrawalId);
+    ok(withdrawal.user_id === String(userId), 'E_FORBIDDEN', 'crypto withdrawal does not belong to user');
+    if (['succeeded', 'failed', 'cancelled'].includes(withdrawal.status)) return withdrawal;
+    const provider = getProvider(withdrawal.provider);
+    ok(typeof provider.getPayout === 'function', 'E_NOT_IMPLEMENTED', 'provider does not support payout status');
+    const credentials = credentialsFor(provider);
+    const result = await provider.getPayout(withdrawal.provider_ref, { credentials, transport, nowIso: now, callbackUrl });
+    const status = result.status || 'pending';
+    if (status === 'succeeded') {
+      cryptoLedger.settle({
+        user_id: withdrawal.user_id,
+        asset: withdrawal.asset,
+        network: withdrawal.network,
+        amount: withdrawal.amount,
+        idempotency_key: 'withdrawal:settle:' + withdrawal.id,
+        meta: { kind: 'crypto_withdrawal_settlement', withdrawal_id: withdrawal.id, provider_ref: withdrawal.provider_ref },
+      });
+      return cryptoLedger.updateWithdrawal(withdrawal.id, { status: 'succeeded' });
+    }
+    if (['failed', 'cancelled', 'expired'].includes(status)) {
+      cryptoLedger.release({
+        user_id: withdrawal.user_id,
+        asset: withdrawal.asset,
+        network: withdrawal.network,
+        amount: withdrawal.amount,
+        idempotency_key: 'withdrawal:release:' + withdrawal.id,
+        meta: { kind: 'crypto_withdrawal_release', withdrawal_id: withdrawal.id, provider_ref: withdrawal.provider_ref },
+      });
+      return cryptoLedger.updateWithdrawal(withdrawal.id, { status: status === 'cancelled' ? 'cancelled' : 'failed', error: status });
+    }
+    return cryptoLedger.updateWithdrawal(withdrawal.id, { status: 'processing' });
   }
 
   async function listCurrencies(providerName = 'nowpayments') {
@@ -354,12 +479,18 @@ function buildPaymentGateway(input = {}) {
     const id = genId();
     const created_at = now();
     const reference = String(request.reference || id);
+    const requestedPayCurrency = request.pay_currency ? String(request.pay_currency).trim().toLowerCase() : null;
+    const mappedPayCurrency = requestedPayCurrency ? nowCurrencyInfo(requestedPayCurrency) : null;
+    if (['nowpayments', 'nowpayments-sandbox'].includes(provider.name)) {
+      ok(!requestedPayCurrency || mappedPayCurrency, 'E_CRYPTO_SETTLEMENT_UNSUPPORTED', 'unsupported NOWPayments currency/network: ' + requestedPayCurrency);
+    }
     const storedRequest = stripSecrets({
       amount_milli: amountMilli,
       currency,
       direction,
       reference,
       customer: request.customer || null,
+      ...(requestedPayCurrency ? { pay_currency: requestedPayCurrency } : {}),
       ...(paymentProject ? { project: paymentProject } : {}),
     });
     const intent = {
@@ -412,6 +543,7 @@ function buildPaymentGateway(input = {}) {
           description: request.description || null,
           returnUrl: request.return_url || null,
           cancelUrl: request.cancel_url || null,
+          pay_currency: requestedPayCurrency,
         },
         ctx,
       );
@@ -433,6 +565,15 @@ function buildPaymentGateway(input = {}) {
     };
   }
 
+  function cryptoSettlementInfo(payload) {
+    const body = payload && typeof payload === 'object' ? payload : {};
+    const code = body.pay_currency || body.currency || null;
+    const info = nowCurrencyInfo(code);
+    const amount = body.pay_amount;
+    if (!info || amount === undefined || amount === null || amount === '') return null;
+    return { ...info, amount: String(amount) };
+  }
+
   function applyStatusInternal(intentId, status, payload, providerRef) {
     assertKnownStatus(status);
     const current = getIntent(intentId);
@@ -452,7 +593,34 @@ function buildPaymentGateway(input = {}) {
         'UPDATE payment_intents SET status = ?, provider_ref = COALESCE(?, provider_ref), response_json = ?, updated_at = ? WHERE id = ?',
       ).run(status, providerRef || null, response_json, ts, intentId);
       appendEvent(current, 'status.changed', status, providerRef || current.provider_ref, payload);
-      if (status === 'succeeded' && current.status !== 'succeeded' && current.wallet_id) {
+      if (status === 'succeeded' && current.status !== 'succeeded' && cryptoLedger && current.direction === 'payin' && ['nowpayments', 'nowpayments-sandbox'].includes(current.provider)) {
+        let payCurrency = payload && payload.pay_currency ? String(payload.pay_currency).trim().toLowerCase() : null;
+        if (!payCurrency) {
+          try {
+            const req = typeof current.request_json === 'string' ? JSON.parse(current.request_json) : current.request_json;
+            payCurrency = req && req.pay_currency ? String(req.pay_currency).trim().toLowerCase() : null;
+          } catch (_) {}
+        }
+        const info = nowCurrencyInfo(payCurrency);
+        ok(info, 'E_CRYPTO_SETTLEMENT_UNSUPPORTED', 'cannot settle unsupported crypto currency: ' + payCurrency);
+        const payAmount = payload && payload.pay_amount !== undefined ? cryptoLedger.cryptoAmount(payload.pay_amount) : null;
+        ok(payAmount, 'E_CRYPTO_AMOUNT', 'provider success response is missing pay_amount');
+        settlement = cryptoLedger.creditWithinTx({
+          user_id: current.user_id,
+          asset: info.asset,
+          network: info.network,
+          amount: payAmount,
+          idempotency_key: 'payment:crypto-settlement:' + current.id,
+          tx_type: 'deposit',
+          meta: {
+            kind: 'payment_crypto_settlement',
+            payment_intent_id: current.id,
+            provider: current.provider,
+            provider_ref: providerRef || current.provider_ref,
+            pay_currency: payCurrency,
+          },
+        }).entry;
+      } else if (status === 'succeeded' && current.status !== 'succeeded' && current.wallet_id) {
         if (current.direction === 'payin') {
           settlement = appendWithinTx(db, {
             wallet_id: current.wallet_id,
@@ -485,6 +653,18 @@ function buildPaymentGateway(input = {}) {
           }).entry;
         }
       }
+      if (status === 'succeeded' && current.status !== 'succeeded' && current.provider === 'nowpayments' && current.direction === 'payin' && current.user_id && cryptoLedger) {
+        const info = cryptoSettlementInfo(payload);
+        if (!info) throw new DataError('E_CRYPTO_SETTLEMENT_UNSUPPORTED', 'NOWPayments crypto settlement payload is missing a supported pay_currency/pay_amount');
+        settlement = cryptoLedger.creditWithinTx({
+          user_id: current.user_id,
+          asset: info.asset,
+          network: info.network,
+          amount: info.amount,
+          idempotency_key: 'payment:crypto:settlement:' + current.id,
+          meta: { kind: 'payment_crypto_settlement', payment_intent_id: current.id, provider: current.provider, provider_ref: providerRef || current.provider_ref, pay_currency: info.code },
+        }).entry;
+      }
       db.exec('COMMIT');
     } catch (err) {
       safeRollback(db);
@@ -493,12 +673,22 @@ function buildPaymentGateway(input = {}) {
     const updated = getIntent(intentId);
     recordAudit('payment.intent.' + status, updated, { amount_milli: updated.amount_milli, currency: updated.currency });
     if (settlement) {
-      recordAudit('payment.wallet.settled', updated, {
-        wallet_id: settlement.wallet_id,
-        ledger_entry_id: settlement.id,
-        amount_milli: settlement.amount_milli,
-        direction: settlement.direction,
-      });
+      if (settlement.wallet_id) {
+        recordAudit('payment.wallet.settled', updated, {
+          wallet_id: settlement.wallet_id,
+          ledger_entry_id: settlement.id,
+          amount_milli: settlement.amount_milli,
+          direction: settlement.direction,
+        });
+      } else {
+        recordAudit('payment.crypto.settled', updated, {
+          crypto_balance_id: settlement.balance_id,
+          crypto_ledger_entry_id: settlement.id,
+          asset: settlement.asset,
+          network: settlement.network,
+          amount: settlement.amount,
+        });
+      }
     }
     return updated;
   }
@@ -853,6 +1043,9 @@ function buildPaymentGateway(input = {}) {
     providers,
     listProviders,
     listCurrencies,
+    createCryptoWithdrawal,
+    verifyCryptoWithdrawal,
+    syncCryptoWithdrawal,
     getProvider,
     initiatePayment,
     applyProviderStatus,

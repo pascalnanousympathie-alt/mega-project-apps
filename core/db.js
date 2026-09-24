@@ -438,7 +438,67 @@ CREATE INDEX idx_crypto_wallets_user ON crypto_wallets (user_id, created_at);
 CREATE INDEX idx_crypto_wallets_asset ON crypto_wallets (user_id, asset, network);
 `;
 
-const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8, SCHEMA_V9];
+const SCHEMA_V10 = `
+CREATE TABLE crypto_balances (
+  id                TEXT PRIMARY KEY,
+  user_id           TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  asset             TEXT NOT NULL,
+  network           TEXT NOT NULL,
+  available_amount  TEXT NOT NULL DEFAULT '0',
+  reserved_amount   TEXT NOT NULL DEFAULT '0',
+  status            TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','locked')),
+  version           INTEGER NOT NULL DEFAULT 0,
+  created_at        TEXT NOT NULL,
+  updated_at        TEXT NOT NULL,
+  UNIQUE (user_id, asset, network)
+);
+CREATE INDEX idx_crypto_balances_user ON crypto_balances (user_id, created_at);
+
+CREATE TABLE crypto_ledger_entries (
+  seq               INTEGER PRIMARY KEY AUTOINCREMENT,
+  id                TEXT NOT NULL UNIQUE,
+  balance_id        TEXT NOT NULL REFERENCES crypto_balances(id) ON DELETE RESTRICT,
+  user_id           TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  asset             TEXT NOT NULL,
+  network           TEXT NOT NULL,
+  idempotency_key   TEXT NOT NULL,
+  tx_type           TEXT NOT NULL CHECK (tx_type IN ('deposit','withdrawal_reserve','withdrawal_release','withdrawal_settlement')),
+  amount            TEXT NOT NULL,
+  available_before  TEXT NOT NULL,
+  available_after   TEXT NOT NULL,
+  reserved_before   TEXT NOT NULL,
+  reserved_after    TEXT NOT NULL,
+  status            TEXT NOT NULL DEFAULT 'committed' CHECK (status = 'committed'),
+  prev_hash         TEXT NOT NULL,
+  hash              TEXT NOT NULL UNIQUE,
+  meta_json         TEXT NOT NULL DEFAULT '{}',
+  created_at        TEXT NOT NULL,
+  UNIQUE (balance_id, idempotency_key)
+);
+CREATE INDEX idx_crypto_ledger_balance ON crypto_ledger_entries (balance_id, seq);
+CREATE INDEX idx_crypto_ledger_user ON crypto_ledger_entries (user_id, seq);
+
+CREATE TABLE crypto_withdrawals (
+  id                TEXT PRIMARY KEY,
+  user_id           TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  balance_id        TEXT NOT NULL REFERENCES crypto_balances(id) ON DELETE RESTRICT,
+  crypto_wallet_id  TEXT NOT NULL REFERENCES crypto_wallets(id) ON DELETE RESTRICT,
+  provider          TEXT NOT NULL,
+  asset             TEXT NOT NULL,
+  network           TEXT NOT NULL,
+  payout_currency   TEXT NOT NULL,
+  amount            TEXT NOT NULL,
+  status            TEXT NOT NULL CHECK (status IN ('requested','awaiting_2fa','processing','succeeded','failed','cancelled')),
+  provider_ref      TEXT,
+  error             TEXT,
+  created_at        TEXT NOT NULL,
+  updated_at        TEXT NOT NULL
+);
+CREATE INDEX idx_crypto_withdrawals_user ON crypto_withdrawals (user_id, created_at);
+CREATE INDEX idx_crypto_withdrawals_status ON crypto_withdrawals (status, updated_at);
+`;
+
+const MIGRATIONS = [SCHEMA_V1, SCHEMA_V2, SCHEMA_V3, SCHEMA_V4, SCHEMA_V5, SCHEMA_V6, SCHEMA_V7, SCHEMA_V8, SCHEMA_V9, SCHEMA_V10];
 
 function migrate(db) {
   const has = db.prepare(
@@ -489,6 +549,13 @@ function openDataLayer(dataDir, options = {}) {
     const { verifyLocalChain } = require('./local-records');
     try {
       verifyLocalChain(db);
+    } catch (err) {
+      db.close();
+      throw err;
+    }
+    const { buildCryptoLedger } = require('./crypto-ledger');
+    try {
+      buildCryptoLedger(db).verify();
     } catch (err) {
       db.close();
       throw err;

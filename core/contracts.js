@@ -35,6 +35,16 @@ const ERROR_STATUS = {
   E_CRYPTO_WALLET_NOT_FOUND: 404,
   E_CRYPTO_WALLET_INVALID: 400,
   E_CRYPTO_WALLET_CREATE: 409,
+  E_CRYPTO_BALANCE_NOT_FOUND: 404,
+  E_CRYPTO_WITHDRAWAL_NOT_FOUND: 404,
+  E_CRYPTO_WITHDRAWAL_STATUS: 409,
+  E_CRYPTO_AMOUNT: 400,
+  E_CRYPTO_INSUFFICIENT_FUNDS: 409,
+  E_CRYPTO_SETTLEMENT_UNSUPPORTED: 409,
+  E_CRYPTO_LEDGER_LINK: 500,
+  E_CRYPTO_LEDGER_HASH: 500,
+  E_CRYPTO_LEDGER_RECONCILE: 500,
+  E_CRYPTO_BALANCE_LOCKED: 409,
   E_NO_ENTRY: 404,
   E_NOT_PENDING: 409,
   E_ALREADY_SETTLED: 409,
@@ -260,6 +270,18 @@ const CRYPTO_WALLET_ID_PARAMS = {
   properties: { cryptoWalletId: { type: 'string', minLength: 1 } },
 };
 
+const CRYPTO_BALANCE_ID_PARAMS = {
+  type: 'object',
+  required: ['balanceId'],
+  properties: { balanceId: { type: 'string', minLength: 1 } },
+};
+
+const CRYPTO_WITHDRAWAL_ID_PARAMS = {
+  type: 'object',
+  required: ['withdrawalId'],
+  properties: { withdrawalId: { type: 'string', minLength: 1 } },
+};
+
 const CRYPTO_WALLET_BODY = {
   type: 'object',
   required: ['provider', 'asset', 'network', 'address'],
@@ -270,6 +292,28 @@ const CRYPTO_WALLET_BODY = {
     address: { type: 'string', minLength: 20, maxLength: 160 },
     address_memo: { type: 'string', maxLength: 120 },
     label: { type: 'string', maxLength: 80 },
+  },
+  additionalProperties: false,
+};
+
+const CRYPTO_WITHDRAWAL_BODY = {
+  type: 'object',
+  required: ['crypto_wallet_id', 'amount', 'payout_currency'],
+  properties: {
+    crypto_wallet_id: { type: 'string', minLength: 1, maxLength: 160 },
+    provider: { type: 'string', enum: ['nowpayments'] },
+    amount: { type: 'string', minLength: 1, maxLength: 60, pattern: '^\\d+(?:\\.\\d{1,18})?$' },
+    payout_currency: { type: 'string', minLength: 2, maxLength: 32, pattern: '^[a-z0-9][a-z0-9._-]{1,31}$' },
+    extra_id: { type: 'string', maxLength: 160 },
+  },
+  additionalProperties: false,
+};
+
+const CRYPTO_WITHDRAWAL_VERIFY_BODY = {
+  type: 'object',
+  required: ['verification_code'],
+  properties: {
+    verification_code: { type: 'string', minLength: 4, maxLength: 12, pattern: '^[0-9]+$' },
   },
   additionalProperties: false,
 };
@@ -445,6 +489,80 @@ const REST_ROUTES = [
     auth: 'bearer',
     idempotent: false,
     params: CRYPTO_WALLET_ID_PARAMS,
+    body: { type: 'object', additionalProperties: false },
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto.balances',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/crypto/balances',
+    auth: 'bearer',
+    idempotent: false,
+    query: { type: 'object' },
+    response: { type: 'array' },
+  },
+  {
+    id: 'crypto.balance_entries',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/crypto/balances/:balanceId/entries',
+    auth: 'bearer',
+    idempotent: false,
+    params: CRYPTO_BALANCE_ID_PARAMS,
+    query: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 500 } } },
+    response: { type: 'array' },
+  },
+  {
+    id: 'crypto.withdrawals.list',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/crypto/withdrawals',
+    auth: 'bearer',
+    idempotent: false,
+    query: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 500 } } },
+    response: { type: 'array' },
+  },
+  {
+    id: 'crypto.withdrawals.create',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/crypto/withdrawals',
+    auth: 'bearer',
+    idempotent: true,
+    body: CRYPTO_WITHDRAWAL_BODY,
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto.withdrawals.get',
+    version: API_VERSION,
+    method: 'GET',
+    path: '/crypto/withdrawals/:withdrawalId',
+    auth: 'bearer',
+    idempotent: false,
+    params: CRYPTO_WITHDRAWAL_ID_PARAMS,
+    query: { type: 'object' },
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto.withdrawals.verify',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/crypto/withdrawals/:withdrawalId/verify',
+    auth: 'bearer',
+    idempotent: true,
+    params: CRYPTO_WITHDRAWAL_ID_PARAMS,
+    body: CRYPTO_WITHDRAWAL_VERIFY_BODY,
+    response: { type: 'object' },
+  },
+  {
+    id: 'crypto.withdrawals.sync',
+    version: API_VERSION,
+    method: 'POST',
+    path: '/crypto/withdrawals/:withdrawalId/sync',
+    auth: 'bearer',
+    idempotent: true,
+    params: CRYPTO_WITHDRAWAL_ID_PARAMS,
     body: { type: 'object', additionalProperties: false },
     response: { type: 'object' },
   },

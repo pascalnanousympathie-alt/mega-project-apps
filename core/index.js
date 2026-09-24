@@ -14,6 +14,7 @@ const { buildLocalRecords } = require('./local-records');
 const { buildGateway } = require('./gateway');
 const { buildSocketIo, socketAuthMiddleware, createServer } = require('./socketio');
 const { buildPaymentGateway } = require('./payments');
+const { buildCryptoLedger } = require('./crypto-ledger');
 const { createObservability } = require('./observability');
 const contracts = require('./contracts');
 
@@ -24,6 +25,7 @@ function createDataLayer(options = {}) {
   const repos = buildRepositories(db);
   const auth = buildAuth(db, repos);
   const wallet = buildCentralWallet(db);
+  const cryptoLedger = buildCryptoLedger(db);
   const gameWallet = buildGameWallet({ db, repos, options: options.house || {} });
   const gatewayOptions = {
     ...(options.gateway || {}),
@@ -48,6 +50,7 @@ function createDataLayer(options = {}) {
   const payments = buildPaymentGateway({
     db,
     repos,
+    cryptoLedger,
     credentials: (options.payments || {}).credentials,
     env: (options.payments || {}).env || process.env,
     transport: (options.payments || {}).transport,
@@ -70,6 +73,7 @@ function createDataLayer(options = {}) {
     repos,
     auth,
     wallet,
+    cryptoLedger,
     gameWallet,
     ledger,
     domino,

@@ -129,7 +129,7 @@ test('all payment providers are registered behind one uniform interface', () => 
     assert.ok(CANONICAL_STATUSES.includes(normalizeStatus('pending', provider.statusMap)));
   }
   assert.deepEqual(
-    [createMvolaProvider(), createAirtelProvider(), createOrangeProvider(), createBinanceProvider(), createNowPaymentsProvider()].map((p) => p.name),
+    [createMvolaProvider(), createAirtelProvider(), createOrangeProvider(), createBinanceProvider(), createNowPaymentsProvider(), createNowPaymentsProvider({ sandbox: true })].map((p) => p.name),
     ['mvola', 'airtel', 'orange', 'binance', 'nowpayments', 'nowpayments-sandbox'],
   );
 });
@@ -156,8 +156,12 @@ test('provider status maps normalize vendor-specific codes', () => {
 test('gateway lists provider capabilities without leaking credentials', (t) => {
   const { layer } = makePaymentLayer(t);
   const providers = layer.payments.listProviders();
-  assert.equal(providers.length, 5);
+  assert.equal(providers.length, 6);
   for (const provider of providers) {
+    if (provider.name === 'nowpayments-sandbox') {
+      assert.equal(provider.configured, false);
+      continue;
+    }
     assert.equal(provider.configured, true, provider.name + ' should be configured');
     assert.deepEqual(provider.missing_credentials, []);
     assert.ok(provider.capabilities.callback);

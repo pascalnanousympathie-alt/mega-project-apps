@@ -48,6 +48,40 @@ function publicCryptoWallet(wallet) {
   };
 }
 
+function publicCryptoBalance(balance) {
+  if (!balance) return null;
+  return {
+    id: balance.id,
+    user_id: balance.user_id,
+    asset: balance.asset,
+    network: balance.network,
+    available_amount: balance.available_amount,
+    reserved_amount: balance.reserved_amount,
+    status: balance.status,
+    version: balance.version,
+    created_at: balance.created_at,
+    updated_at: balance.updated_at,
+  };
+}
+
+function publicCryptoWithdrawal(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    crypto_wallet_id: row.crypto_wallet_id,
+    provider: row.provider,
+    asset: row.asset,
+    network: row.network,
+    payout_currency: row.payout_currency,
+    amount: row.amount,
+    status: row.status,
+    provider_ref: row.provider_ref || null,
+    error: row.error || null,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
 function publicEntry(entry) {
   if (!entry) return null;
   return {
@@ -367,6 +401,57 @@ function buildApiHandlers(layer) {
       // audit must not break wallet disabling
     }
     return { wallet: publicCryptoWallet(wallet), disabled: wallet.status === 'disabled' };
+  };
+
+  handlers['crypto.balances'] = (ctx) => {
+    const { user } = session(ctx);
+    return layer.cryptoLedger.listBalances(user.id).map(publicCryptoBalance);
+  };
+
+  handlers['crypto.balance_entries'] = (ctx) => {
+    const { user } = session(ctx);
+    const row = layer.db.prepare('SELECT * FROM crypto_balances WHERE id = ?').get(ctx.params.balanceId);
+    ok(row && row.user_id === user.id, 'E_FORBIDDEN', 'crypto balance does not belong to user');
+    const limit = Number.isSafeInteger(ctx.query.limit) ? ctx.query.limit : 100;
+    return layer.cryptoLedger.listEntries(ctx.params.balanceId, limit);
+  };
+
+  handlers['crypto.withdrawals.list'] = (ctx) => {
+    const { user } = session(ctx);
+    return layer.cryptoLedger.listWithdrawals(user.id, Number.isSafeInteger(ctx.query.limit) ? ctx.query.limit : 100)
+      .map(publicCryptoWithdrawal);
+  };
+
+  handlers['crypto.withdrawals.create'] = async (ctx) => {
+    const { user } = session(ctx);
+    const result = await layer.payments.createCryptoWithdrawal({
+      user_id: user.id,
+      crypto_wallet_id: ctx.body.crypto_wallet_id,
+      provider: ctx.body.provider || 'nowpayments',
+      amount: ctx.body.amount,
+      payout_currency: ctx.body.payout_currency,
+      extra_id: ctx.body.extra_id,
+    });
+    return { withdrawal: publicCryptoWithdrawal(result.withdrawal), provider: result.provider };
+  };
+
+  handlers['crypto.withdrawals.get'] = (ctx) => {
+    const { user } = session(ctx);
+    const row = layer.cryptoLedger.getWithdrawal(ctx.params.withdrawalId);
+    ok(row.user_id === user.id, 'E_FORBIDDEN', 'crypto withdrawal does not belong to user');
+    return { withdrawal: publicCryptoWithdrawal(row) };
+  };
+
+  handlers['crypto.withdrawals.verify'] = async (ctx) => {
+    const { user } = session(ctx);
+    const row = await layer.payments.verifyCryptoWithdrawal(ctx.params.withdrawalId, user.id, ctx.body.verification_code);
+    return { withdrawal: publicCryptoWithdrawal(row) };
+  };
+
+  handlers['crypto.withdrawals.sync'] = async (ctx) => {
+    const { user } = session(ctx);
+    const row = await layer.payments.syncCryptoWithdrawal(ctx.params.withdrawalId, user.id);
+    return { withdrawal: publicCryptoWithdrawal(row) };
   };
 
   handlers['ledger.entries'] = (ctx) => {
