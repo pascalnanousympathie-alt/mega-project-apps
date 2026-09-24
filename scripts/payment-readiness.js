@@ -3,7 +3,7 @@
 const { buildProviderRegistry, evaluatePaymentsReadiness } = require('../core/payments');
 
 const registry = buildProviderRegistry();
-const required = (process.env.ACEP_REQUIRED_PAYMENT_PROVIDERS || 'mvola,airtel,orange,binance')
+const required = (process.env.ACEP_REQUIRED_PAYMENT_PROVIDERS || 'nowpayments')
   .split(',').map((value) => value.trim()).filter(Boolean);
 const enforce = process.env.ACEP_ENFORCE_PAYMENT_READINESS === '1';
 const production = process.env.ACEP_PRODUCTION_MODE !== 'false';
