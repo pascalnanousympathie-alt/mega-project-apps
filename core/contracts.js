@@ -561,7 +561,7 @@ const REST_ROUTES = [
     method: 'POST',
     path: '/payments/callback/:provider',
     auth: 'public',
-    idempotent: true,
+    idempotent: false,
     params: {
       type: 'object',
       required: ['provider'],
