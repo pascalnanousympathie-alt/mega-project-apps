@@ -1,0 +1,29 @@
+{
+  "date":"2026-09-26",
+  "status":"UPDATED",
+  "github_repositories":{
+    "DominoMada":"https://github.com/pascalnanousympathie-alt/DominoMada",
+    "LotoMada":"https://github.com/pascalnanousympathie-alt/LotoMada",
+    "RamiMada":"https://github.com/pascalnanousympathie-alt/RamiMada"
+  },
+  "github_releases":{
+    "DominoMada":"https://github.com/pascalnanousympathie-alt/DominoMada/releases/tag/v1.0.1",
+    "LotoMada":"https://github.com/pascalnanousympathie-alt/LotoMada/releases/tag/v1.0.1",
+    "RamiMada":"https://github.com/pascalnanousympathie-alt/RamiMada/releases/tag/v1.0.1"
+  },
+  "local_verification":{
+    "postgresql":"accepting_connections",
+    "ludomada_ready_http":200,
+    "ludomada_database":"ready",
+    "ludomada_port":3000,
+    "production_railway_ready_http":200
+  },
+  "release_package":"MEGA_PROJECTS_STORE_2026-09-26-v1.0.1.zip",
+  "release_package_checksums":"PASS",
+  "remaining_non_payment_gates":[
+    "Google Play Console publication",
+    "Physical Android UI smoke test with an attached device or emulator",
+    "Signing-key backup to a separate physical/cloud location"
+  ],
+  "mobile_money":"EXCLUDED_FROM_THIS_UPDATE"
+}
