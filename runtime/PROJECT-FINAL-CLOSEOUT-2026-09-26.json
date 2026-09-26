@@ -1,0 +1,47 @@
+{
+  "date": "2026-09-26",
+  "release": {
+    "version": "1.0.1",
+    "github_ludomada": "https://github.com/pascalnanousympathie-alt/LudoMada/releases/tag/v1.0.1",
+    "github_mega": "https://github.com/pascalnanousympathie-alt/mega-project-apps/releases/tag/v1.0.1"
+  },
+  "android": {
+    "apps": ["LudoMada", "DominoMada", "LotoMada", "RamiMada"],
+    "apk_signature_v2": "PASS_ALL_4",
+    "aab_jarsigner": "PASS_ALL_4",
+    "release_certificate_sha256": "8c9fa80c7ae6ebcacb5f0c1c73e028e6fbcc7ee0781abb67d91dd12dc014e696"
+  },
+  "backend": {
+    "railway_deployment_id": "ffffb50a-2694-48aa-ab07-b0cc5b7f75a2",
+    "deployment_status": "SUCCESS",
+    "production_ready_http": 200,
+    "database": "ok",
+    "ledger": "ok",
+    "music_js_http": 200,
+    "local_ludomada_ready": "database=ready"
+  },
+  "payments": {
+    "mvola_live": "OFF_BY_POLICY",
+    "airtel": "OFF_BY_POLICY",
+    "orange": "OFF_BY_POLICY",
+    "real_money_test": "NOT_PERFORMED"
+  },
+  "repositories": {
+    "LudoMada": {"commit": "a3d50a3281ae93d9f46d5d5dd1914470db56465f", "working_tree": "CLEAN"},
+    "DominoMada": {"commit": "b95ed1d6de6d6d9c874e1f15fed6b103bd050d56", "working_tree": "CLEAN"},
+    "LotoMada": {"commit": "d19201683692ed5ab5cd8e04ccd83885c8222757", "working_tree": "CLEAN"},
+    "RamiMada": {"commit": "f9b88bb856d0a1548a71deed3252c275b33ed8ee", "working_tree": "CLEAN"},
+    "mega_project_apps": {"commit": "de497d56ff8f756588e2dfd92c735325a425e0ed", "working_tree": "CLEAN"}
+  },
+  "distribution": {
+    "store_package": "/storage/emulated/0/Download/MEGA_PROJECTS_STORE_2026-09-26-v1.0.1.zip",
+    "package_integrity": "ZIP_OK; SHA256SUMS_OK",
+    "private_signing_key_in_package": false
+  },
+  "remaining_external_gates": [
+    "Google Play Console publication requires the owner's Play Console access",
+    "MVola/Airtel/Orange production activation requires provider approval and production credentials",
+    "Physical Android UI smoke test requires an attached Android device or emulator",
+    "DominoMada/LotoMada/RamiMada source repositories are local-only because no matching owner repositories were found"
+  ]
+}
