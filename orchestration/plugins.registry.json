@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "lastReviewed": "2026-10-13",
-  "purpose": "Central inventory for ChatGPT development integrations and external verification runners. Status values are an operator-maintained snapshot, not a live API probe.",
+  "purpose": "Live-audited snapshot of ChatGPT integrations and external verification runners; statuses must be paired with evidence notes and do not claim end-to-end health.",
   "statusValues": [
     "connected",
     "requires_user_connection",
@@ -43,7 +43,7 @@
         "dashboard",
         "web_smoke_checks"
       ],
-      "notes": "Prefer preview/staging first. Production promotion is an approval gate."
+      "notes": "Connector verified. Projects found: mada-commander-public-mcp-auto, mada-commander-public-mcp, ludomada-commander-control. Latest sampled auto-project deployments were ERROR; canonical public MCP and control-project samples were READY. Verify health endpoints and deployment logs before declaring overall readiness."
     },
     {
       "id": "railway",
@@ -58,7 +58,7 @@
         "api_services",
         "backend_smoke_checks"
       ],
-      "notes": "Do not apply production changes until database migrations and health checks pass."
+      "notes": "Connector authentication verified. This check returned no active workspace/repository binding; backend service actions remain blocked until a Railway project/workspace is selected. No production deployment was performed."
     },
     {
       "id": "supabase",
@@ -75,7 +75,7 @@
         "rls_review",
         "migration_validation"
       ],
-      "notes": "Back up and review migrations; never expose service-role credentials to client code."
+      "notes": "Connector verified; mada-commander-public-mcp project reports ACTIVE_HEALTHY (ap-south-1). RLS/schema and live endpoint checks remain separate gates."
     },
     {
       "id": "figma",
@@ -108,7 +108,7 @@
         "die_pawns_board",
         "scene_preview"
       ],
-      "notes": "Some image/video generation actions may consume credits. Verify the exported asset in the target renderer."
+      "notes": "Connector is authenticated. Some 3D/image/video generation may consume credits; verify asset export and target renderer before integration."
     },
     {
       "id": "openart",
@@ -124,7 +124,7 @@
         "texture_references",
         "marketing_visuals"
       ],
-      "notes": "Generated images are references, not production-ready meshes by default."
+      "notes": "Connector authenticated; current account reports Free plan with 10 credits. Avoid spending credits unless the owner explicitly requests it."
     },
     {
       "id": "superpowers",
@@ -174,12 +174,12 @@
         "dependency_and_code_risk"
       ],
       "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
-      "notes": "A security scan is one signal; it does not prove an APK is spyware-free."
+      "notes": "Plugin directory reports installed=false. Availability is listed, but no connected Codex Security execution is available in this audit. GitHub Actions now runs Semgrep CE, Trivy, OSV-Scanner and Gitleaks as a substitute baseline; these do not equal Codex Security."
     },
     {
       "id": "posthog",
       "name": "PostHog",
-      "status": "requires_user_connection",
+      "status": "connected",
       "capabilities": [
         "error_tracking",
         "event_analytics",
@@ -191,12 +191,13 @@
         "crash_triage",
         "product_analytics"
       ],
-      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow."
+      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
+      "notes": "Connector authenticated and active Default project (ID 662006) resolves. ingested_event=false; app instrumentation/first-event setup is still incomplete. Do not claim runtime monitoring verified until test events arrive."
     },
     {
       "id": "replit",
       "name": "Replit",
-      "status": "available",
+      "status": "connected",
       "capabilities": [
         "rapid_web_prototype",
         "web_preview"
@@ -204,7 +205,7 @@
       "useFor": [
         "throwaway_prototypes"
       ],
-      "notes": "Optional; do not fork or replace the canonical Android/game repositories for a quick prototype."
+      "notes": "Connector is installed/authenticated, but list_apps returned no apps. Do not treat this as an active app deployment."
     },
     {
       "id": "ramus_runner",
@@ -237,7 +238,127 @@
         "mcp_readiness",
         "termux_bridge_verification"
       ],
-      "notes": "Readiness is unverified in this run. Do not claim connected/healthy until an authenticated health check, tool smoke test, and bridge evidence succeed. Do not bypass app challenge, OAuth, or access controls."
+      "notes": "Readiness is not verified. Vercel auto project samples currently show ERROR, though canonical project samples were READY; the OpenAI challenge/OAuth + endpoint health + authenticated MCP smoke + Termux bridge evidence must all pass before calling it connected."
+    },
+    {
+      "id": "linear",
+      "name": "Linear",
+      "status": "connected",
+      "capabilities": [
+        "project_tracking",
+        "issues",
+        "milestones",
+        "documents"
+      ],
+      "useFor": [
+        "master_plan_tracking",
+        "security_triage",
+        "release_checkpoints"
+      ],
+      "notes": "Workspace Nanou Projet and team NAN resolve; project list is currently empty. The GitHub/Linear review-diff sync was not proven in this audit."
+    },
+    {
+      "id": "lovable",
+      "name": "Lovable",
+      "status": "connected",
+      "capabilities": [
+        "web_app_prototyping",
+        "full_stack_app_generation",
+        "workspace_knowledge"
+      ],
+      "useFor": [
+        "bounded_web_prototypes",
+        "dashboard_prototypes"
+      ],
+      "notes": "Workspace Nanou's Lovable is authenticated (Free); list_projects returned no projects. Do not claim an app exists."
+    },
+    {
+      "id": "opera_browser",
+      "name": "Opera Browser Connector",
+      "status": "requires_user_connection",
+      "capabilities": [
+        "browser_tabs",
+        "page_accessibility_tree",
+        "screenshots",
+        "navigation"
+      ],
+      "useFor": [
+        "browser_qa",
+        "web_console_verification"
+      ],
+      "connectionAction": "In Opera, enable 'Allow AI connection' in the Browser Connector and sign in; then re-test list_tabs.",
+      "notes": "Plugin directory lists installed=true, but live list_tabs returned 'Browser not connected'. Treat as disconnected until a live tab query succeeds."
+    },
+    {
+      "id": "triggercmd",
+      "name": "TRIGGERcmd",
+      "status": "requires_user_connection",
+      "capabilities": [
+        "registered_computer_commands"
+      ],
+      "useFor": [
+        "authorized_remote_commands"
+      ],
+      "connectionAction": "Register/activate a computer with the TRIGGERcmd client, then re-test list_commands.",
+      "notes": "Tools exist but list_commands returned no computers. No commands were run."
+    },
+    {
+      "id": "openai_developers",
+      "name": "OpenAI Developers",
+      "status": "connected",
+      "capabilities": [
+        "OpenAI_Platform_key_setup",
+        "platform_project_discovery"
+      ],
+      "useFor": [
+        "optional_api_key_setup"
+      ],
+      "notes": "Plugin is installed/enabled. No new API key was created and no API-key presence was verified during this audit."
+    },
+    {
+      "id": "github_security_scanners",
+      "name": "GitHub Actions Security Scanners",
+      "status": "connected",
+      "capabilities": [
+        "semgrep_ce",
+        "trivy_repository_scan",
+        "osv_dependency_scan",
+        "gitleaks_secret_scan",
+        "security_artifacts"
+      ],
+      "useFor": [
+        "continuous_security_baseline",
+        "dependency_triage",
+        "secret_scan"
+      ],
+      "notes": "Pinned workflow .github/workflows/security-audit.yml committed in all six repositories and latest sampled runs passed: LudoMada, DominoMada, LotoMada, RamiMada, mega-project-apps and PC-Free. Findings are report-only until triaged; successful scan does not imply a clean repository."
+    },
+    {
+      "id": "mobsf_ci",
+      "name": "MobSF APK Static Analysis Workflow",
+      "status": "external_manual",
+      "capabilities": [
+        "apk_static_analysis",
+        "android_permissions_review",
+        "mobile_security_report"
+      ],
+      "useFor": [
+        "manual_android_release_security_gate"
+      ],
+      "notes": "Manual workflow .github/workflows/mobsf-apk-audit.yml added for LudoMada, DominoMada, LotoMada and RamiMada. Not yet run; hosted runner resources, Docker image and MobSF API compatibility must be verified first. Dynamic analysis is not configured."
+    },
+    {
+      "id": "tinyfish",
+      "name": "TinyFish",
+      "status": "connected",
+      "capabilities": [
+        "browser_automation",
+        "web_research"
+      ],
+      "useFor": [
+        "none_by_default"
+      ],
+      "notes": "Installed/enabled but excluded from routine work at the owner's direction because credit consumption is a concern; do not invoke unless explicitly requested."
     }
   ]
 }
