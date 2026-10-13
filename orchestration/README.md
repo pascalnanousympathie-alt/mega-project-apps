@@ -25,7 +25,7 @@ node scripts/plugin-workflow-manager.js plan all
 
 ## Connect integrations
 
-The integrations still marked `requires_user_connection` are Context7, Codex Security, and PostHog. Superpowers was confirmed connected during the current ChatGPT session. Open ChatGPT's app/connector settings and complete the account connection/consent flow for each available integration. A suggestion or catalog listing does not mean the integration is connected. Once you confirm a connection, update that integration's status in `plugins.registry.json` through a reviewed commit.
+Superpowers and Context7 have been confirmed connected for this session. The remaining optional integrations marked `requires_user_connection` are Codex Security and PostHog. Complete each app's account connection/consent flow from ChatGPT's app/connector settings when available. A suggestion or catalog listing does not mean the integration is connected. Update `plugins.registry.json` only after the connection is actually confirmed; never mark a tool connected merely because it is desired.
 
 A status set to `connected` only records that the operator believes the integration is connected. A workflow is complete only when the relevant connected tool actually executes and returns verifiable evidence during that run.
 
