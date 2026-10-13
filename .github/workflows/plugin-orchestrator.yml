@@ -1,0 +1,40 @@
+name: Plugin Workflow Orchestrator
+
+on:
+  push:
+    branches: [main, "feat/**"]
+    paths:
+      - "orchestration/**"
+      - "scripts/plugin-workflow-manager.js"
+      - "tests/plugin-workflow-manager.test.js"
+      - ".github/workflows/plugin-orchestrator.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "orchestration/**"
+      - "scripts/plugin-workflow-manager.js"
+      - "tests/plugin-workflow-manager.test.js"
+      - ".github/workflows/plugin-orchestrator.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-orchestrator-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate integration registry and workflow graph
+        run: node scripts/plugin-workflow-manager.js check
+      - name: Run orchestrator regression tests
+        run: node --test tests/plugin-workflow-manager.test.js
