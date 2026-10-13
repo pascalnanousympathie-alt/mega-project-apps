@@ -129,7 +129,7 @@
     {
       "id": "superpowers",
       "name": "Superpowers",
-      "status": "requires_user_connection",
+      "status": "connected",
       "capabilities": [
         "tdd_methodology",
         "debugging_workflows",
@@ -140,7 +140,8 @@
         "repeatable_debugging",
         "test_first_changes"
       ],
-      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow."
+      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
+      "notes": "Connection was confirmed during the current ChatGPT session; use it for TDD and debugging workflow guidance."
     },
     {
       "id": "context7",
