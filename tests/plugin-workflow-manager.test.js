@@ -29,11 +29,11 @@ test('unconnected integrations are blocked rather than falsely marked ready', ()
   assert.equal(plan.find(item => item.stage.id === 'tdd').state, 'BLOCKED_CONNECTION');
 });
 
-test('optional design reference can be skipped, but real 3D validation needs external evidence', () => {
+test('available design references are runnable, but real 3D validation needs external evidence', () => {
   const { registry, workflows } = loadConfig();
   const workflow = workflows.workflows.find(item => item.id === '3d-pipeline');
   const plan = buildPlan(registry, workflow);
-  assert.equal(plan.find(item => item.stage.id === 'reference').state, 'OPTIONAL_SKIPPED');
+  assert.equal(plan.find(item => item.stage.id === 'reference').state, 'READY_TO_RUN');
   assert.equal(plan.find(item => item.stage.id === 'target-validation').state, 'NEEDS_EXTERNAL_EVIDENCE');
 });
 
