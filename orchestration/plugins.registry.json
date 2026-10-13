@@ -141,12 +141,12 @@
         "test_first_changes"
       ],
       "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
-      "notes": "Connection was confirmed during the current ChatGPT session; use it for TDD and debugging workflow guidance."
+      "notes": "Connection confirmed for the current ChatGPT session; use for TDD and systematic debugging guidance."
     },
     {
       "id": "context7",
       "name": "Context7",
-      "status": "requires_user_connection",
+      "status": "connected",
       "capabilities": [
         "current_library_docs",
         "api_examples"
@@ -158,7 +158,8 @@
         "node",
         "mcp"
       ],
-      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow."
+      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
+      "notes": "Connection confirmed for the current ChatGPT session; use for current library documentation and API examples."
     },
     {
       "id": "codex_security",
