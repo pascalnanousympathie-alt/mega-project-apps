@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": "fast-code",
+      "name": "Fast code change with quality gates",
+      "description": "Short feedback loop for a bounded code change: understand, implement, test, review, then merge through a PR.",
+      "stages": [
+        {
+          "id": "inspect",
+          "title": "Inspect repository, branch, and existing tests",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Read current state before editing."
+        },
+        {
+          "id": "docs",
+          "title": "Check current API/library documentation",
+          "integrations": [
+            "context7"
+          ],
+          "gate": "Use versions already pinned by the project."
+        },
+        {
+          "id": "implement",
+          "title": "Implement one scoped change on a feature branch",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Keep authoritative game state, wallet, ledger, auth, payments, and anti-cheat unchanged unless required."
+        },
+        {
+          "id": "tdd",
+          "title": "Add or update regression tests and debug failures",
+          "integrations": [
+            "superpowers"
+          ],
+          "gate": "Do not accept untested behaviour changes."
+        },
+        {
+          "id": "ci",
+          "title": "Run repository CI and inspect every failed job",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Required tests and security checks must pass."
+        },
+        {
+          "id": "review",
+          "title": "Review diff and open/update a pull request",
+          "integrations": [
+            "github"
+          ],
+          "gate": "No direct production deployment from an unreviewed change."
+        }
+      ]
+    },
+    {
+      "id": "gameplay-qa",
+      "name": "LudoMada gameplay and Android QA",
+      "description": "Protect game rules and verify that changes behave in the real Android renderer and gameplay runtime.",
+      "stages": [
+        {
+          "id": "rules",
+          "title": "Review rules and authoritative state boundaries",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Preserve sortie-on-six, exact finish, capture, extra-turn, turn order, reconciliation and anti-cheat."
+        },
+        {
+          "id": "unit-tests",
+          "title": "Run rules, animation-guard, and regression tests",
+          "integrations": [
+            "github"
+          ],
+          "gate": "No test failures or unexplained skips."
+        },
+        {
+          "id": "asset-check",
+          "title": "Check any changed 3D assets and file formats",
+          "integrations": [
+            "higgsfield_3d",
+            "github"
+          ],
+          "gate": "Check GLB transforms, scale, materials, texture references, and licensing/source."
+        },
+        {
+          "id": "remote-build",
+          "title": "Build on the authorized remote runner",
+          "integrations": [
+            "ramus_runner"
+          ],
+          "gate": "Capture build command, commit SHA, exit code, and logs."
+        },
+        {
+          "id": "runtime",
+          "title": "Verify gameplay and rendering on the target Android environment",
+          "integrations": [
+            "ramus_runner"
+          ],
+          "gate": "Check dice and pawn input guards, turn flow, captures, shadows/reflections, crashes, and performance."
+        },
+        {
+          "id": "security",
+          "title": "Run code security checks",
+          "integrations": [
+            "codex_security"
+          ],
+          "gate": "Record scan status and investigate findings; this does not replace runtime diagnostics."
+        },
+        {
+          "id": "release-approval",
+          "title": "Human release approval",
+          "integrations": [],
+          "requiresApproval": true,
+          "gate": "Release only after all evidence is reviewed."
+        }
+      ]
+    },
+    {
+      "id": "3d-pipeline",
+      "name": "3D asset creation to in-game verification",
+      "description": "Keep visual generation separate from production asset integration and validate the result in the actual GLES renderer.",
+      "stages": [
+        {
+          "id": "reference",
+          "title": "Create visual references or texture concepts when useful",
+          "integrations": [
+            "openart"
+          ],
+          "optional": true,
+          "gate": "References are not treated as production meshes."
+        },
+        {
+          "id": "scene",
+          "title": "Create/edit Blender scene and import/export GLB",
+          "integrations": [
+            "higgsfield_3d"
+          ],
+          "gate": "Keep scene revision and export artifacts traceable."
+        },
+        {
+          "id": "source-control",
+          "title": "Store assets and integration changes in a feature branch",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Record source, license, dimensions, texture dependencies, and commit SHA."
+        },
+        {
+          "id": "renderer-integration",
+          "title": "Integrate assets into the existing renderer",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Do not create a disconnected demo scene instead of integrating the live app."
+        },
+        {
+          "id": "target-validation",
+          "title": "Validate materials, lighting, frame cost, and gameplay interaction",
+          "integrations": [
+            "ramus_runner"
+          ],
+          "gate": "Return screenshots/logs and verify the exported asset in the target renderer."
+        }
+      ]
+    },
+    {
+      "id": "fast-web-deploy",
+      "name": "Fast web deployment with staged promotion",
+      "description": "Automate safe preview deployment and keep production promotion explicit.",
+      "stages": [
+        {
+          "id": "tests",
+          "title": "Run tests, secret scan, and dependency checks",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Stop on any failed required check."
+        },
+        {
+          "id": "preview",
+          "title": "Deploy preview and inspect deployment logs",
+          "integrations": [
+            "vercel"
+          ],
+          "gate": "Use preview/staging before production."
+        },
+        {
+          "id": "observe",
+          "title": "Inspect post-deploy errors and events",
+          "integrations": [
+            "posthog"
+          ],
+          "gate": "If observability is not connected, record this as blocked rather than claiming verified."
+        },
+        {
+          "id": "production-approval",
+          "title": "Approve production promotion",
+          "integrations": [],
+          "requiresApproval": true,
+          "gate": "No unreviewed production promotion."
+        }
+      ]
+    },
+    {
+      "id": "backend-deploy",
+      "name": "Backend and database deployment",
+      "description": "Run database safety checks, deploy a staging service, validate health, and require approval before production.",
+      "stages": [
+        {
+          "id": "database-review",
+          "title": "Review migrations, RLS, and data safety",
+          "integrations": [
+            "supabase"
+          ],
+          "gate": "Review migration impact and preserve wallet/ledger invariants."
+        },
+        {
+          "id": "tests",
+          "title": "Run backend tests and security checks",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Idempotency, auth, transaction atomicity, and provider gates must pass."
+        },
+        {
+          "id": "staging",
+          "title": "Deploy backend staging and inspect logs",
+          "integrations": [
+            "railway"
+          ],
+          "gate": "Health checks must pass before continuing."
+        },
+        {
+          "id": "runtime-observability",
+          "title": "Inspect runtime errors and metrics",
+          "integrations": [
+            "posthog"
+          ],
+          "gate": "Do not mark monitoring as verified when the integration is disconnected."
+        },
+        {
+          "id": "production-approval",
+          "title": "Approve production deploy/migration",
+          "integrations": [],
+          "requiresApproval": true,
+          "gate": "Explicit human approval required."
+        }
+      ]
+    },
+    {
+      "id": "mada-commander-readiness",
+      "name": "Mada Commander MCP and Termux bridge readiness",
+      "description": "Verify current deployment, auth/challenge configuration, protected database access, authenticated MCP tool contracts, and remote-agent evidence before declaring the control plane usable.",
+      "stages": [
+        {
+          "id": "source-review",
+          "title": "Inspect current repository, branch, and prior fixes",
+          "integrations": [
+            "github"
+          ],
+          "gate": "Use the current checked-in state; do not repeat older failed setup paths without evidence."
+        },
+        {
+          "id": "deployment-snapshot",
+          "title": "Inspect actual Vercel deployment status and logs",
+          "integrations": [
+            "vercel"
+          ],
+          "gate": "A Ready deployment label alone is insufficient if health endpoints fail."
+        },
+        {
+          "id": "database-readiness",
+          "title": "Check Supabase project, schema migrations, RLS, and required configuration",
+          "integrations": [
+            "supabase"
+          ],
+          "gate": "Do not print or commit secrets; fail closed if required configuration is missing."
+        },
+        {
+          "id": "challenge-and-auth",
+          "title": "Verify the active MCP app challenge/OAuth configuration against the current deployment",
+          "integrations": [
+            "vercel"
+          ],
+          "gate": "Do not bypass identity verification or invent a challenge token."
+        },
+        {
+          "id": "mcp-health-and-smoke",
+          "title": "Run authenticated health and tool-contract smoke tests against the live MCP endpoint",
+          "integrations": [
+            "mada_commander_mcp"
+          ],
+          "gate": "Capture response status, tool list, auth result, and sanitized logs; no readiness claim without evidence."
+        },
+        {
+          "id": "termux-bridge",
+          "title": "Verify the remote agent/Termux bridge and permitted command boundary",
+          "integrations": [
+            "ramus_runner"
+          ],
+          "gate": "Use remote-runner evidence; confirm least privilege, timeouts, and fail-closed behavior."
+        },
+        {
+          "id": "security-review",
+          "title": "Review security findings and permission boundaries",
+          "integrations": [
+            "codex_security"
+          ],
+          "gate": "Investigate findings and confirm the bridge cannot expose credentials or execute unauthorized actions."
+        },
+        {
+          "id": "readiness-approval",
+          "title": "Approve readiness only after every required evidence item passes",
+          "integrations": [],
+          "requiresApproval": true,
+          "gate": "Do not call Mada Commander autonomous/ready until health, auth, database, tool smoke tests, and bridge evidence all pass."
+        }
+      ]
+    }
+  ]
+}

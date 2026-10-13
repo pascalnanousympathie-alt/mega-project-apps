@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "lastReviewed": "2026-10-13",
+  "purpose": "Central inventory for ChatGPT development integrations and external verification runners. Status values are an operator-maintained snapshot, not a live API probe.",
+  "statusValues": [
+    "connected",
+    "requires_user_connection",
+    "available",
+    "external_manual"
+  ],
+  "integrations": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "status": "connected",
+      "capabilities": [
+        "repository_read",
+        "repository_write",
+        "pull_requests",
+        "ci_status",
+        "workflow_artifacts"
+      ],
+      "useFor": [
+        "source_of_truth",
+        "branches",
+        "reviews",
+        "ci",
+        "release_evidence"
+      ],
+      "notes": "Use feature branches and PRs. Do not push directly to protected release branches."
+    },
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "status": "connected",
+      "capabilities": [
+        "web_deploy",
+        "deployment_logs",
+        "deployment_status"
+      ],
+      "useFor": [
+        "web_apps",
+        "dashboard",
+        "web_smoke_checks"
+      ],
+      "notes": "Prefer preview/staging first. Production promotion is an approval gate."
+    },
+    {
+      "id": "railway",
+      "name": "Railway",
+      "status": "connected",
+      "capabilities": [
+        "backend_deploy",
+        "service_logs",
+        "deployment_diagnosis"
+      ],
+      "useFor": [
+        "api_services",
+        "backend_smoke_checks"
+      ],
+      "notes": "Do not apply production changes until database migrations and health checks pass."
+    },
+    {
+      "id": "supabase",
+      "name": "Supabase",
+      "status": "connected",
+      "capabilities": [
+        "database_inspection",
+        "sql",
+        "schema_migrations",
+        "auth_review"
+      ],
+      "useFor": [
+        "backend_data",
+        "rls_review",
+        "migration_validation"
+      ],
+      "notes": "Back up and review migrations; never expose service-role credentials to client code."
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "status": "connected",
+      "capabilities": [
+        "design_context",
+        "design_capture",
+        "design_system_review"
+      ],
+      "useFor": [
+        "ui_ux",
+        "design_tokens",
+        "screen_review"
+      ]
+    },
+    {
+      "id": "higgsfield_3d",
+      "name": "Higgsfield / 3D Jutsu",
+      "status": "connected",
+      "capabilities": [
+        "3d_scene_edit",
+        "glb_import_export",
+        "blender_scene",
+        "visual_generation"
+      ],
+      "useFor": [
+        "game_assets",
+        "3d_environment",
+        "die_pawns_board",
+        "scene_preview"
+      ],
+      "notes": "Some image/video generation actions may consume credits. Verify the exported asset in the target renderer."
+    },
+    {
+      "id": "openart",
+      "name": "OpenArt",
+      "status": "connected",
+      "capabilities": [
+        "image_generation",
+        "video_generation",
+        "visual_reference"
+      ],
+      "useFor": [
+        "concept_art",
+        "texture_references",
+        "marketing_visuals"
+      ],
+      "notes": "Generated images are references, not production-ready meshes by default."
+    },
+    {
+      "id": "superpowers",
+      "name": "Superpowers",
+      "status": "connected",
+      "capabilities": [
+        "tdd_methodology",
+        "debugging_workflows",
+        "implementation_planning"
+      ],
+      "useFor": [
+        "code_quality",
+        "repeatable_debugging",
+        "test_first_changes"
+      ],
+      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
+      "notes": "Connection confirmed for the current ChatGPT session; use for TDD and systematic debugging guidance."
+    },
+    {
+      "id": "context7",
+      "name": "Context7",
+      "status": "connected",
+      "capabilities": [
+        "current_library_docs",
+        "api_examples"
+      ],
+      "useFor": [
+        "android",
+        "kotlin",
+        "opengl_es",
+        "node",
+        "mcp"
+      ],
+      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
+      "notes": "Connection confirmed for the current ChatGPT session; use for current library documentation and API examples."
+    },
+    {
+      "id": "codex_security",
+      "name": "Codex Security",
+      "status": "requires_user_connection",
+      "capabilities": [
+        "security_scan",
+        "vulnerability_investigation"
+      ],
+      "useFor": [
+        "static_security_review",
+        "dependency_and_code_risk"
+      ],
+      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow.",
+      "notes": "A security scan is one signal; it does not prove an APK is spyware-free."
+    },
+    {
+      "id": "posthog",
+      "name": "PostHog",
+      "status": "requires_user_connection",
+      "capabilities": [
+        "error_tracking",
+        "event_analytics",
+        "logs",
+        "feature_flags"
+      ],
+      "useFor": [
+        "runtime_observability",
+        "crash_triage",
+        "product_analytics"
+      ],
+      "connectionAction": "Connect the app from ChatGPT's app/plugin connection flow."
+    },
+    {
+      "id": "replit",
+      "name": "Replit",
+      "status": "available",
+      "capabilities": [
+        "rapid_web_prototype",
+        "web_preview"
+      ],
+      "useFor": [
+        "throwaway_prototypes"
+      ],
+      "notes": "Optional; do not fork or replace the canonical Android/game repositories for a quick prototype."
+    },
+    {
+      "id": "ramus_runner",
+      "name": "Ramus remote diagnostics / test runner",
+      "status": "external_manual",
+      "capabilities": [
+        "remote_build",
+        "android_diagnostics",
+        "gameplay_verification",
+        "apk_inspection"
+      ],
+      "useFor": [
+        "android_build",
+        "gameplay_qa",
+        "pre_release_diagnostics"
+      ],
+      "notes": "External runner, not a ChatGPT plugin connection. A step is complete only when logs or evidence are returned and inspected."
+    },
+    {
+      "id": "mada_commander_mcp",
+      "name": "Mada Commander MCP endpoint and tool bridge",
+      "status": "external_manual",
+      "capabilities": [
+        "mcp_healthcheck",
+        "tool_contract_smoke_test",
+        "agent_bridge_diagnostics"
+      ],
+      "useFor": [
+        "cross_tool_orchestration",
+        "mcp_readiness",
+        "termux_bridge_verification"
+      ],
+      "notes": "Readiness is unverified in this run. Do not claim connected/healthy until an authenticated health check, tool smoke test, and bridge evidence succeed. Do not bypass app challenge, OAuth, or access controls."
+    }
+  ]
+}

@@ -9,7 +9,10 @@
     "test:security": "node scripts/secret-scan.js",
     "ci:gate": "node scripts/ci-gate.js",
     "evidence:p18": "node scripts/p18-evidence.js",
-    "payment:readiness": "node scripts/payment-readiness.js"
+    "payment:readiness": "node scripts/payment-readiness.js",
+    "orchestration:status": "node scripts/plugin-workflow-manager.js status",
+    "orchestration:check": "node scripts/plugin-workflow-manager.js check",
+    "orchestration:plan": "node scripts/plugin-workflow-manager.js plan"
   },
   "keywords": [],
   "author": "",

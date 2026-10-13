@@ -420,7 +420,7 @@ function buildRepositories(db) {
       params.push(String(options.actorType));
     }
     if (where.length) sql += ' WHERE ' + where.join(' AND ');
-    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    sql += ' ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
     return db.prepare(sql).all(...params).map(parseRow);
   }
