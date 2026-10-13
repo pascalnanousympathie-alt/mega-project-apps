@@ -14,6 +14,7 @@ node scripts/plugin-workflow-manager.js plan gameplay-qa
 node scripts/plugin-workflow-manager.js plan 3d-pipeline
 node scripts/plugin-workflow-manager.js plan fast-web-deploy
 node scripts/plugin-workflow-manager.js plan backend-deploy
+node scripts/plugin-workflow-manager.js plan mada-commander-readiness
 node scripts/plugin-workflow-manager.js plan all
 ```
 
@@ -24,7 +25,7 @@ node scripts/plugin-workflow-manager.js plan all
 
 ## Connect integrations
 
-The four integrations marked `requires_user_connection` are Superpowers, Context7, Codex Security, and PostHog. Open ChatGPT's app/connector settings and complete the account connection/consent flow for each available integration. A suggestion or catalog listing does not mean the integration is connected. Once you confirm a connection, update that integration's status in `plugins.registry.json` through a reviewed commit.
+The integrations still marked `requires_user_connection` are Context7, Codex Security, and PostHog. Superpowers was confirmed connected during the current ChatGPT session. Open ChatGPT's app/connector settings and complete the account connection/consent flow for each available integration. A suggestion or catalog listing does not mean the integration is connected. Once you confirm a connection, update that integration's status in `plugins.registry.json` through a reviewed commit.
 
 A status set to `connected` only records that the operator believes the integration is connected. A workflow is complete only when the relevant connected tool actually executes and returns verifiable evidence during that run.
 
