@@ -21,12 +21,12 @@ test('every workflow stage references a known integration', () => {
   }
 });
 
-test('unconnected integrations are blocked rather than falsely marked ready', () => {
+test('unconnected integrations are blocked while connected integrations remain usable', () => {
   const { registry, workflows } = loadConfig();
   const workflow = workflows.workflows.find(item => item.id === 'fast-code');
   const plan = buildPlan(registry, workflow);
   assert.equal(plan.find(item => item.stage.id === 'docs').state, 'BLOCKED_CONNECTION');
-  assert.equal(plan.find(item => item.stage.id === 'tdd').state, 'BLOCKED_CONNECTION');
+  assert.equal(plan.find(item => item.stage.id === 'tdd').state, 'READY_TO_RUN');
 });
 
 test('available design references are runnable, but real 3D validation needs external evidence', () => {
