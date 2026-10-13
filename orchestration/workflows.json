@@ -106,9 +106,17 @@
           "id": "security",
           "title": "Run code security checks",
           "integrations": [
-            "codex_security"
+            "github_security_scanners"
           ],
-          "gate": "Record scan status and investigate findings; this does not replace runtime diagnostics."
+          "gate": "Record scan status and triage findings from Semgrep CE, Trivy, OSV-Scanner and Gitleaks. These replace the unavailable Codex Security connection for the baseline workflow, but do not replace runtime diagnostics or independent review."
+        },
+        {
+          "id": "mobsf-static",
+          "title": "Run manual MobSF static APK analysis and inspect report artifact",
+          "integrations": [
+            "mobsf_ci"
+          ],
+          "gate": "The MobSF workflow is configured but must be run on a runner meeting documented resource requirements; attach the report and triage findings before release."
         },
         {
           "id": "release-approval",
