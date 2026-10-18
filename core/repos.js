@@ -96,7 +96,15 @@ function buildRepositories(db) {
   function setStatus(id, status) {
     ok(USER_STATUSES.includes(status), 'E_ARG', 'invalid user status');
     const row = getById(id);
-    const ts = nowIso();
+    const candidateTs = nowIso();
+    const candidateMs = Date.parse(candidateTs);
+    const previousMs = Date.parse(row.updated_at);
+    // Wall-clock timestamps have millisecond precision. Ensure an update is
+    // observable and ordered even when two mutations happen in the same ms or
+    // the system clock moves backwards slightly.
+    const ts = Number.isFinite(previousMs) && candidateMs <= previousMs
+      ? new Date(previousMs + 1).toISOString()
+      : candidateTs;
     db.prepare('UPDATE users SET status = ?, updated_at = ? WHERE id = ?').run(status, ts, id);
     return { ...row, status, updated_at: ts };
   }
