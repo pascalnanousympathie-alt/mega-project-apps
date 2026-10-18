@@ -1,0 +1,37 @@
+version: 2.1
+
+jobs:
+  acep-ci-gate:
+    docker:
+      - image: cimg/node:22
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - acep-npm-v1-{{ checksum "package-lock.json" }}
+            - acep-npm-v1-
+      - run:
+          name: Install locked dependencies
+          command: npm ci
+      - run:
+          name: Run required tests, security and deployment-readiness gates
+          command: |
+            mkdir -p artifacts
+            set +e
+            npm run ci:gate > artifacts/ci-gate.log 2>&1
+            result=$?
+            cat artifacts/ci-gate.log
+            exit "$result"
+      - save_cache:
+          key: acep-npm-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - ~/.npm
+      - store_artifacts:
+          path: artifacts/ci-gate.log
+          destination: ci-gate.log
+
+workflows:
+  acep-ci-fallback:
+    jobs:
+      - acep-ci-gate
