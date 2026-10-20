@@ -59,6 +59,16 @@ Draft PR [#3](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull
 
 The workflow-job step summary returned no step details for ACEP CI, and direct job-log retrieval is unavailable through the connected integration. These failures are therefore not attributed to the new Markdown files without evidence; their precise cause remains UNDIAGNOSED. Do not merge PR #3 until CI failure causes are identified and required gates pass or an explicitly reviewed policy decision is made.
 
+## Local checkpoint update — 2026-10-20
+
+Created and verified a private local checkpoint directory outside the project repositories:
+- Path: `~/.project-checkpoints/20261020-parallel-start/`
+- Captured branch, HEAD, git status, and tracked-change patch for LudoMada, NanouBrowser, Nanoumada and the temporary Nanou Browser agent checkout.
+- Archived the git-untracked paths from those worktrees where present. The original worktrees were re-read afterward and their dirty status remained unchanged.
+- The checkpoint is for recovery only. Do not apply patches blindly: review them first, and keep secrets out of commits and status reports.
+
+Next safe action: investigate GitHub job output for the failing checks using a different read path, then work on isolated branches. Do not alter the protected LudoMada worktree until its pre-existing changes have been reviewed.
+
 ## Evidence gaps
 
 - Failed workflow logs could not be downloaded through the connected GitHub log tool; it returned 404 BlobNotFound. Scanner/test failure root causes remain UNDIAGNOSED. Do not suppress, skip, or rerun all workflows blindly.
