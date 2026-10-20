@@ -11,11 +11,15 @@
 - **Source of truth:** GitHub repositories and commit SHA. Make scoped commits and require CI evidence.
 - **Planning/orchestration:** mega-project-apps, orchestration/plugins.registry.json, orchestration/workflows.json, and scripts/plugin-workflow-manager.js.
 - **Android release:** repository Gradle builds and APK artifacts; MobSF static APK analysis is a separate manual gate.
-- **Web/MCP hosting:** Vercel. Health and authenticated tool-contract checks are required even if a deployment is labelled READY.
+- **Web/MCP hosting:** host per repository and verified deployment manifest. Nanou Browser’s intended browser-agent/MCP preview uses its root `render.yaml` on Render; Nanoumada is a separate browser-based AI coding workspace whose host must match its own linked project; Mada Commander has its own MCP/control-plane resources. No blanket “all web/MCP goes to Vercel” rule is valid. A `READY` host status alone is not proof of application, auth or MCP health.
 - **Database:** Supabase project mada-commander-public-mcp; keep it separate from LudoMada gameplay/wallet data.
 - **Runtime backend:** Railway connector is authenticated, but this audit did not find a bound Railway workspace/project.
 - **Tracking/telemetry:** Linear for delivery issues; PostHog for runtime telemetry only after events are actually ingested.
 - **Design/media:** Figma for design work; Higgsfield/OpenArt for assets when needed. Check credit use and validate 3D assets inside the real GLES renderer.
+
+### Project boundary contract
+
+Before editing or orchestrating any repository, read [`PROJECT-BOUNDARIES.md`](./PROJECT-BOUNDARIES.md) plus that repository’s `AGENTS.md` and `README.md`. The requested project/output is the authority; never infer output from leftover files or a stale check name. Core distinctions: **Nanou Browser = TinyFish-style web service + remote MCP (not APK)**; **Nanoumada = browser-based AI coding workspace (not APK)**; **LudoMada/RamiMada/LotoMada/DominoMada = Android games**; **mega-project-apps = orchestration and evidence, not a product app**. Keep hosts, credentials, runner recipes and secrets per-repository. Do not call custom MCP “connected in ChatGPT” until the account/plan is eligible and the live HTTPS `initialize`, `tools/list` and harmless tool-call checks pass.
 
 ### Mandatory state flow
 **INVENTORY → SCOPE → IMPLEMENT → TEST → SECURITY → ARTIFACT/EVIDENCE → REVIEW → PASS/BLOCKED**
