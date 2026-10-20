@@ -59,3 +59,13 @@ Update PROJECT_STATUS.md after every material test/fix/PR state change. Each ent
 - Keep repository credentials, .env, OAuth tokens, API keys, signing keys, wallet private keys and payment secrets out of logs, prompts, commits and status reports.
 - Preserve least privilege and user approval for authentication, payments, wallet settings, production access, merges and destructive operations.
 - Do not claim background work is active unless an actual workflow/session has been started and checked.
+
+
+## Anti-repetition and evidence freshness (mandatory)
+
+- Before diagnosing a failure, read the latest `PROJECT_STATUS.md`, this runbook, relevant conversation history, and prior PR/commit/check-run evidence for that exact failure class. Reuse a documented fix if it remains applicable; do not restart from zero.
+- Do not present a previously reported GitHub Actions Billing & plans/spending-limit issue as the current root cause unless the *current run* has a fresh annotation/log or other direct evidence tying it to that cause. Treat older annotations as historical until freshly re-confirmed.
+- `runner_id=0`, blank `runner_name`, and `steps=[]` establish that the job did not start. They do not by themselves prove billing, application-test, scanner, Android-build, or repository-code failure.
+- For jobs that did start, identify the first failing step and inspect annotations/logs before patching. If logs are inaccessible, record the exact endpoint/error and mark the failure `UNDIAGNOSED`; do not invent a finding or repeat the same test without a different diagnostic path.
+- Keep providers separate: GitHub Actions, Buildkite, CircleCI, Vercel, and local Termux results are different evidence sources. A pass in one is not a pass in another.
+- After a fix, run targeted and relevant regression checks, then independently re-read the saved file/commit/PR/status. Report only the evidence actually observed. Do not weaken required checks to obtain green status.
