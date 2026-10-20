@@ -1,0 +1,58 @@
+name: OSV Full Scan
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "45 12 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  osv-full-scan:
+    name: OSV-Scanner Full Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Run OSV-Scanner
+        id: scan
+        uses: google/osv-scanner-action/osv-scanner-action@0a65f82af05cd58cf587827b0bb0489548c18346
+        env:
+          GOTOOLCHAIN: auto
+        with:
+          scan-args: |-
+            --output=results.json
+            --format=json
+            -r
+            ./
+        continue-on-error: true
+      - name: Fail if scan did not produce results
+        if: ${{ steps.scan.outcome == 'failure' }}
+        run: |
+          if [ ! -s results.json ]; then
+            echo "::error::OSV-Scanner failed without writing results.json; failing closed."
+            exit 1
+          fi
+      - name: Generate SARIF report
+        uses: google/osv-scanner-action/osv-reporter-action@0a65f82af05cd58cf587827b0bb0489548c18346
+        with:
+          scan-args: |-
+            --output=results.sarif
+            --new=results.json
+            --gh-annotations=false
+            --fail-on-vuln=false
+      - name: Upload OSV scan report
+        if: always() && hashFiles('results.sarif') != ''
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: osv-full-scan-results
+          path: results.sarif
+          retention-days: 14
