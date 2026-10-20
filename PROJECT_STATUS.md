@@ -69,6 +69,22 @@ Created and verified a private local checkpoint directory outside the project re
 
 Next safe action: investigate GitHub job output for the failing checks using a different read path, then work on isolated branches. Do not alter the protected LudoMada worktree until its pre-existing changes have been reviewed.
 
+## CI evidence refinement — 2026-10-20
+
+The GitHub API's commit check-runs endpoint exposed additional Buildkite check summaries for PR #3, despite the workflow-job log endpoint being unavailable:
+
+- Buildkite **ACEP CI / gate**: **PASS**, exit status 0.
+- Buildkite **Semgrep Community Edition**: **PASS**, exit status 0.
+- Buildkite **OSV PR Scan**: **PASS**, exit status 0.
+- Buildkite **Gitleaks**: **FAIL**, exit status 1; detailed scan output is not exposed in the check summary.
+- Buildkite **Trivy**: **FAIL**, exit status 1; detailed scan output is not exposed in the check summary.
+- Buildkite **OSV Full Scan**: **could not run**. The check summary identifies a Buildkite adapter limitation: the referenced OSV reusable workflow's bounded artifact-download adapter requires the \`name\` input to be an exact literal artifact name. The summary also notes that GitHub Actions \`concurrency.cancel-in-progress\` is not implemented by Buildkite; Buildkite advises configuring Cancel Intermediate Builds in pipeline settings. No pipeline setting was changed.
+- The same PR also has separate GitHub Actions workflow runs that reported failure. Keep GitHub Actions and Buildkite statuses distinct; do not collapse them into one result.
+
+The targeted Nanoumada composite-action metadata PR [#13](https://github.com/pascalnanousympathie-alt/nanoumada/pull/13) had CI run [39374796101](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39374796101) fail in the 2-second Test job with two annotations. The connected GitHub integration did not return the annotation details. The metadata fix is therefore not proven sufficient; investigate the precise annotations before changing more files.
+
+Local isolated Mega-Project clone \`~/tmp/mega-project-apps-repro-20261020\` was created from remote main SHA \`3b86e64\`. \`npm ci --ignore-scripts --no-audit --no-fund\` completed. Targeted \`tests/users.test.js\` passed 5/5 on Termux Node 26.4.0. The full \`npm test\` suite is still running in process PID 21067 at the time of this update; no failing assertion has appeared in the log so far. This local run does not validate the hosted Node 22 environment.
+
 ## Evidence gaps
 
 - Failed workflow logs could not be downloaded through the connected GitHub log tool; it returned 404 BlobNotFound. Scanner/test failure root causes remain UNDIAGNOSED. Do not suppress, skip, or rerun all workflows blindly.
