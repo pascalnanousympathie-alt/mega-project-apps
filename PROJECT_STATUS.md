@@ -51,6 +51,14 @@ Read-only inspection found pre-existing uncommitted changes. No checkout, reset,
 - RamiMada/LotoMada/DominoMada: each has a draft CircleCI cloud-build fallback PR #1.
 - Nanoumada returned no open PRs from the current query.
 
+## Control-plane PR validation update — 2026-10-20
+
+Draft PR [#3](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/3) was created from this snapshot branch and remains unmerged. After creation, GitHub Actions reported:
+- ACEP CI run [39374308312](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/39374308312): FAIL, job "gate".
+- Security Audit run [39374308508](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/39374308508): FAIL in Trivy, Semgrep, OSV PR scan and Gitleaks.
+
+The workflow-job step summary returned no step details for ACEP CI, and direct job-log retrieval is unavailable through the connected integration. These failures are therefore not attributed to the new Markdown files without evidence; their precise cause remains UNDIAGNOSED. Do not merge PR #3 until CI failure causes are identified and required gates pass or an explicitly reviewed policy decision is made.
+
 ## Evidence gaps
 
 - Failed workflow logs could not be downloaded through the connected GitHub log tool; it returned 404 BlobNotFound. Scanner/test failure root causes remain UNDIAGNOSED. Do not suppress, skip, or rerun all workflows blindly.
