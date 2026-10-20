@@ -94,7 +94,7 @@ jobs:
 
   osv-full-scan:
     name: OSV-Scanner Full Scan
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
