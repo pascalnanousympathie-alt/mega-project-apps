@@ -179,3 +179,20 @@ Separate Buildkite evidence for Mega-project-apps head `2fd5085`, build #77: Sem
 Unaffected positive evidence remains separate: Nanou Browser Agent PR CI run `39162254021` PASS; PC-Free scheduled Security Audit run `39305776358` PASS. PR #3 and #4 remain OPEN/DRAFT/UNMERGED. No workflows were retried merely to repeat the confirmed pre-run failure, and no merge, deployment, payment action, secret change or local-worktree synchronization was performed.
 
 Next action: account owner must review GitHub **Billing & plans** and resolve the payment/spending-limit condition for hosted Actions to start again. Meanwhile, continue local/independent tests and investigate executed Buildkite failures through an authorized log route.
+
+## Nanou Browser local Android unit-test result — 2026-10-20 13:40 EAT
+
+Local validation was completed in a separate clean checkout, `~/nanou-browser`, on branch `fix/navigation-and-low-memory-build`, HEAD `2631664c93dfd78ef2a4e2bc9eec9ada8a2b790d` (the head of Nanou Browser PR #1). After validation, `git status --short` was empty; no tracked repository configuration was changed.
+
+Command used:
+```sh
+ANDROID_HOME="$HOME/android-sdk" ANDROID_SDK_ROOT="$HOME/android-sdk" \
+  ./gradlew testDebugUnitTest --no-daemon --console=plain --offline \
+  -Pandroid.aapt2FromMavenOverride="$HOME/android-sdk/build-tools/35.0.0/aapt2"
+```
+
+Result: `BUILD SUCCESSFUL in 6m 40s`; 20 actionable tasks (9 executed, 11 up-to-date). JUnit XML `app/build/test-results/testDebugUnitTest/TEST-com.nanou.browser.BrowserUrlResolverTest.xml` reports 11 tests, 0 failures, 0 errors, 0 skipped. The same 11 tests also passed via a direct `javac` + JUnit 4.13.2 run, outside the repository.
+
+Diagnostic context: the first Gradle invocation failed because neither Android SDK environment variable was set. Setting both exposed a second host mismatch: Maven AAPT2 `aapt2-8.7.3-12006047-linux` is x86-64 and cannot execute on the Termux ARM64 host. The command-scoped `android.aapt2FromMavenOverride` pointed to the installed, executable Termux AAPT2 at `~/android-sdk/build-tools/35.0.0/aapt2`; with that override the full `testDebugUnitTest` task completed successfully. No `local.properties` or tracked Gradle files were changed.
+
+Scope: this proves local URL-resolver unit tests and the Gradle unit-test task only. It is not evidence of a release APK build, emulator/device E2E, or hosted GitHub Actions PASS. The separate dirty checkout `~/NanouBrowser` (branch `android-alternative`) was not touched. Current hosted native Actions runs remain subject to the separately verified Billing & plans/spending-limit gate; no new hosted retry was started.
