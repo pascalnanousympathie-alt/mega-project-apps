@@ -157,3 +157,25 @@ After the status/runbook commits, the latest observed native GitHub Actions runs
 Buildkite check metadata for the same branch head subsequently finished: PR #3 Security Audit build #74 reported **Semgrep PASS**, **OSV PR scan PASS**, **Gitleaks exit 1**, **Trivy exit 1**, and the older reusable OSV full-scan job could not run because its dynamic artifact name is incompatible with the adapter's literal-name requirement. ACEP CI gate build #72 exited 1. The Semgrep Cloud Platform scan passed. Full Buildkite logs could not be opened via available access (HTTP 403), so Gitleaks, Trivy and ACEP exit-1 causes remain **UNDIAGNOSED**; the adapter failure is separately diagnosed. Do not suppress checks or patch based on exit status without the logs.
 
 The PR discussion comment was updated with this run-level evidence. Because updating this control-plane document itself triggers additional PR workflows, do not recursively chase every doc-triggered status commit; use the linked PR comment for the latest post-commit CI snapshot and keep any new diagnosis tied to fresh run evidence.
+
+
+## Latest billing-annotation confirmation — 2026-10-20 13:16 EAT
+
+A fresh read of GitHub check-run annotations using the authenticated GitHub CLI on the authorized Mercia device established the current pre-runner cause for the affected native Actions jobs. The failure annotation explicitly says: “The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings.”
+
+Directly confirmed on:
+- Mega-project-apps PR #3 head `2fd5085aecf6998966934046af682bd3c7ed85bf`: Security Audit run `39404773829` and ACEP CI run `39404772982`; job annotations for Gitleaks, Semgrep, Trivy, OSV PR Scan and ACEP gate.
+- LudoMada: scheduled runtime canary run `39374740319` and Security Audit PR run `39365140504`.
+- Nanoumada: scheduled stale-issues run `39383245468` and CI/CD Test run `39374796101`.
+- Nanou Browser Android CI run `39162120214`.
+- RamiMada scheduled Security Audit run `39305833306`.
+- LotoMada scheduled Security Audit run `39305855489`.
+- DominoMada scheduled Security Audit run `39305887826`.
+
+Each inspected failed native job also had `runner_id=0` and `steps=[]`. For these specific runs, the fresh matching annotations—not those metadata fields alone—prove GitHub Actions billing/spending-limit gating prevented execution. No tests or scanners ran in those jobs. This does not automatically explain independently executed Buildkite steps.
+
+Separate Buildkite evidence for Mega-project-apps head `2fd5085`, build #77: Semgrep and OSV PR Scan PASS; Gitleaks and Trivy exit 1; ACEP gate build #75 exit 1. Their summaries provide no diagnostic details and the Buildkite UI/API route still returns HTTP 403, so these execution failures remain UNDIAGNOSED. The native Actions logs endpoint returned `BlobNotFound/404`, but the annotations were retrievable through GitHub CLI; this is no longer recorded as “annotations unavailable.” Do not patch Gitleaks, Trivy or ACEP without their actual step logs.
+
+Unaffected positive evidence remains separate: Nanou Browser Agent PR CI run `39162254021` PASS; PC-Free scheduled Security Audit run `39305776358` PASS. PR #3 and #4 remain OPEN/DRAFT/UNMERGED. No workflows were retried merely to repeat the confirmed pre-run failure, and no merge, deployment, payment action, secret change or local-worktree synchronization was performed.
+
+Next action: account owner must review GitHub **Billing & plans** and resolve the payment/spending-limit condition for hosted Actions to start again. Meanwhile, continue local/independent tests and investigate executed Buildkite failures through an authorized log route.
