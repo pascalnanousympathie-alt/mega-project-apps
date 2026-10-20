@@ -196,3 +196,20 @@ Result: `BUILD SUCCESSFUL in 6m 40s`; 20 actionable tasks (9 executed, 11 up-to-
 Diagnostic context: the first Gradle invocation failed because neither Android SDK environment variable was set. Setting both exposed a second host mismatch: Maven AAPT2 `aapt2-8.7.3-12006047-linux` is x86-64 and cannot execute on the Termux ARM64 host. The command-scoped `android.aapt2FromMavenOverride` pointed to the installed, executable Termux AAPT2 at `~/android-sdk/build-tools/35.0.0/aapt2`; with that override the full `testDebugUnitTest` task completed successfully. No `local.properties` or tracked Gradle files were changed.
 
 Scope: this proves local URL-resolver unit tests and the Gradle unit-test task only. It is not evidence of a release APK build, emulator/device E2E, or hosted GitHub Actions PASS. The separate dirty checkout `~/NanouBrowser` (branch `android-alternative`) was not touched. Current hosted native Actions runs remain subject to the separately verified Billing & plans/spending-limit gate; no new hosted retry was started.
+
+## Nanou Browser local debug APK result — 2026-10-20 13:50 EAT
+
+The debug package was built successfully in the same separate clean checkout `~/nanou-browser`, branch `fix/navigation-and-low-memory-build`, HEAD `2631664c93dfd78ef2a4e2bc9eec9ada8a2b790d`.
+
+Command:
+```sh
+ANDROID_HOME="$HOME/android-sdk" ANDROID_SDK_ROOT="$HOME/android-sdk" \
+  ./gradlew assembleDebug --no-daemon --console=plain --offline \
+  -Pandroid.aapt2FromMavenOverride="$HOME/android-sdk/build-tools/35.0.0/aapt2"
+```
+
+Result: `BUILD SUCCESSFUL in 4m 20s`; 32 actionable tasks (17 executed, 15 up-to-date). Artifact: `app/build/outputs/apk/debug/app-debug.apk`; package `com.nanou.browser`, versionName `1.0.0`, versionCode `1`, size `30844` bytes. `unzip -t` reported no compressed-data errors; `apksigner verify --verbose --print-certs` confirmed APK Signature Scheme v2 with one Android Debug signer. SHA-256: `8725be6d91496d90d6f4bab3606a193c3087d9bebadaa7321b822ba58f5991f3`.
+
+Copied to `/sdcard/Download/NanouBrowser-debug-20261020.apk` on the authorized device and confirmed byte-for-byte equality plus matching SHA-256. This is a debug-signed package for local testing, not release signing. It was not installed; emulator/device E2E was not run. `aapt dump badging` failed because the Termux aapt parser reported an idmap/resource-table version mismatch, so the package/version were verified from Gradle's generated packaged manifest, and signature separately with `apksigner`.
+
+After both local test and packaging tasks, the separate checkout's `git status --short` remained empty and HEAD stayed unchanged. This local PASS does not clear native hosted Actions failures or confirm production release readiness. No retry, merge, deployment, or signing-key change was performed.
