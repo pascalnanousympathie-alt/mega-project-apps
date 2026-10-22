@@ -252,3 +252,27 @@ This refresh separates actual application/UI failures from runner or test-enviro
 3. For the LudoMada JOUER gate, get a fresh Android/Ramus session with screenshot plus logcat/marker evidence, then patch only the proven interaction/accessibility cause on an isolated branch.
 4. Keep Nanou Browser web service verification on its own service branch. Verify current hosted HTTPS health, bearer rejection/acceptance, MCP initialize/tools-list, and one harmless browser-session/navigation/snapshot/close cycle before claiming the hosted product is ready.
 5. Preserve dirty local worktrees and draft PRs; no merge, deployment, payment or production changes were performed.
+
+## LudoMada ARM64 local build and APK integrity — 2026-10-22 (final evidence)
+
+### Root cause and correction
+- First local command `cd ~/LudoMada/android-app && ./gradlew testDebugUnitTest assembleDebug --no-daemon` **failed at** `:app:processDebugResources`, because AGP launched the Maven Linux AAPT2 binary on the Android/Termux shell. The direct diagnostic was `aapt2-8.7.3-12006047-linux/aapt2: 1: Syntax error: "("` and four `AarResourcesCompilerTransform` operations then reported AAPT2 daemon startup failure. This was a host-tool/ABI mismatch, not a proven source-code compile error.
+- Reused the already-installed, previously documented ARM64 AAPT2 wrapper without editing project configuration: `$HOME/.local/bin/aapt2`. The underlying glibc ARM64 binary at `$HOME/.local/share/ludomada/aapt2-arm64-36.0.0` matched the expected SHA-256 `7512ff7e381bea6fd310b6f6e347422c8fda21e07c6e3f0162742e95eb9d7f98`; its wrapper `version` command responded.
+- Corrected command: `./gradlew -Pandroid.aapt2FromMavenOverride="$HOME/.local/bin/aapt2" testDebugUnitTest assembleDebug --no-daemon --no-parallel -Dorg.gradle.workers.max=1 --console=plain`.
+- **BUILD SUCCESSFUL in 11m 43s**, exit code 0; 38 actionable tasks, 5 executed and 33 up-to-date. The Termux build logged a non-fatal `LD_PRELOAD` warning from the wrapper and a Gradle 8.11.1 deprecation notice. `testDebugUnitTest` was `NO-SOURCE`, so no JVM unit tests were actually run. `compileDebugKotlin` was `UP-TO-DATE`; this is build evidence, not new Kotlin compilation evidence.
+
+### APK integrity and asset checks
+- Fresh artifact: `~/LudoMada/android-app/app/build/outputs/apk/debug/app-debug.apk`, modified `2026-10-22 13:31:45 +0300`, **18,144,293 bytes**, SHA-256 `d9f1318b1f2c06f70a9ec575ca5df52d72acdab230de79700f14c95d9c8903c7`.
+- Package metadata: `com.ludomadagascar`, versionName `1.0.1`, versionCode `2`, minSdk `24`, targetSdk `35`; minSdk 24 supports Android 8.1/API 27.
+- `unzip -tq`: passed; `apksigner verify --verbose`: passed with one signer using APK Signature Scheme v2; `zipalign -c -p 4`: passed.
+- `node scripts/check-3d-assets.mjs`: **28/28 PASS**; source manifest/GLB SHA checks and size budgets matched.
+- `node scripts/check-3d-optimization.mjs`: **PASS** (`3D_OPTIMIZATION_CONTRACT_PASS`).
+- `node scripts/check-apk-3d-asset.mjs <APK>`: **PASS**, 564 ZIP entries, `assets/3d/ludomada-premium-3d-rev3.glb` present.
+- Additional APK ZIP listing verified both active `assets/3d/ludomada-gameplay-rev5.glb` and `assets/3d/ludomada-gameplay-market-v6.glb` are present.
+- Copied to `~/storage/downloads/LudoMada-debug-20261022.apk` without overwriting an existing file. Size and SHA-256 were rechecked and match the build output byte-for-byte. This is a debug-signed APK for testing, not a release-signed APK.
+
+### Remaining visual/gameplay gate
+- `adb devices` still returns no connected device/emulator; `ramus` is not installed in the local Termux PATH. Therefore app launch, on-device screenshots, Home `JOUER` → game-mode overlay interaction, actual 3D rendering/frame stability, and end-to-end gameplay remain **BLOCKED/NOT VERIFIED**.
+- Historical Ramus PR #115 failure already tried orientation/coordinate fallbacks and still could not expose the game-mode dialog; do not repeat those same fixes blindly. PR #126’s hosted emulator failed for insufficient disk space (6,713.32 MB available vs 7,372.80 MB required). PR #132’s Ramus session terminated with no startup screenshot. These are separate evidence categories.
+- The local dirty worktree remains on branch `feat/gameplay-cosmetics-v1`, HEAD `78e6af247571ffc941eb357dd89b5527d2250a23`; the same pre-existing modified/untracked paths are still present. No reset, clean, stash, rebase, pull, source overwrite, merge or deployment occurred.
+- Next required action for visual PASS: run the new debug APK on an authorized Android device or a verified emulator/Ramus session, collect a fresh screenshot plus logcat/interaction markers, and then diagnose the exact first UI mismatch. Do not claim UI/visual release readiness based on build or asset integrity alone.
