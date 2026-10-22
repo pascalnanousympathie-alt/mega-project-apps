@@ -213,3 +213,42 @@ Result: `BUILD SUCCESSFUL in 4m 20s`; 32 actionable tasks (17 executed, 15 up-to
 Copied to `/sdcard/Download/NanouBrowser-debug-20261020.apk` on the authorized device and confirmed byte-for-byte equality plus matching SHA-256. This is a debug-signed package for local testing, not release signing. It was not installed; emulator/device E2E was not run. `aapt dump badging` failed because the Termux aapt parser reported an idmap/resource-table version mismatch, so the package/version were verified from Gradle's generated packaged manifest, and signature separately with `apksigner`.
 
 After both local test and packaging tasks, the separate checkout's `git status --short` remained empty and HEAD stayed unchanged. This local PASS does not clear native hosted Actions failures or confirm production release readiness. No retry, merge, deployment, or signing-key change was performed.
+
+## UI realism and Android gate diagnostics — 2026-10-22
+
+This refresh separates actual application/UI failures from runner or test-environment failures. PR/run evidence below is tied to the exact historical head/run listed; do not assume it represents a newer untested commit.
+
+### LudoMada — local assets/build/device
+
+- Read-only verification in `~/LudoMada`: branch `feat/gameplay-cosmetics-v1`, HEAD `78e6af2`. The worktree remains dirty with pre-existing modifications/untracked files. No reset, clean, stash, rebase, pull, or source overwrite was performed.
+- `node scripts/check-3d-assets.mjs`: **PASS, 28/28**. The gameplay GLB recorded in the manifest is 867,800 bytes and its SHA-256 matches; the market library is 7,934,184 bytes and matches its expected SHA-256; no packaged GLB exceeds the declared hero budget.
+- `node scripts/check-3d-optimization.mjs`: **PASS**, `3D_OPTIMIZATION_CONTRACT_PASS`.
+- Source inspection confirms `GlbRuntimeLoader` loads the rev5 gameplay GLB and `LudoBoardView` references the real pawn/die parts. This is source/asset evidence, not screenshot or runtime proof.
+- Started `cd ~/LudoMada/android-app && ./gradlew testDebugUnitTest assembleDebug --no-daemon`. As of this status entry the process was still running after more than nine minutes, showing project configuration but no task completion summary. **No PASS is claimed**; capture the final exit/result before deciding whether another diagnostic is needed.
+- `adb devices -l` returned no connected device/emulator. The pre-existing debug APK under `android-app/app/build/outputs/apk/debug/app-debug.apk` was timestamped 2026-10-12, size 18,144,293 bytes; it is not proof that the current source has been rebuilt or visually verified. Do not call the UI visual PASS until a current APK can be launched and representative screenshots/interactions are captured.
+
+### LudoMada — separate observed UI/runner failures
+
+- PR [#115](https://github.com/pascalnanousympathie-alt/LudoMada/pull/115), head `f3cbed54c8cb2c36a43562e7b9ceb075041d1ec9`, Lane F run [38523429460](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/38523429460): source gate, exact-candidate APK artifact selection/download, and packaged-3D-asset verification all **passed**; the Ramus visual/interaction smoke failed at `scripts/ramus-smoke.mjs:347` with `Game mode dialog was not exposed from Home JOUER`. The failure is a real UI-interaction gate failure on that commit. No downloadable artifact/screenshot was returned by the artifact-list endpoint, so the precise touch-vs-overlay failure is not further diagnosed from screenshots; do not apply a speculative coordinate patch without fresh evidence.
+- PR [#126](https://github.com/pascalnanousympathie-alt/LudoMada/pull/126), hosted APK fallback run [38527915444](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/38527915444): compile/build/instrumentation-APK step **passed**; the instrumented test step failed because the hosted emulator could not create its userdata partition: **6,713.32 MB available, 7,372.80 MB required**, followed by `emulator-5554 not found` and emulator boot timeout. This is an emulator storage/boot failure, not a Kotlin compile failure.
+- PR [#132](https://github.com/pascalnanousympathie-alt/LudoMada/pull/132), Ramus run [39155546748](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39155546748): debug APK build and source/3D audit passed; the Ramus session ended during startup, reported `session_ended` and a possible device crash, with no startup screenshot. Artifact upload then separately reported a storage-quota error. Treat that quota message as historical for this run only; the application-smoke root cause remains **UNDIAGNOSED** without a live session/screenshot/logcat.
+- PR [#135](https://github.com/pascalnanousympathie-alt/LudoMada/pull/135), runtime-watch run [39365140095](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39365140095) passed health/MCP/tool-catalog/OAuth-start checks. This is backend/runtime evidence, not proof that Android gameplay/UI works.
+
+### Nanou Browser — web agent/service versus Android checkout
+
+- PR [#2](https://github.com/pascalnanousympathie-alt/nanou-browser/pull/2), branch `feat/cloud-browser-agent-mcp`, head `9fbd19d44128965759ad3a1451975c8cfc483272`, Agent PR CI run [39488148103](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39488148103): **PASS**. Actual job steps include dependency installation and `Run safety and API tests`, which passed.
+- The separate local clone `~/tmp/nanou-browser-agent-check` is at an older HEAD `b453724` and has pre-existing untracked Python cache directories. A local pytest attempt first used the wrong module path, then correctly set `PYTHONPATH=agent-service` but failed collection because the Termux Python environment does not have the service dependency `mcp` installed. This is a local environment/dependency gap, **not** evidence that the latest PR code failed; do not modify that clone or install dependencies blindly just to duplicate the successful CI job.
+- The repo branch contains `render.yaml` configuring a Free Render service, but no current public HTTPS host, deployed `/healthz`, bearer-authenticated REST/MCP handshake, or harmless live browser tool call was verified in this check. Therefore deployment and ChatGPT connectivity remain **UNVERIFIED**.
+
+### Nanoumada and control-plane CI — log access limits
+
+- Nanoumada CI run [39374796101](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39374796101), job `Test`: the step endpoint returned `steps=[]` and job-log retrieval returned `BlobNotFound`. Current cause is **UNDIAGNOSED**; no new billing/spending-limit attribution is supported by this run's accessible evidence.
+- The latest sampled CI runs for control-plane PR #5 also report failed jobs with empty step details; log retrieval returned `BlobNotFound`. Treat them as failed/und as well as log-inaccessible, not a passing scanner or proven vulnerability finding. Keep GitHub Actions, Buildkite, local Termux and remote-agent results separate.
+
+### Next safe actions
+
+1. Read the final result of the already-started local Gradle build; if it fails or stays stalled, capture the first useful diagnostic and change the diagnostic approach before retrying.
+2. Fix the emulator storage/boot setup independently from app code.
+3. For the LudoMada JOUER gate, get a fresh Android/Ramus session with screenshot plus logcat/marker evidence, then patch only the proven interaction/accessibility cause on an isolated branch.
+4. Keep Nanou Browser web service verification on its own service branch. Verify current hosted HTTPS health, bearer rejection/acceptance, MCP initialize/tools-list, and one harmless browser-session/navigation/snapshot/close cycle before claiming the hosted product is ready.
+5. Preserve dirty local worktrees and draft PRs; no merge, deployment, payment or production changes were performed.
