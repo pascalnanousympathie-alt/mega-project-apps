@@ -1,0 +1,32 @@
+---
+description: Safe, evidence-driven workflow for the mega-project-apps repository and related projects.
+alwaysApply: true
+---
+
+# Multi-project isolation and verification
+
+## Before changing anything
+- Confirm the exact repository, intended product, branch, HEAD commit, and `git status --short --branch`.
+- Read the applicable `AGENTS.md`, `PROJECT_STATUS.md`, runbooks, CI policy, recent PR/commit history, and latest relevant workflow logs. Also inspect relevant open/draft PR branches for newer status/runbook documents not yet on the default branch; distinguish their evidence from merged/default-branch evidence. If a file is absent from the default branch and no relevant PR branch contains it, record that fact; do not invent its contents.
+- Inspect the first real failing CI step and its annotations/logs. A runner identifier of `0` or an empty `steps=[]` means the job may not have started; it is not a root-cause diagnosis by itself.
+- Do not repeat an old GitHub Actions billing/spending-limit claim unless fresh evidence confirms it. Check previous runbooks, issue/PR history, and any earlier workaround first.
+
+## Keep products separate
+- `mega-project-apps` is the ACEP/orchestration project. Respect its existing `AGENTS.md` and `CI_POLICY.md`, including the protected LudoMada scope.
+- `LudoMada` is the Madagascar Ludo game and backend. Treat wallet, payment, game-settlement, Android, visual QA, and release work as LudoMada-specific.
+- `Nanou Browser` refers to the web-based browser-automation product. Do not substitute an Android/Gradle checkout just because its repository is named `NanouBrowser` or `nanou-browser`; verify its origin, branch, deployment, and intended product first.
+- `Nanoumada` is a separate browser-based AI coding workspace based on Bolt.diy. Never conflate it with Nanou Browser.
+- `Mada Commander` is a separate MCP/remote-command service; do not treat it as part of the LudoMada game or Nanou Browser.
+- `RamiMada`, `LotoMada`, `DominoMada`, and `PC-Free` are separate projects with their own repositories, status, tests, credentials, and release gates. Do not transplant code or assumptions between them without a verified dependency.
+
+## Protect working state and credentials
+- Never run `git reset`, `git clean`, stash, rebase, force-push, or pull as a shortcut. Never overwrite or discard dirty work. Prefer a new feature branch and a minimal patch.
+- Never print, commit, or copy secrets from `.env`, tokens, private keys, OAuth responses, or deployment settings. Use example files and report only whether a required setting is present/absent.
+- Do not alter authentication/RBAC, wallet balances, payment provider live switches, production configuration, real payments, or production deployments without explicit authorization and the required safety review.
+- Do not merge a PR or deploy to production unless explicitly authorized. Draft a PR for review and state what remains unverified.
+
+## Implement and verify
+- Diagnose root cause before patching symptoms. Make the smallest targeted change; avoid unrelated formatting, broad refactors, or disabling tests/security gates.
+- Run focused regression tests first, then relevant lint/type checks/build/security checks. Capture the exact command and result. If a tool could not start or evidence is missing, report BLOCKED—not PASS.
+- Reopen/read back changed files and inspect the final diff. Confirm no secret or unrelated file entered the change.
+- Report in Malagasy by default: what changed, exact test evidence, root cause (if proven), blockers, and the next concrete action. Distinguish PASS, FAIL, and BLOCKED precisely.

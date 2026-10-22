@@ -1,0 +1,41 @@
+---
+description: Visual quality, realism, responsive behaviour, and regression gates for UI changes.
+alwaysApply: true
+---
+
+# UI stability and realism
+
+## Choose the correct product and renderer first
+- Read the repository's project boundary, README, AGENTS.md, current branch/HEAD/status, existing UI implementation, and supplied reference screenshots before selecting a tool or framework.
+- Never replace an existing app stack with a generated prototype, or treat a prototype as a production implementation.
+- Keep Nanou Browser (web browser-automation service), Nanoumada (web AI coding workspace), LudoMada (Android game/backend), and Mada Commander (MCP/control plane) separate. Do not infer the requested deliverable from a legacy directory name.
+- Use design-generation tools for exploration and visual specifications; implement and verify the final UI in the target repository.
+
+## Design before implementation
+- Use a small, explicit design system: semantic color tokens, type scale, spacing scale, responsive breakpoints, radii, elevation/shadow rules, icon family, and reusable components. Define tokens once and reuse them.
+- Establish approved reference screens/states and a component inventory before building out many routes.
+- Preserve the product's visual identity. Do not substitute unrelated stock imagery, flat placeholder shapes, emoji icons, or a static mockup when the requirement calls for rendered 3D or functional controls.
+- Realism must match the medium. For 3D scenes, use actual geometry/materials, physically plausible lighting, shadows, contact/AO where supported, correct camera/perspective, and target-device performance; a generated background image is not a functioning 3D scene.
+- Use existing licensed assets when possible. Track the source/license for added assets and avoid copyrighted logos, UI, or game assets unless the project has rights to use them.
+
+## Required interface states
+For each critical route or screen, implement and verify:
+- initial/loading, normal/success, empty, validation error, server/network error, disabled/in-progress, and permission/unauthenticated states where relevant;
+- keyboard/touch/focus states, visible and accessible labels, readable contrast, scalable text, and localization/long-string layouts;
+- responsive layout and safe-area behaviour at a narrow Android viewport as well as a wider browser viewport;
+- back navigation, repeated taps, slow responses, expired sessions, and offline/network-loss handling when relevant.
+
+## Visual regression and UI behaviour
+- Web apps: use the repository's existing browser test stack; prefer Playwright for end-to-end interaction and screenshot comparison when compatible. Keep viewport, locale, device scale, test data, animation state, and rendering environment deterministic. Mask only genuinely dynamic regions; never hide a broken component to obtain a pass.
+- Android: use the existing Espresso/UI Automator or project test stack, and capture screenshot/golden comparisons for representative high-risk screens. Test at the minimum supported Android API and one modern API where feasible. Do not claim device verification from a compile-only run.
+- 3D/game screens: verify the actual renderer and interaction path, not a flat substitute or a design file. Capture consistent screenshots/video for the target low-end device and test gameplay state, camera, materials, animation and frame stability. Report unsupported effects/fallbacks explicitly.
+- Compare new screenshots against approved reference images and review the visual diff manually. Update golden files only after a human-reviewed intended change; never auto-accept a screenshot just to make CI green.
+- A successful build/unit test alone is not visual PASS. Record visual evidence, interaction results, target viewport/device, and any untested states.
+
+## Quality and safety gates
+- Use the smallest patch and the libraries already present unless a measured requirement justifies a new dependency. Do not disable accessibility checks, snapshot assertions, lint, security gates or tests to clear failures.
+- Keep auth, session handling, RBAC, wallet/payment flows, user data and API permissions server-enforced. Never place secrets in front-end code, generated prompts, screenshots, logs or commits.
+- Check loading/empty/error responses, accessible semantics, console errors, network failures, duplicate requests, slow requests and mobile overflow.
+- For visual test failures, find the first real mismatch and inspect screenshot, trace, console and network evidence before changing code. Do not repeat the same failed test without new diagnostics.
+- Read changed files back, inspect the final diff, and run relevant tests/build/security checks after the patch.
+- Report PASS only when the applicable code, visual, behaviour, accessibility and security evidence exists. Otherwise use PARTIAL, BLOCKED, FAIL or NOT RUN accurately.
