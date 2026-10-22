@@ -243,7 +243,7 @@ This refresh separates actual application/UI failures from runner or test-enviro
 ### Nanoumada and control-plane CI — log access limits
 
 - Nanoumada CI run [39374796101](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39374796101), job `Test`: the step endpoint returned `steps=[]` and job-log retrieval returned `BlobNotFound`. Current cause is **UNDIAGNOSED**; no new billing/spending-limit attribution is supported by this run's accessible evidence.
-- The latest sampled CI runs for control-plane PR #5 also report failed jobs with empty step details; log retrieval returned `BlobNotFound`. Treat them as failed/und as well as log-inaccessible, not a passing scanner or proven vulnerability finding. Keep GitHub Actions, Buildkite, local Termux and remote-agent results separate.
+- The latest sampled CI runs for control-plane PR #5 also report failed jobs with empty step details; log retrieval returned `BlobNotFound`. Treat them as failed and log-inaccessible, not a passing scanner or proven vulnerability finding. Keep GitHub Actions, Buildkite, local Termux and remote-agent results separate.
 
 ### Next safe actions
 
