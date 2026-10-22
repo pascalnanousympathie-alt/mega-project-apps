@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## Before changing anything
 - Confirm the exact repository, intended product, branch, HEAD commit, and `git status --short --branch`.
-- Read the applicable `AGENTS.md`, `PROJECT_STATUS.md`, runbooks, CI policy, recent PR/commit history, and latest relevant workflow logs when present. If a status/runbook file is absent, record that fact; do not invent its contents.
+- Read the applicable `AGENTS.md`, `PROJECT_STATUS.md`, runbooks, CI policy, recent PR/commit history, and latest relevant workflow logs. Also inspect relevant open/draft PR branches for newer status/runbook documents not yet on the default branch; distinguish their evidence from merged/default-branch evidence. If a file is absent from the default branch and no relevant PR branch contains it, record that fact; do not invent its contents.
 - Inspect the first real failing CI step and its annotations/logs. A runner identifier of `0` or an empty `steps=[]` means the job may not have started; it is not a root-cause diagnosis by itself.
 - Do not repeat an old GitHub Actions billing/spending-limit claim unless fresh evidence confirms it. Check previous runbooks, issue/PR history, and any earlier workaround first.
 
