@@ -331,3 +331,10 @@ This refresh separates actual application/UI failures from runner or test-enviro
 2. Nanou Browser: inspect CI run `39778782478` after it has actually started/completed; do not assume config PASS while queued.
 3. LudoMada: inspect why run `39771056654` was cancelled and the queue/runtime of Lane F before attempting compilation again. No speculative code patch or additional parallel Gradle build.
 4. Direct full browser MCP in this current ChatGPT Free Android account is **NOT SOLVABLE by source/config edits** under current product restrictions. Use Nanou Browser's independently hosted web UI for the no-cost route; do not claim ChatGPT has connected to its MCP tools without a real eligible client session and harmless live tool call.
+
+
+### Nanou Browser CI runner cross-check — 2026-10-22 12:35 UTC
+
+- GitHub connector still reports PR run [39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478) as `pending` and job `119824415775` as `queued` with empty step data. This conflicts with the connected Termux Nanou Browser runner's own diagnostic log: at `12:29:59Z` it logged `Running job: test`, and at `12:33:33Z` the worker log entered the `Run safety and API tests` step.
+- The runner diagnostic also records one preceding `HTTP Status: Conflict` for an acquire-job request and skips a duplicate message with `job assignment is invalid: MissingKey`; it subsequently accepted and renewed a different job assignment and marked its prior job request `processed succeed`. Do not equate that one conflict with the current run's failure.
+- The current job's actual pytest summary/terminal conclusion has not been exposed by either the GitHub job/log endpoint or the local worker-log result scan. Therefore the new OpenRouter/render.yaml change remains **TEST OUTCOME UNVERIFIED**, despite evidence that a runner entered the test step. No pass/failure is claimed. Further diagnosis should use the exact job's final console output or runner-side job output before retrying.
