@@ -476,3 +476,15 @@ These are the exact current default refs returned by GitHub repository/commit me
 - **Undiagnosed / blocked:** PR #3 native Actions jobs have empty step summaries and current job-log download returns `BlobNotFound/404`; Buildkite Gitleaks/Trivy/ACEP detailed logs remain blocked by HTTP 403; current LudoMada Android fallback and Nanoumada test jobs have no accessible step-level failure cause; Mercia is offline.
 - Next: retain PR #3/#4 as drafts; seek a different authorized log/annotation route for actual executed Buildkite failures; do not rerun identical failed endpoints without a new route. When Mercia reconnects normally, first read-only verify every worktree's branch/HEAD/dirty state before any local work. Continue independent web-agent validation without deploying or changing secrets.
 - No merge, deployment, production change, payment, live-wallet change, auth/security-policy change, secret rotation, destructive data change or noVNC action occurred in this pass.
+
+
+### Read-only deployment cross-check — 2026-10-24
+
+A separate read-only Vercel deployment listing added deployment-state evidence after the GitHub status snapshot above:
+
+- **Mada Commander production project** `mada-commander-public-mcp`: latest listed production deployment is `READY`, created 2026-10-13, on LudoMada `main` commit `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246`. The separate `mada-commander-public-mcp-auto` project has a latest `READY` non-production deployment (target is null), created 2026-10-18, at current LudoMada main SHA `0dfca3603942b8df6ad3005977fedbc90da0e670`. This is a preview, not evidence that production was updated. No deployment was triggered by this pass.
+- **Nanoumada**: the latest listed production deployment is `READY` on main SHA `7acac6037b574160d60dd7b58fe0de96c7d63578`, created 2026-10-18. A separate `READY` preview on the web-scope documentation branch (`70038d15a87b838c1117d0b8d83ddeebdb327ffd`, created 2026-10-20) and a `READY` preview on the composite-action metadata branch (`c0aba0cdee03ba82098f91265e8a906d969edbc2`, created 2026-10-20) were also listed. Preview readiness is not test-suite PASS.
+- **Nanou Browser**: the Vercel project `nanou-browser-ci-lab` returned zero deployments. The intended product preview is configured for Render; no Render deployment or live endpoint was verified in this pass. Do not create a deployment or enter/rotate provider secrets as part of this coordination run.
+- A read-only Railway service description request returned `User input required` in the non-interactive runtime, so it was not completed. No Railway configuration or service was changed. Existing combined status contexts for LudoMada and mega-project-apps remain the only Railway evidence used above.
+
+These deployment records do not change the CI classifications above and do not authorize production deployment. All worktrees remain untouched; noVNC remains unused.
