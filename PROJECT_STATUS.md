@@ -488,3 +488,76 @@ A separate read-only Vercel deployment listing added deployment-state evidence a
 - A read-only Railway service description request returned `User input required` in the non-interactive runtime, so it was not completed. No Railway configuration or service was changed. Existing combined status contexts for LudoMada and mega-project-apps remain the only Railway evidence used above.
 
 These deployment records do not change the CI classifications above and do not authorize production deployment. All worktrees remain untouched; noVNC remains unused.
+
+
+## Daily coordination pass — 2026-10-25 08:36 EAT
+
+> Evidence collected 2026-10-25 (EAT) from GitHub repository metadata, open PR heads, combined commit statuses, workflow run/job summaries, job-step summaries/log downloads, and Vercel deployment listings. No local worktree was available for inspection. This section supersedes older statements only where it explicitly supplies newer evidence.
+
+### Default-branch refs and visible status
+
+| Repository / workstream | Default branch SHA | Current visible status evidence |
+|---|---|---|
+| mega-project-apps control plane | `main` `3b86e64019dfe2d1945b5d44a09bc25d50f55279` | Combined status: ACEP API success. PR #3 head `504c8158a5271862710e170a9d8df8c56503be13`; latest observed native runs 40068442391 and 40068442646 failed with zero step summaries. |
+| LudoMada | `main` `0dfca3603942b8df6ad3005977fedbc90da0e670` | Combined status contexts Railway, Vercel and Mada Termux CI are success. PR #135 runtime canary passed with 3 executed steps. PR #132 Android smoke has a real Ramus session failure; separate security audit has no steps. |
+| Nanoumada | `main` `7acac6037b574160d60dd7b58fe0de96c7d63578` | Vercel success; Mada Termux CI pending. Current production-target deployment is READY at this main SHA. PR #14 CI run 39483862281 failed but the Test job has no steps and log download returns BlobNotFound/404. |
+| Nanou Browser — Android | `android-alternative` `a504f7fcd18cd190a12dfee47a44a7d23d496900` | Mada Termux CI failure. Run 39162120214 job 117777417291 failed with an empty step list; log download returned BlobNotFound/404. Root cause remains UNDIAGNOSED. |
+| Nanou Browser — browser agent | PR #2 head `e1e2163c8e6725c3840bcde4fc210cc4a34ea7df` | Run 39778782478 PASS: checkout, ARM64 Python environment, dependency installation and safety/API tests all executed successfully. This does not validate the Android implementation or a public Render deployment. |
+| Mada Commander | Nested under LudoMada; no separate accessible GitHub repository | Runtime canary 39365140095 PASS with 3 executed steps (health, MCP protocol, tool catalog, OAuth-start check). Vercel deployment dpl_DZ3im8aHE257d65H5QkKMJpeUqva is READY on LudoMada main SHA, but target is null; do not call it a confirmed production deployment. |
+| PC-Free / infrastructure | `main` `e66dde7383ea93beb20ab398db9ad86f116cb9cc` | No combined status contexts returned for this SHA. PR #2 run 39142762767 Compose validation PASS; run 39142762931 Gitleaks, OSV PR scan, Semgrep and Trivy all PASS with executed steps. OSV full scan was skipped. |
+| RamiMada | `main` `fe3152c0847e5ae87337352d00974a33ed9ec5b3` | No combined status contexts returned. Latest scheduled security run retrievable from prior ledger, 39305833306, has failed jobs with empty step summaries; no new PR-triggered run was returned for PR #1 head. |
+| LotoMada | `main` `03f3ba21753a6a0454270eef983c438e6b8e83bf` | Mada Termux CI success. Scheduled security run 39305855489 has failed jobs with empty step summaries; no new PR-triggered run was returned for PR #1 head. |
+| DominoMada | `main` `31481559c78c421ace5237b0275d595223981707` | Mada Termux CI success. Scheduled security run 39305887826 has failed jobs with empty step summaries; no new PR-triggered run was returned for PR #1 head. |
+
+### Open PRs observed
+
+- mega-project-apps: #2 CircleCI cloud fallback; #3 central status/runbook; #4 Buildkite-compatible OSV full scan; #5 Cursor safety and verification rules. All remain open; #3, #4 and #5 are drafts.
+- LudoMada: current search returned open work including #135 runtime canary, #134 Cloudflare Workers runtime, #132 hosted UI/CI, #129 Ramus session recovery, #126 accessibility, #123 game-mode selector, #115 3D market/release verification, #108 Android instrumentation smoke, and additional gameplay/CI PRs. No merge was performed.
+- Nanoumada: #13 composite-action metadata and #14 web-app scope.
+- Nanou Browser: #1 navigation/render recovery and #2 web agent/remote MCP. Keep Android and agent work separate.
+- PC-Free: #2 Windows setup fix.
+- RamiMada, LotoMada and DominoMada: each has draft PR #1 for CircleCI Android build fallback.
+- Mada Commander has no separate repository in the accessible repository list; its implementation remains nested in LudoMada.
+
+### Fresh failure classification and root-cause evidence
+
+#### mega-project-apps PR #3 / PR #4 / PR #5
+
+- PR #3 head `504c8158a5271862710e170a9d8df8c56503be13`: ACEP run [40068442391](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40068442391), job `gate` failure; Security Audit run [40068442646](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40068442646), Trivy, OSV PR scan, Gitleaks and Semgrep jobs failed while OSV Full Scan was skipped. Every queried failed job returned `steps=[]`. Job-log download returned GitHub `BlobNotFound/404` at 2026-10-25 08:38 EAT. The connector did not expose a fresh runner_id or run-specific annotation. Classify as no-step/pre-runner-indicated and UNDIAGNOSED; do not attribute this run to billing, repository code, or scanner findings.
+- PR #4 remains at head `5d4ea29af52c1ac483903d879eb4f588ef75df90`. The latest native Actions runs retrievable for that head remain 39376607853 and 39376608123; their failed jobs have empty step summaries. The workflow split is structurally verified, but no fresh successful Buildkite run was observed. Prior Buildkite PR build #62 still has Semgrep and OSV PR Scan PASS, Gitleaks and Trivy exit 1, and ACEP gate exit 1 on build #60; detailed Buildkite logs remain blocked by HTTP 403. The executed-step failures remain UNDIAGNOSED.
+- PR #5 head `4916f1c7ec13b63cfa03dac1d02fc9e6b564c1f4`: runs 39760054775 (ACEP gate) and 39760055446 (Security Audit) failed; the queried gate/scanner step summaries are empty. No new annotation was returned, so root cause remains UNDIAGNOSED.
+- Runbook blob re-read: `e5d9e149331fb400f3ede237639d21e429c89559`. No current evidence justifies repeating the historical billing/spending-limit explanation as the cause of these newer runs.
+
+#### LudoMada Android / Ramus
+
+- PR #135 runtime-watch run [39365140095](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39365140095) is a genuine PASS: 3 executed steps including production health, MCP protocol/tool catalog and OAuth-start checks.
+- PR #132 Android UI smoke run [39155546748](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39155546748) genuinely executed. APK build and Android source/3D policy checks passed; the 3D optimization contract reported PASS and 28/28 source checks passed. The Ramus smoke step failed because the session ended: diagnostics state the fresh session ended with “The device crashed, possibly because of the app running on it”; startup screenshot evidence was absent and the smoke script raised “LudoMada Premium Home did not open”. This proves a device/session failure and failed visual smoke, not the underlying application-code defect. No screenshot/log evidence identifies a narrower app root cause.
+- Later artifact-upload steps independently failed with `Artifact storage quota has been hit`. This is a separate evidence-upload problem, not the reason the Ramus session ended. Keep the release gate blocked until a valid visual smoke succeeds and required evidence is available.
+- PR #132 Android APK Cloud Fallback run [39771059275](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39771059275) failed with an empty step summary; its job-log download returned BlobNotFound/404. Do not infer a build failure from that run.
+
+#### Nanoumada / Nanou Browser
+
+- Nanoumada PR #14 run [39483862281](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39483862281): Test job failed, `steps=[]`, log download returned BlobNotFound/404. PR #13 run [39374796101](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39374796101) has the same no-step limitation. These are not proven test assertion failures. Vercel production deployment dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf is READY on main SHA `7acac6037b574160d60dd7b58fe0de96c7d63578`; PR #13 and #14 previews are also READY.
+- Nanou Browser Android run [39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214): failed job with `steps=[]`; log download returned BlobNotFound/404. Root cause UNDIAGNOSED.
+- Nanou Browser agent run [39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478): genuine PASS with 8 executed steps, including “Run safety and API tests”. Vercel project `nanou-browser-ci-lab` returned zero deployments; this is not evidence of a live web-agent deployment.
+
+#### PC-Free, RamiMada, LotoMada and DominoMada
+
+- PC-Free PR #2 checks executed and passed as listed above; this is scoped to that PR head, not a claim that all infrastructure is validated.
+- Scheduled security runs 39305833306, 39305855489 and 39305887826 returned failed scanner jobs with empty step summaries when re-read. No new run-specific annotations or logs were available in this pass. Keep the scheduled failures UNDIAGNOSED; do not infer findings from jobs that did not execute.
+- LotoMada and DominoMada main retain a successful Mada Termux CI context; RamiMada returned no combined status context. Do not infer that the three CircleCI fallback PRs have run; the connector returned no PR-triggered workflow runs for their current heads.
+
+### Local-state protection and tool availability
+
+- Mercia/localhost is OFFLINE; last seen 61 hours ago. Local branch, HEAD and dirty status could not be re-read in this pass. No local repository was modified.
+- NoVNC was not opened or restarted.
+- No code fix was committed because no new source-code root cause was proven. The safe work completed here is remote evidence collection and status coordination. No security gate was weakened; no PR was merged; no deployment, production, wallet, payment, authentication, secret or destructive data operation occurred.
+
+### Next actions
+
+1. For mega-project-apps PR #3/#5 and the native Actions runs on PR #4, obtain fresh runner/annotation diagnostics through a different authorized route. Job-step and log endpoints were rechecked; current results are empty step lists plus BlobNotFound/404, so do not repeat the same download call without a new path.
+2. For PR #4 Buildkite failures, obtain access to the actual Gitleaks, Trivy and ACEP failing-step logs (HTTP 403 remains the concrete blocker). Keep the PR draft and security gates unchanged.
+3. For LudoMada, treat Ramus session death and artifact storage quota as separate issues. Preserve the failed-run evidence; do not patch app code until a screenshot/log or reproducible test identifies the app-level failure.
+4. For Nanoumada and Nanou Browser Android, obtain a real runner-start annotation or alternate executed test evidence before changing code. Keep browser-agent validation independent.
+5. Continue using current successful evidence on PC-Free, Nanou Browser agent and Mada Commander canary without generalizing it to unrelated branches or deployments.
+6. When Mercia returns online, first re-read each worktree's branch/HEAD/dirty state and preserve it before any local action. No reset/clean/stash/rebase/pull/overwrite is authorized by this status pass.
