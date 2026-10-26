@@ -634,3 +634,14 @@ Mada Commander has no separate repository in the accessible repository list; its
 - No code patch was made because no new source-level root cause was proven. The previously proven OSV adapter issue is already addressed in PR #4 and requires a fresh Buildkite execution to validate.
 - Do not re-try the same 404/403 log paths without a new route. Seek fresh GitHub runner annotations through an authorized alternate path; seek authenticated Buildkite per-step logs for Gitleaks/Trivy/ACEP. Keep PR #3 and #4 draft/unmerged until causes and required gates are addressed.
 - Continue independent safe work only where current evidence supports a change. Do not infer current billing cause from the historical 2026-10-20 annotation. No merge, deployment, production/payment/live-wallet mutation, secret rotation, auth/security policy change or destructive operation was performed.
+
+
+### Targeted PR #4 workflow contract check — 2026-10-26
+
+Re-read both workflow files from `refs/pull/4/head` after the coordination refresh:
+- `.github/workflows/security-audit.yml` blob `713c31543d9b05c7332d42097b3c14a7329e2944`
+- `.github/workflows/osv-full-scan.yml` blob `686b2fc35ce00dcfed7c3179050da69d3bb3acad`
+
+A read-only static contract script passed all 9 assertions: the PR workflow retains the OSV PR scan; it does not define the OSV full-scan job; the separate full scan has push-to-main, schedule and manual-dispatch triggers; it has no pull_request trigger; the SARIF artifact name is a literal `osv-full-scan-results`; and the fail-closed check remains when the scanner fails without producing `results.json`.
+
+Result: **PASS_STATIC_STRUCTURE**. Runtime validation is **NOT RUN / BLOCKED**: no fresh Buildkite execution was available, and prior detailed Buildkite logs remain inaccessible via HTTP 403. This check made no source/workflow changes and does not establish that the scanner executes successfully.
