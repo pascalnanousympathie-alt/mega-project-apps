@@ -751,3 +751,56 @@ NoVNC was not opened/restarted. No reset, clean, stash, rebase, pull, overwrite,
 3. PR #4: keep draft and unmerged; obtain authorized Buildkite per-step logs for Gitleaks/Trivy/ACEP through a route not returning HTTP 403, then fix only a diagnosed cause.
 4. LudoMada: do not use the failed scheduled runtime-watch job as current health evidence; it did not execute. Preserve the real historical canary PASS and the separate Ramus UI evidence.
 5. Keep Nanou Browser Android, browser-agent service and Nanoumada web app isolated. No code patch is justified by pre-runner billing failures.
+
+## Daily coordination refresh — 2026-10-27 08:34 EAT
+
+This pass began by reading `PROJECT_STATUS.md` (blob `d13f2b060f7369217beb23a89f863de720495df9`) and `PARALLEL_ORCHESTRATION_RUNBOOK.md` (blob `e5d9e149331fb400f3ede237639d21e429c89559`) from `ops/central-project-status-20261020`. All GitHub checks below are read-only. A separate Desktop Commander command re-read local Git branch, HEAD and dirty status; noVNC was not used.
+
+### Current GitHub refs and CI
+
+| Workstream | Default branch SHA | Latest relevant CI evidence | Result |
+|---|---|---|---|
+| Mega-project control plane | `main` `3b86e64019dfe2d1945b5d44a09bc25d50f55279` | PR #3 head `4936118e20bcba94b21a165581b769d302b04b11`: native Security Audit [40453438323](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40453438323) and ACEP CI [40453438131](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40453438131) failed before runner startup; affected jobs have `runner_id=0`, blank runner name, `steps=[]`. Buildkite [build #161](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/161) actually executed on that head: Semgrep PASS, OSV PR scan PASS, Gitleaks FAIL, Trivy FAIL, OSV full scan FAIL; ACEP gate failed on build #159. | PARTIAL; native-run cause for the newest PR run UNDIAGNOSED without a run-specific annotation. Executed Gitleaks/Trivy/ACEP failures UNDIAGNOSED; OSV adapter failure diagnosed below. |
+| LudoMada | `main` `0dfca3603942b8df6ad3005977fedbc90da0e670` | Runtime watch [40431753845](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40431753845), job 121950852111: `runner_id=0`, no runner name, `steps=[]`. Security Audit [40381639077](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40381639077) is also pre-runner. Earlier runtime canary [39365140095](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39365140095) is a historical executed PASS only. | PARTIAL; current runtime and security scan NOT RUN because jobs did not start. |
+| Nanoumada web app | `main` `7acac6037b574160d60dd7b58fe0de96c7d63578` | Scheduled stale-issues run [40284689153](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/40284689153), job 121445474893: `runner_id=0`, `steps=[]`. PR #14 CI/CD run [39483862281](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39483862281), Test job 118839112334, also failed before runner startup. | BLOCKED for those jobs; neither is evidence of a failed application assertion. |
+| Nanou Browser — Android | default branch `android-alternative` `a504f7fcd18cd190a12dfee47a44a7d23d496900` | Android CI [39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214), job 117777417291: `runner_id=0`, `steps=[]`. No newer Android-labelled run appeared in the latest branch-filtered run list. | BLOCKED / UNDIAGNOSED for Android build; no compile or APK result from that job. |
+| Nanou Browser — browser agent | PR #2 head `e1e2163c8e6725c3840bcde4fc210cc4a34ea7df` | Agent PR run [39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478), job 119824415775, used runner 21 and executed checkout, ARM64 Python setup, dependency install and safety/API tests; all steps passed. | PASS for this exact browser-agent test run only; not Android or live Render/MCP proof. |
+| Mada Commander | No dedicated repository in the accessible GitHub repository list; implementation remains nested under LudoMada | Current runtime watch is the pre-runner-blocked LudoMada run [40431753845](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40431753845). | PARTIAL; live service health not established by the blocked run. |
+| PC-Free / infrastructure | `main` `e66dde7383ea93beb20ab398db9ad86f116cb9cc` | Security Audit [40381409552](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/40381409552) actually ran Gitleaks, Semgrep, Trivy and OSV full scan on runners 1000002086, 1000002085, 1000002088 and 1000002087 respectively; each named job's scan/report steps passed. Scheduled OSV PR scan was skipped as expected. | PASS for those four executed checks only. |
+| RamiMada | `main` `fe3152c0847e5ae87337352d00974a33ed9ec5b3` | Security Audit [40381487819](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/40381487819): Gitleaks, Trivy, Semgrep and OSV full scan all have `runner_id=0`, `steps=[]`. | BLOCKED before runner; no new scan result. |
+| LotoMada | `main` `03f3ba21753a6a0454270eef983c438e6b8e83bf` | Security Audit [40381459562](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/40381459562): all scanner jobs `runner_id=0`, `steps=[]`. | BLOCKED before runner; no new scan result. |
+| DominoMada | `main` `31481559c78c421ace5237b0275d595223981707` | Security Audit [40381473001](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/40381473001): all scanner jobs `runner_id=0`, `steps=[]`. | BLOCKED before runner; no new scan result. |
+
+### Diagnosed failures and remaining blockers
+
+- **Buildkite OSV full scan on PR #3:** the current Buildkite check summary explicitly reports that the bounded `download-artifact` adapter requires the reusable workflow's `name` input to be an exact literal. This is a proven adapter incompatibility, not a vulnerability finding. The isolated workflow split already exists in draft PR #4 and structurally removes the full-scan job from PR-triggered `security-audit.yml`, moving it to push-to-main/schedule/manual triggers with a literal artifact name and a fail-closed missing-results guard. That is **PASS_STATIC_STRUCTURE only**; the new isolated workflow still lacks a fresh successful runtime check. Do not duplicate the same fix or merge either PR.
+- **Buildkite Gitleaks, Trivy and ACEP gate:** PR #3's latest executed checks returned exit 1. Check-run summaries expose step identifiers but not the first failing command. The prior direct Buildkite log route returned HTTP 403; an alternate page-open attempt was also inaccessible. Root cause remains **UNDIAGNOSED**. Do not suppress scanners or change gates without the actual logs.
+- **Latest native GitHub Actions PR #3 run:** confirmed pre-runner from job metadata (`runner_id=0`, zero steps). The previous status entry recorded a billing/spending-limit annotation for an earlier run; this pass could not retrieve a run-specific annotation for the newer 404534 runs. Therefore their current root cause remains **UNDIAGNOSED** rather than assumed from the earlier run.
+- **Other scheduled runner-blocked jobs:** the prior status snapshot records run-specific Billing & plans annotations for LudoMada runtime watch, Nanoumada stale-issues, Nanou Browser Android, RamiMada, LotoMada and DominoMada. This pass re-confirmed their no-runner/zero-step state. Treat those as infrastructure-startup blockers, not application/scanner failures; avoid identical retries until the prerequisite is resolved.
+- **PR #4:** remains OPEN / DRAFT / UNMERGED at `5d4ea29af52c1ac483903d879eb4f588ef75df90`. Latest accessible Buildkite runtime remains build #62 (2026-10-20): Semgrep and OSV PR scan PASS; Gitleaks and Trivy FAIL; ACEP gate failed on build #60. No fresh run proves the separated full scan executes successfully.
+- **PR #2:** remains OPEN / DRAFT / UNMERGED at `087460f74f9b6a07f2b53184e2f3c03efd7533b8`. The previous isolated local verification passed 5/5 `tests/users.test.js` and the full `npm run ci:gate` (342 tests); this is Termux Node 26 evidence, not a CircleCI/hosted Node 22 run. The branch remains 7 commits behind main; no CircleCI run was verified.
+- **Open PR inventory:** mega-project-apps #2, #3, #4 and #5 remain open; #2/#3/#4/#5 are drafts. LudoMada has open PRs including #135, #134, #132, #126 and #115; Nanou Browser #1/#2; Nanoumada #13/#14; PC-Free #2; RamiMada/LotoMada/DominoMada each #1. No PR was merged.
+
+### Local worktree preservation — fresh read-only snapshot
+
+Desktop Commander device `localhost` was Online. The command only read Git metadata/status; no repository files were edited.
+
+- `~/LudoMada`: branch `feat/gameplay-cosmetics-v1`, HEAD `78e6af247571`, 21 modified/untracked status entries. Includes nested Mada Commander files and an untracked APK; preserve all.
+- `~/NanouBrowser`: branch `android-alternative`, HEAD `ece5cd9f0057`, 5 modified/untracked entries including `build-manual/`; preserve all.
+- `~/projects/nanoumada`: branch `main`, HEAD `0467119cedac`, 7 modified files; preserve all.
+- `~/nanou-browser`: branch `fix/navigation-and-low-memory-build`, HEAD `2631664c93df`, clean.
+- `~/RamiMada`: branch `main`, HEAD `3de5d382cbbe`, clean.
+- `~/LotoMada`: branch `main`, HEAD `06ec0a1af690`, clean.
+- `~/DominoMada`: branch `main`, HEAD `9165598e5d36`, clean.
+- No worktree found at exact paths `~/PC-Free` or `~/mega-project-apps`; this does not prove no other clone exists. `~/tmp/mega-project-apps-repro-20261020` (`main`, `3b86e64019df`) and `~/tmp/mega-project-apps-circleci-pr2-verify-20261027` (`ci/circleci-node-fallback-20261013`, `087460f74f9b`) were clean.
+
+### Next actions
+
+1. Keep PR #3 and PR #4 draft/unmerged. For PR #3, obtain authorized per-step Buildkite logs for Gitleaks/Trivy/ACEP through a route that does not return HTTP 403; fix only a diagnosed first failing step. The OSV adapter cause is already addressed structurally on PR #4.
+2. Recheck the separated OSV full-scan workflow only when a real Buildkite execution is available; do not claim runtime PASS from static assertions.
+3. Resolve the current native hosted-runner prerequisite only with fresh evidence for the exact affected run; do not infer the latest PR #3 cause from an older billing annotation.
+4. Preserve the dirty LudoMada, NanouBrowser Android and Nanoumada worktrees. Do not synchronize them or change their branches during this audit.
+5. Continue browser-agent work only on its isolated branch; keep Android, Nanoumada web app and nested Mada Commander implementation separate.
+6. No source-code patch was justified in this pass: the fresh failures either did not start or lack the first failing command. The existing PR #4 is the proven structural fix for the adapter incompatibility; no duplicate PR was created.
+
+No reset, clean, stash, rebase, pull, overwrite, merge, deployment, production mutation, payment, live-wallet operation, secret rotation, authentication/security-policy change, destructive data change or noVNC action occurred.
