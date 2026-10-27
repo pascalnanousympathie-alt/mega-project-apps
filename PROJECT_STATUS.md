@@ -862,3 +862,24 @@ No new code patch was justified from the fresh CI evidence: the native failures 
 2. Obtain current-run annotations or an authorized alternate runner result for GitHub Actions runs `40464631154` and `40464630912`; do not claim a root cause from `runner_id=0` alone.
 3. Use an approved way to invoke the documented Mada Commander local startup script, then verify service endpoints. Current safety-control rejection is a real operational blocker and was not bypassed.
 4. After the Nanoumada build succeeds locally, validate the relevant chat API/provider-key path with non-secret fixtures and a local preview before calling it release-ready.
+
+
+## Live verification refresh — 2026-10-27 (Vercel, local/remote commit alignment, CI evidence)
+
+### Nanoumada deployment vs tested worktree
+- Vercel project nanoumada (prj_FKeRsAddkkbdsnGEEAZKUL53zI3t): the production deployment is dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf, state READY, target production, source main commit 7acac6037b574160d60dd7b58fe0de96c7d63578. Project aliases nanoumada.vercel.app, nanoumada-nanou3.vercel.app, and nanoumada-git-main-nanou3.vercel.app map to that production deployment.
+- The latest Vercel deployment is dpl_CfCydFkm5CEedqRD3MVTpqxfiRJ7, state READY, target null (preview), branch docs/nanoumada-web-scope-20261020, commit 70038d15a87b838c1117d0b8d83ddeebdb327ffd. It is not production.
+- GitHub compare of main against locally tested HEAD 0467119cedac1b19e09e5c5e2ce60ae4b1d2f3e5: status behind, ahead_by=0, behind_by=35, merge base equals the local HEAD. Thus that tested commit is an ancestor of current main, not the current release candidate. The successful local tests/typecheck/build covered the local worktree plus its seven pre-existing modified tracked files; they are not proof those uncommitted edits are in remote main or production. Keep those dirty files intact and do not promote/deploy them without review and a fresh branch/PR.
+- Vercel runtime-error aggregation for the last 24 hours reports no error groups on Nanoumada, the primary Mada Commander project, or the separate auto project. This is evidence only that the aggregation returned no errors in that interval; it is not a route-level E2E/availability check.
+
+### Mada Commander public production error signal
+- Separate project mada-commander-public-mcp-auto (prj_AkuB5ZLmuipNASDkRkDLvEihvmYw) has two aggregated 500 error groups within the last seven days, both on /api/router and deployment dpl_DZ3im8aHE257d65H5QkKMJpeUqva: routes oauth-server and oauth-resource, timestamps 2026-10-22T06:55:21Z, each count 1. The sanitized records include request IDs f982e01e-65ad-4976-b516-172b9c356c28 and 555235ac-3508-4fc5-bdcc-88c2a8448909.
+- No runtime-error groups are present for that project in the last 24 hours, and a recent 30-minute error-log query returned no entries. The attempt to query raw runtime logs over seven days was rejected by Vercel Hobby retention (the response says runtime logs retain one hour); raw logs for the historical request IDs therefore remain unavailable through this route. Root cause is UNDIAGNOSED; do not call it fixed based solely on no recent errors. Main mada-commander-public-mcp also returned no aggregated runtime errors in the last seven days.
+- The current production deployments of both separate public MCP projects report READY; this is deployment state, not proof the personal/private Commander tunnel is running or that OAuth succeeds end to end.
+
+### Fresh CI job evidence
+- Re-read GitHub job summaries for control-plane Security Audit run 40466645836, ACEP run 40466645436, Ludo canary 40462523319, Nanoumada scheduled stale check 40284689153, and Nanou Browser Android 39162120214. The selected job-step API returned steps=[] for every selected failed job. The workflow-job log API returned BlobNotFound for these job IDs. This is consistent with pre-runner jobs but does not establish why the platform failed to start them; annotate the exact-run root cause as UNDIAGNOSED until a fresh run annotation or supported runner evidence is available.
+- The separate known OSV reusable-workflow incompatibility and PR #4 static-only fix remain as previously recorded; no duplicate patch was created, no scanners/gates were disabled, and no PR was merged.
+
+### Actions taken
+- Read-only Vercel deployment/runtime-error inspection and GitHub commit/job metadata only. No production promotion, redeploy, secret/environment-variable read, branch rewrite, dirty-worktree modification, PR merge, or personal tunnel startup occurred.
