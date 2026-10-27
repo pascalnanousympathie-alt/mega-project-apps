@@ -1012,3 +1012,26 @@ No new code patch was justified from the fresh CI evidence: the native failures 
 ### Safe completion boundary
 - No merge, production deployment/promotion, payment/wallet action, secret access/rotation, CI gate removal, dirty local worktree mutation, or new paid/limited sandbox was performed.
 - The actionable OSV adapter fix is already in draft PR #4; next step that changes its adoption is owner-approved merge after reviewing the still-failing Gitleaks/Trivy/ACEP checks. The next diagnostic blocker is access to Buildkite logs and current GitHub startup annotations. CircleCI cannot be enabled from this chat until the browser route or a supported CircleCI integration is available.
+
+## Mada Commander personal MCP — verified access diagnosis (2026-10-27 EAT)
+
+### Production MCP endpoint
+Read-only requests from the paired Termux device verified the deployed production service:
+
+- `GET /api/health` returned **HTTP 200**, `ready=true`. Reported checks: database configured, Google OAuth configured, OAuth client mode configured, OAuth redirect allowlist configured, CIMD enabled and schema ready. The separate `domainChallengeConfigured` check is `false`.
+- `GET /.well-known/oauth-authorization-server` returned **HTTP 200**. It advertises authorization-code and refresh-token grants, S256 PKCE, and scope `mada:workspace`.
+- JSON-RPC `initialize` sent to `POST /mcp` returned **HTTP 200** and protocol version `2025-03-26`.
+- JSON-RPC `tools/list` returned **HTTP 200** and listed the actual Mada Commander tools, including `mada_agent_status`, `mada_list_projects`, approved diagnostics, project workspace, task, shell/command, Opera/noVNC, and optional MCP-integration operations. The tool schemas declare OAuth2 security with scope `mada:workspace`.
+- An unauthenticated `tools/call` request to read-only `mada_agent_status` returned **HTTP 401** with a `WWW-Authenticate` header pointing to the protected-resource metadata and required scope. This is expected OAuth enforcement; no token was used or exposed.
+- Vercel's production deployment is `READY`, commit `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246`. A query for the last 30 minutes of runtime logs returned no matching records; that means no logs matched that query, not that the endpoint is untested.
+
+### ChatGPT-side access boundary
+- Plugin Creator currently lists two private USER-scope records: `dev-6acb9a769a948191a4946293073bac2e` (v1.2.2) and `mada-commander-remote-tools` (v0.1.0). Their existence does not cause the `mada_*` tool definitions to appear in this current ChatGPT conversation.
+- The current conversation's available tools do **not** include the `mada_*` MCP actions. The Opera Browser Connector call currently reports `Browser not connected` in this tool session, although it is installed/available in the user's noVNC setup.
+- Official OpenAI documentation currently states Developer Mode is **not available on ChatGPT Free**, custom MCP apps are web-only, and full write-capable MCP support is restricted to eligible Business/Enterprise/Edu plans. Sources: https://help.openai.com/en/articles/12584461-developer-mode-and-full-mcp-connectors-in-chatgpt and https://chatgpt.com/pricing/.
+- Therefore, the live evidence separates the layers: **the remote MCP service and tool discovery work; an authenticated tool call needs OAuth; the custom MCP tools are not registered into this ChatGPT Free conversation**. Do not label this as a Vercel/server outage.
+
+### Next action / constraints
+- Do not ask the user to complete public plugin submission, domain challenge, public developer verification, billing, or payments to repair private MCP usage. `domainChallengeConfigured=false` concerns a separate public submission route and is not the cause of the successful private MCP initialize/tools-list calls.
+- Do not bypass OAuth, impersonate the ChatGPT OAuth client, harvest tokens, or copy token values into chat.
+- Continue work through the existing authorized tools actually available in the current session. If native `mada_*` calls are a hard requirement, state the verified ChatGPT-plan/registration limitation accurately; do not claim those tools are callable until they are present in the active tool inventory.
