@@ -1047,3 +1047,15 @@ The native MCP access check was extended from the deployed endpoint to the ChatG
 
 ### Operational conclusion
 The existing deployed server is healthy and advertises its MCP tools; the ChatGPT app registry says the private plugins are not installed, and this account is on Free. Do not ask the user to submit a public plugin, obtain a domain challenge, pay for API credits, or change server authentication to work around this. Use the first-party GitHub/Vercel/Supabase and other connected tools already available to this conversation for supported tasks. Native `mada_*` actions remain unavailable until the product exposes an eligible custom-MCP connection in the active session; do not claim otherwise.
+
+### Mada Commander deployment drift — verified 2026-10-27 EAT
+
+A fresh GitHub compare and Vercel deployment listing identified one separate deployment-safety issue:
+
+- Current LudoMada/main is 0dfca3603942b8df6ad3005977fedbc90da0e670 (2026-10-13T13:17:37Z).
+- Current production deployment for mada-commander-public-mcp is dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q, READY on f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246.
+- GitHub compare from production SHA to main reports ahead_by=4, behind_by=0. The intervening commits include the Termux runit path fixes and recursive secret redaction for external MCP integration results. The recursive redaction patch adds handling for nested keys such as service-role keys, refresh tokens and private keys and has regression tests.
+- A separate auto-preview deployment dpl_GB1thEngEvdFKkBnnF6GHoygFzZu is READY at the current main SHA, branch ops-mcp-preview, with target=null; it is not the production deployment and does not prove production has the latest security fix.
+- Production has not been redeployed or promoted from this diagnostic. Do not promote/deploy solely to fix the ChatGPT Free-plan connector limitation; these are separate layers. If an owner-approved production update is later requested, run the scoped MCP boundary/security audit, unit tests, tenant-isolation tests and production smoke checks on the exact candidate before promotion, then re-test /api/health, MCP initialize, tools/list, OAuth authorize/token/refresh and authenticated tools/call.
+
+The separate ChatGPT-access diagnosis remains: the production MCP initializes and lists tools successfully; unauthenticated tool calls return the expected OAuth 401; Plugin Management reports both private plugin records as not_installed, and native custom-MCP tools are absent from this Free-plan conversation. This does not indicate that the server is down.
