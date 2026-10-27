@@ -645,3 +645,62 @@ Re-read both workflow files from `refs/pull/4/head` after the coordination refre
 A read-only static contract script passed all 9 assertions: the PR workflow retains the OSV PR scan; it does not define the OSV full-scan job; the separate full scan has push-to-main, schedule and manual-dispatch triggers; it has no pull_request trigger; the SARIF artifact name is a literal `osv-full-scan-results`; and the fail-closed check remains when the scanner fails without producing `results.json`.
 
 Result: **PASS_STATIC_STRUCTURE**. Runtime validation is **NOT RUN / BLOCKED**: no fresh Buildkite execution was available, and prior detailed Buildkite logs remain inaccessible via HTTP 403. This check made no source/workflow changes and does not establish that the scanner executes successfully.
+
+
+## Daily coordination refresh — 2026-10-27 (EAT)
+
+> Evidence captured 2026-10-27 EAT. The control-plane files were read first on `ops/central-project-status-20261020`: the prior status blob was `c78a8e81c7b743f8fe3810c954b34467c2d33911`; runbook blob `e5d9e149331fb400f3ede237639d21e429c89559`. Local checks below were read-only except for a new isolated checkout dedicated to PR #2 validation. NoVNC was not opened/restarted.
+
+### Current remote refs and latest visible runs
+
+| Workstream | Default branch / SHA | Newest relevant evidence | Classification |
+|---|---|---|---|
+| mega-project-apps | main `3b86e64019dfe2d1945b5d44a09bc25d50f55279` | Scheduled Security Audit [40381546336](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40381546336): Gitleaks, Semgrep, Trivy and OSV full scan each completed as failure in about 2–3 seconds with `runner_id=0`, blank runner name, `steps=[]`; OSV PR scan skipped. Fresh check-run annotation on job 121778804787 explicitly says job was not started due to account payments/spending limit. | BLOCKED before runner; tests/scanners did not execute |
+| LudoMada | main `0dfca3603942b8df6ad3005977fedbc90da0e670` | Scheduled runtime watch [40431753845](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40431753845): production-canary job 121950852111 has the same fresh Billing & plans annotation, `runner_id=0`, `steps=[]`. Security Audit [40381639077](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40381639077) is likewise pre-runner-blocked. Historical runtime-canary [39365140095](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39365140095) executed and passed health/MCP/OAuth-start checks. | PARTIAL; current scheduled health/security jobs BLOCKED before runner |
+| Nanoumada | main `7acac6037b574160d60dd7b58fe0de96c7d63578` | Scheduled stale-issues run [40284689153](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/40284689153): job 121445474893 is `runner_id=0`, blank runner, `steps=[]`, with fresh Billing & plans annotation. Main combined status: Vercel success; Mada Termux CI pending. | BLOCKED on hosted job startup; application test cause not established |
+| Nanou Browser — Android | `android-alternative` `a504f7fcd18cd190a12dfee47a44a7d23d496900` | Current default branch still reports Mada Termux CI failure; no newer Android-labelled GitHub workflow run appeared in the latest 100-run lookup. Historical run [39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214) was pre-runner blocked. | BLOCKED / UNDIAGNOSED for current Android CI |
+| Nanou Browser — browser agent | PR #2 head `e1e2163c8e6725c3840bcde4fc210cc4a34ea7df` | [PR run 39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478) and push run 39778777356 succeeded with actual service setup, ARM64 Python environment, dependency installation and safety/API-test execution. Earlier job log recorded 62 passed and one deprecation warning. | PASS for that exact browser-agent test run only; no Android or live Render/MCP proof |
+| Mada Commander | No standalone GitHub repo discovered; implementation remains nested in LudoMada | Current runtime-watch [40431753845](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40431753845) did not start due to fresh billing annotation. Older runtime-canary [39365140095](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/39365140095) genuinely passed its checks. | PARTIAL; current live runtime state not established by a job that did not run |
+| PC-Free | main `e66dde7383ea93beb20ab398db9ad86f116cb9cc` | Scheduled Security Audit [40381409552](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/40381409552) succeeded. Gitleaks runner 1000002086, Semgrep 1000002085, Trivy 1000002088 and OSV full scan 1000002087 executed real steps and passed; scheduled OSV PR scan was skipped as expected. | PASS for those named executed checks |
+| RamiMada | main `fe3152c0847e5ae87337352d00974a33ed9ec5b3` | Scheduled Security Audit [40381487819](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/40381487819): Gitleaks, Trivy, Semgrep and OSV full scan all `runner_id=0`, blank runner, `steps=[]`; a fresh annotation explicitly identifies Billing & plans/spending-limit gating. | BLOCKED before runner |
+| LotoMada | main `03f3ba21753a6a0454270eef983c438e6b8e83bf` | Scheduled Security Audit [40381459562](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/40381459562): scanner jobs `runner_id=0`, `steps=[]`; fresh annotation confirms Billing & plans/spending-limit gating. | BLOCKED before runner |
+| DominoMada | main `31481559c78c421ace5237b0275d595223981707` | Scheduled Security Audit [40381473001](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/40381473001): scanner jobs `runner_id=0`, `steps=[]`; fresh annotation confirms Billing & plans/spending-limit gating. | BLOCKED before runner |
+
+### Root-cause split: GitHub Actions versus Buildkite
+
+- **Confirmed for the specific native GitHub Actions runs above:** the annotation says the job was not started because recent account payments failed or the spending limit needs to be increased. `runner_id=0` / `steps=[]` alone would not prove that cause; the matching current run annotation does. These jobs did not run application tests or scanners. Account owner action required: review GitHub **Billing & plans** and resolve payment/spending-limit status. No payment was attempted from this session.
+- **Separate executed Buildkite failures:** PR #3 head `a3c3aa487046eac672ab6195883f9481bc76ac42` build #152 shows Semgrep and OSV PR scan PASS, Gitleaks and Trivy exit 1; ACEP gate build #150 exit 1. These checks actually executed, but underlying Gitleaks/Trivy/ACEP causes remain UNDIAGNOSED because detailed Buildkite logs previously returned HTTP 403. Do not attribute those executions to GitHub billing or weaken any scanner gate.
+- **PR #4 workflow structure:** re-read `security-audit.yml` (blob `713c31543d9b05c7332d42097b3c14a7329e2944`) and `osv-full-scan.yml` (blob `686b2fc35ce00dcfed7c3179050da69d3bb3acad`) from `refs/pull/4/head`. Eight targeted assertions passed: the PR workflow retains the OSV PR scan but omits the full-scan job; the separate workflow has push-to-main, schedule and manual-dispatch triggers, no pull_request trigger; literal SARIF artifact name and missing-results fail-closed check remain. Result is **PASS_STATIC_STRUCTURE**, not runtime PASS. Latest Buildkite result for PR #4 is still older build #62 (2026-10-20): Semgrep/OSV PR PASS, Gitleaks/Trivy exit 1; ACEP gate build #60 exit 1. PR #4 remains OPEN/DRAFT/UNMERGED.
+- PR #3 and PR #4 remain OPEN/DRAFT/UNMERGED; no merge or deployment was performed. PR comments updated with the above evidence: [PR #2 comment](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/2#issuecomment-6433732887), [PR #3 comment](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/3#issuecomment-6433733499), [PR #4 comment](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/4#issuecomment-6433734030).
+
+### Independent fix validation: PR #2 user timestamp race
+
+- PR #2 `ci/circleci-node-fallback-20261013` is OPEN/DRAFT at `087460f74f9b6a07f2b53184e2f3c03efd7533b8`, 4 commits ahead / 7 behind main; it was not rebased, pulled or rewritten. The diff contains a narrowly scoped monotonic timestamp guard in `core/repos.js:setStatus` and a deterministic fixed-clock regression test in `tests/users.test.js`. This addresses the same-millisecond case where `nowIso()` can return the existing `updated_at` and a timing-sensitive inequality assertion can fail.
+- In a brand-new isolated checkout `~/tmp/mega-project-apps-circleci-pr2-verify-20261027`, `npm ci --ignore-scripts --no-audit --no-fund` succeeded. Targeted command `node --test tests/users.test.js`: **5 tests passed, 0 failed**.
+- Full `npm run ci:gate` exited 0 on that exact head: `TESTS=PASS`, `SECURITY=PASS`, `DEPENDENCY_AUDIT=PASS`, `PYTHON_COMPILE=PASS`, `DIFF_CHECK=PASS`, `VERSION=1.0.0`, `TEST_COUNT=342`, `DEPLOYMENT=AUTO_DISABLED`, `CI_GATE=PASS`. Post-run verification confirmed HEAD remained `087460f74f9b6a07f2b53184e2f3c03efd7533b8` and `POST_GATE_DIRTY=0`. This was local Termux Node 26.4.0 evidence, not a CircleCI execution and not Node 22 hosted evidence. PR #2 has no verified CircleCI run yet, and its 7-commit divergence remains for review.
+- Because the timestamp correction already exists in PR #2 and passed targeted/full local gates on its exact head, no duplicate source-fix PR was created. Keep #2 draft pending review of divergence and real CircleCI execution.
+
+### Local worktree preservation recheck
+
+Read-only Desktop Commander inspection (27 Oct) found these states; no pre-existing worktree was changed:
+
+- `~/LudoMada`: branch `feat/gameplay-cosmetics-v1`, HEAD `78e6af247571`, 21 modified/untracked paths including nested Mada Commander work and APK/artifacts.
+- `~/NanouBrowser`: `android-alternative`, HEAD `ece5cd9f0057`, 5 modified/untracked paths including `build-manual/`.
+- `~/projects/nanoumada`: `main`, HEAD `0467119cedac`, reported behind 32, 7 modified files.
+- `~/nanou-browser`: `fix/navigation-and-low-memory-build`, HEAD `2631664c93df`, clean.
+- `~/RamiMada`: `main`, HEAD `3de5d382cbbe`, clean but older than remote main.
+- `~/LotoMada`: `main`, HEAD `06ec0a1af690`, clean but older than remote main.
+- `~/DominoMada`: `main`, HEAD `9165598e5d36`, clean but older than remote main.
+- `~/tmp/mega-project-apps-repro-20261020`: `main`, HEAD `3b86e64019df`, clean.
+- New verification-only clone `~/tmp/mega-project-apps-circleci-pr2-verify-20261027`: branch `ci/circleci-node-fallback-20261013`, HEAD `087460f74f9b`, clean after the full gate.
+- No worktree existed at the exact searched paths `~/PC-Free` or `~/mega-project-apps`; this does not prove no other clone exists.
+
+No reset, clean, stash, rebase, pull, overwrite, noVNC action, merge, deployment, production/payment/live-wallet mutation, secret rotation, auth/security-policy change or destructive data operation occurred.
+
+### Next actions
+
+1. Account owner: resolve the confirmed GitHub **Billing & plans** issue before expecting native hosted Actions jobs to execute. Avoid repeated retries of identical pre-runner failures.
+2. PR #3 / #4: obtain authorized Buildkite per-step logs for Gitleaks, Trivy and ACEP (HTTP 403 is the current blocker), then diagnose only the first real failing step. Keep both PRs draft/unmerged and all gates intact.
+3. PR #2: review the 7-commit divergence and obtain an actual CircleCI run if the repo is authorized/enabled there; local gate PASS alone does not prove the CircleCI fallback.
+4. LudoMada/Ramus: treat the current production-canary scheduled failure as runner-blocked, not as a new app health result; preserve the earlier actual passing canary as historical evidence only.
+5. Keep Nanou Browser agent and Android separate; continue web-agent validation without claiming a live Render/MCP deployment.
