@@ -22,3 +22,20 @@ These rules are the default operating procedure for work on Mada Commander and t
 
 11. The user prefers direct execution through connected tools, phone-compatible paths, root-cause fixes and concise evidence-based status. Do not re-ask for already provided facts or blame billing without current evidence.
 12. If an operation is genuinely blocked, name the exact missing capability or authorization, distinguish it from unrelated requirements, and continue any independent work that can safely be completed.
+
+## Mada Commander verification record — 2026-10-27
+
+For the currently deployed `mada-commander-public-mcp` service, the following read-only checks were observed from the paired Termux device:
+
+- `GET /api/health` returned HTTP 200 and `ready=true`. Database, Google OAuth, OAuth client mode, redirect allowlist, CIMD, and schema checks were true. `domainChallengeConfigured=false` was also reported.
+- The OAuth authorization-server metadata endpoint returned HTTP 200 and advertises authorization-code plus refresh-token grants and the `mada:workspace` scope.
+- An MCP JSON-RPC `initialize` request returned HTTP 200; `tools/list` returned HTTP 200 and advertised `mada_agent_status`, `mada_list_projects`, and the other registered tools, each declared with OAuth2 scope `mada:workspace`.
+- An unauthenticated `tools/call` to read-only `mada_agent_status` returned HTTP 401 with `WWW-Authenticate` and the protected-resource metadata URL. This is expected authentication enforcement; it is not proof that the MCP server is down.
+- The current ChatGPT conversation's available tool inventory does not include the `mada_*` tools. The user's existing private plugin records are present in Plugin Creator, but those records do not by themselves make the MCP tools available to this conversation.
+- Official current OpenAI documentation states developer mode is unavailable on the Free plan; custom MCP apps are supported on the web in eligible plans, while the full write-capable MCP beta is limited to Business/Enterprise/Edu. Source: https://help.openai.com/en/articles/12584461-developer-mode-and-full-mcp-connectors-in-chatgpt and https://chatgpt.com/pricing/.
+
+### Interpretation and required next action
+
+- Do not confuse `domainChallengeConfigured=false` with the private MCP's runtime health. The domain challenge relates to the separate OpenAI public app/plugin submission flow; it is not the reason the MCP protocol initialize or tools/list requests failed (both succeeded).
+- The proven blocker for using `mada_*` as native tools in the current chat is that the tools are not injected into this session, and the observed unauthenticated tool call is correctly rejected with 401. Do not bypass OAuth, impersonate ChatGPT's OAuth client, request or expose tokens, or misstate the server as broken.
+- Do not send this Free-plan user back to public plugin submission, paid API billing, or identity verification as a way to repair private MCP connectivity. Keep using supported, already-authorized direct tools for tasks where available; when explaining a hard platform limitation, distinguish it from the healthy server and state only the observed requirement.
