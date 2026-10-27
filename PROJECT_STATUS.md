@@ -838,3 +838,27 @@ Re-read `PROJECT_STATUS.md` (pre-write blob `e054cfa83474bb8e320b1eb8b4ed0ea6e05
 6. The Nanoumada production build was still executing when this entry was prepared; record its real outcome in a later evidence refresh rather than converting it to PASS preemptively.
 
 No new code patch was justified from the fresh CI evidence: the native failures did not start, and executed scanner/gate failures lack their first failing command. The proven OSV adapter structural fix already exists in PR #4; the current main branch still uses the old path.
+
+## Daily coordination follow-up — 2026-10-27 build completion
+
+### Newly completed independent verification
+- `~/projects/nanoumada`, branch `main`, HEAD `0467119cedac`: the previously running `npm run build` has now completed with **exit code 0** (local Termux/Android ARM64, duration reported by Desktop Commander 967.41s). Vite generated 1,823 client modules and 302 client asset files, plus `build/server/index.js`; the build log reports the SSR bundle also built successfully. Warnings: three empty API chunks and one client chunk at about 2,002 kB (>500 kB threshold). These are optimization warnings, not build failures; no deploy or preview was attempted.
+- Post-build second read confirms branch/HEAD remain `main` / `0467119cedac`; the same seven pre-existing tracked files remain modified (`BaseChat.tsx`, `Chat.client.tsx`, `ExamplePrompts.tsx`, `ProvidersTab.tsx`, `model.ts`, `api.chat.ts`, `constants.ts`). Generated build output did not change the tracked Git status. Earlier results for this exact worktree remain Vitest 35/35 PASS and TypeScript typecheck exit 0.
+- No further code patch was justified by the Nanoumada test/build output. A runtime/API end-to-end test, external provider credential test and deployment preview are NOT RUN.
+
+### Blocker diagnostics refreshed
+- Buildkite job logs remain BLOCKED through current authorized routes: the Buildkite build page is not accessible through the connected web route; local diagnostics found no `buildkite-agent` executable and no configured `BUILDKITE_API_TOKEN`, `BUILDKITE_TOKEN`, organization-slug or pipeline-slug environment variables (only presence flags were checked; no secrets were read or printed). Therefore Gitleaks/Trivy exit-1 causes remain UNDIAGNOSED. Do not infer a leak/vulnerability from exit status alone. The first failing step cannot be fixed without actual authorized log output.
+- Native GitHub Actions runs on current control-plane head still show pre-runner failures (`runner_id=0`, blank runner name, `steps=[]`). Current run-specific annotation access is unavailable; current root cause remains UNDIAGNOSED. Prior historical Billing & plans annotations must not be generalized to the new runs. An existing CircleCI fallback PR #2 is still OPEN/DRAFT; its hosted CircleCI run is not verified from these diagnostics.
+- Mada Commander personal-control-plane startup remains BLOCKED by the tool's safety control when invoking the documented `scripts/ludomada-connect.sh`. Read-only evidence remains runtime/watchdog STOPPED, no listeners on 8787/8788/8790, and stale PID files dated 2026-10-19. I did not bypass that control, restart noVNC, or start a tunnel by another route. The existing runit service runs the public agent, not the personal MCP HTTP/tunnel. Next required action is an approved execution path for the documented startup, followed by health checks of 8787, 8788 and 8790; this is not marked fixed.
+- PR #4's separate OSV workflow remains a structurally verified fix (9/9 assertions) but has no fresh runtime PASS. Its current head is still `5d4ea29af52c1ac483903d879eb4f588ef75df90`. Buildkite's ignored `cancel-in-progress` warning refers to pipeline configuration; no Buildkite setting was changed because there is no authorized Buildkite session/token available.
+
+### Preserved state and status
+- No local branch/HEAD/dirty state was changed by these checks. `~/LudoMada` (`feat/gameplay-cosmetics-v1` / `78e6af247571`), `~/NanouBrowser` (`android-alternative` / `ece5cd9f0057`) and `~/projects/nanoumada` (`main` / `0467119cedac`) remain protected dirty worktrees. `~/nanou-browser`, `~/RamiMada`, `~/LotoMada` and `~/DominoMada` remain clean at the previously recorded heads.
+- PR #3 remains OPEN/DRAFT/UNMERGED; PR #4 remains OPEN/DRAFT/UNMERGED. No source changes were made to either PR in this follow-up and no duplicate fix was created.
+- No merge, deployment, production mutation, payment, live-wallet operation, secret read/rotation, auth/security-policy change, destructive data change, reset/clean/stash/rebase/pull/overwrite, or noVNC action occurred.
+
+### Exact next actions (dependencies)
+1. Obtain authorized Buildkite `read_build_logs` access or a working account session for build #167/#165; inspect Gitleaks/Trivy first failed commands before changing scanner configuration.
+2. Obtain current-run annotations or an authorized alternate runner result for GitHub Actions runs `40464631154` and `40464630912`; do not claim a root cause from `runner_id=0` alone.
+3. Use an approved way to invoke the documented Mada Commander local startup script, then verify service endpoints. Current safety-control rejection is a real operational blocker and was not bypassed.
+4. After the Nanoumada build succeeds locally, validate the relevant chat API/provider-key path with non-secret fixtures and a local preview before calling it release-ready.
