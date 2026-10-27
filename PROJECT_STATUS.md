@@ -1104,3 +1104,12 @@ A focused draft PR [#136](https://github.com/pascalnanousympathie-alt/LudoMada/p
 2. **Authorized Buildkite diagnostics:** obtain the failed steps/logs from builds #218/#216 using an account/connection with `read_build_logs`; identify first failing commands before touching Gitleaks/Trivy/ACEP.
 3. **GitHub Actions startup:** obtain exact current-run startup annotations for runs #40484361513/#40484361131 through a supported GitHub diagnostic route. Keep root cause **UNDIAGNOSED** and do not attribute it to Billing & plans without a fresh exact-run annotation/log.
 4. **OSV full scan:** keep scoped fix in PR #4; require owner approval and a real executed-step PASS after merge/manual dispatch. No merge or dispatch is performed in this pass.
+
+## GitHub Actions pre-runner failure evidence — 2026-10-27
+
+- Verified `Mada Commander public MCP` run `40484112539`, attempt 2, job `122125610049`: `runner_id=0`, blank `runner_name`, `ubuntu-latest`, started at `10:02:08Z`, failed at `10:02:11Z`, zero steps.
+- Job logs return `BlobNotFound`; there are no executable-step logs for diagnosis.
+- Security Audit run `40484113100` has four independent GitHub Actions jobs failing before visible steps; the external `semgrep-cloud-platform/scan` check succeeded.
+- GitHub Status reported Actions operational and no public incident for 2026-10-27. Similar community reports exist, but they do not establish this repository's root cause.
+- Conclusion: pre-runner/dispatch failure is evidenced; precise cause remains `UNDIAGNOSED`. Do not blame billing, change workflow config, or rerun identical jobs without new evidence. Seek the check-run annotation details and GitHub-side runner/dispatch diagnostics.
+- PR #136 remains draft/unmerged. No deployment, secret, or production changes.
