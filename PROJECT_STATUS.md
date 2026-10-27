@@ -1059,3 +1059,30 @@ A fresh GitHub compare and Vercel deployment listing identified one separate dep
 - Production has not been redeployed or promoted from this diagnostic. Do not promote/deploy solely to fix the ChatGPT Free-plan connector limitation; these are separate layers. If an owner-approved production update is later requested, run the scoped MCP boundary/security audit, unit tests, tenant-isolation tests and production smoke checks on the exact candidate before promotion, then re-test /api/health, MCP initialize, tools/list, OAuth authorize/token/refresh and authenticated tools/call.
 
 The separate ChatGPT-access diagnosis remains: the production MCP initializes and lists tools successfully; unauthenticated tool calls return the expected OAuth 401; Plugin Management reports both private plugin records as not_installed, and native custom-MCP tools are absent from this Free-plan conversation. This does not indicate that the server is down.
+## Mada Commander OAuth refresh compatibility repair — 2026-10-27 EAT
+
+### New defect found and scoped fix prepared
+OpenAI's current ChatGPT custom-MCP guidance says an OAuth provider should advertise offline_access (or an equivalent refresh scope) and issue refresh tokens, otherwise the connection may need reauthentication after expiry:
+https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt (OAuth guidance, lines 70–75).
+
+Evidence on the current production endpoint:
+- /.well-known/oauth-authorization-server returned HTTP 200 and advertised grant_types_supported=[authorization_code,refresh_token].
+- The same metadata only advertised scopes_supported=[mada:workspace]; it did not advertise offline_access.
+- The existing token handler issues refresh tokens for authorization-code grants. The authorization scope parser previously rejected any second scope, so a standard scope request for mada:workspace plus offline_access would have been rejected as invalid scope.
+
+A focused draft PR [#136](https://github.com/pascalnanousympathie-alt/LudoMada/pull/136) has been created from current main at 0dfca3603942b8df6ad3005977fedbc90da0e670:
+- Adds offline_access to OAuth authorization-server discovery metadata.
+- Allows the optional scope only alongside the required mada:workspace scope; unknown scopes and refresh-only requests remain rejected.
+- Keeps the protected MCP resource metadata and all public tool security declarations restricted to mada:workspace; offline_access is refresh continuity, not extra project/tool authorization.
+- Adds unit tests for normal, optional, reversed-order, duplicate, missing-required and unrecognized scopes, plus discovery metadata assertion.
+
+### Validation boundary
+- A direct seven-case logic check for the new scope parser passed in the current ChatGPT turn.
+- GitHub Actions runs [40484112539](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40484112539) (Mada Commander public MCP) and [40484113100](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/40484113100) (Security Audit) on the PR head both failed before any steps ran. The jobs endpoint returned steps=[ ]; job-log retrieval returned BlobNotFound/404. This is not evidence that the tests failed or that scanners found issues; current runner startup cause is UNDIAGNOSED. Full unit/security suite PASS remains unverified.
+- PR #136 remains OPEN/DRAFT/UNMERGED. No production deployment, promotion, environment-variable edit, secret read, OAuth bypass or payment occurred.
+
+### Current endpoint and ChatGPT access boundary reaffirmed
+- Production MCP /api/health, OAuth discovery, MCP initialize, and tools/list all returned HTTP 200 in direct read-only checks. Unauthenticated tools/call returned the expected OAuth 401.
+- The latest main-linked auto-preview deployment returned HTTP 503 from /api/health: preview environment lacks database/DATABASE_URL, Google OAuth configuration, OAuth client mode, redirect allowlist, CIMD enablement and schema. Do not use that preview as a healthy E2E environment or copy production secrets into it.
+- Plugin Management still reports both personal Mada Commander private plugin records as not_installed. OpenAI's current official docs say custom MCP server connections and full MCP support are available on Business and Enterprise/Edu web workspaces, not Free. This remains a ChatGPT plan/registration boundary, distinct from server health and the OAuth refresh-scope defect.
+- Keep using the directly connected GitHub/Vercel/Supabase and other supported tools for work available in this ChatGPT session. Do not send the user back to public plugin submission, domain verification, billing or payment to repair private MCP usage.
