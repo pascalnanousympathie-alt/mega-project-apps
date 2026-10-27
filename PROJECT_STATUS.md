@@ -1035,3 +1035,15 @@ Read-only requests from the paired Termux device verified the deployed productio
 - Do not ask the user to complete public plugin submission, domain challenge, public developer verification, billing, or payments to repair private MCP usage. `domainChallengeConfigured=false` concerns a separate public submission route and is not the cause of the successful private MCP initialize/tools-list calls.
 - Do not bypass OAuth, impersonate the ChatGPT OAuth client, harvest tokens, or copy token values into chat.
 - Continue work through the existing authorized tools actually available in the current session. If native `mada_*` calls are a hard requirement, state the verified ChatGPT-plan/registration limitation accurately; do not claim those tools are callable until they are present in the active tool inventory.
+
+## ChatGPT app registry verification — 2026-10-27 EAT
+
+The native MCP access check was extended from the deployed endpoint to the ChatGPT-side app registry:
+
+- Plugin Creator returned two private USER-scope records for Mada Commander: `plugins_6ad7c49fa6648191b95c71f095d3d781` (`mada-commander-remote-tools`, v0.1.0) and `plugin_asdk_app_6acb9a769a948191a4946293073bac2e` (`dev-6acb9a769a948191a4946293073bac2e`, v1.2.2).
+- Plugin Management `get_app_permissions` returned `status=not_installed` for all tested identifiers: friendly name, developer app name, app ID, plugin ID and Codex plugin ID. These are private plugin records, not installed ChatGPT MCP connections.
+- The Opera Browser Connector lists the ChatGPT plugins page, but navigation/read/screenshot of that tab times out at 10 seconds. It cannot complete an app installation click in this session, and no app was installed.
+- Current official OpenAI help states custom MCP server connections/full MCP support are available for Business and Enterprise/Edu on web; Pro can connect custom MCP with read/fetch permissions, while Free is not included. Sources: https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt and https://help.openai.com/en/articles/12584461-developer-mode-and-full-mcp-connectors-in-chatgpt.
+
+### Operational conclusion
+The existing deployed server is healthy and advertises its MCP tools; the ChatGPT app registry says the private plugins are not installed, and this account is on Free. Do not ask the user to submit a public plugin, obtain a domain challenge, pay for API credits, or change server authentication to work around this. Use the first-party GitHub/Vercel/Supabase and other connected tools already available to this conversation for supported tasks. Native `mada_*` actions remain unavailable until the product exposes an eligible custom-MCP connection in the active session; do not claim otherwise.
