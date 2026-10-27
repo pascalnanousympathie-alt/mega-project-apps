@@ -883,3 +883,21 @@ No new code patch was justified from the fresh CI evidence: the native failures 
 
 ### Actions taken
 - Read-only Vercel deployment/runtime-error inspection and GitHub commit/job metadata only. No production promotion, redeploy, secret/environment-variable read, branch rewrite, dirty-worktree modification, PR merge, or personal tunnel startup occurred.
+
+
+## Automation rollout and safe preview remediation — 2026-10-27
+
+### Automation
+- Created enabled ChatGPT task automation `Mega-project Auto-Coordination`, ID `6ae058e2d8cc8191879cde6a2892f435`, flexible daily schedule with local target 08:00 in `Indian/Antananarivo` (first scheduled date 2026-10-28). The task prompt requires evidence-first orchestration, project separation, no Railway repetition, no Desktop Commander calls unless a fresh need justifies them (usage read at 4% remaining), and no dirty-worktree/production/secret/payment/merge/destructive operations.
+- An immediate run was requested. Latest automation record is `in_progress` (started 2026-10-27T07:56:11Z); no result is available yet, so completion is not claimed.
+
+### Mada Commander preview-only configuration repair
+- The `mada-commander-public-mcp-auto` project had no preview environment variables; its five existing variables were production-only. The historical OAuth metadata 500s were from a preview deployment, not production, and raw logs are no longer retained. Source review confirms `oauth-server` and `oauth-resource` both call `getPublicBase()`, which fails closed in production mode when `MADA_PUBLIC_BASE_URL` is absent/invalid. This remains the probable explanation for those historical 500s, not a proven historical root cause.
+- Created GitHub branch `ops-mcp-preview` from the verified LudoMada main commit `0dfca3603942b8df6ad3005977fedbc90da0e670` for an isolated preview. Added only `MADA_PUBLIC_BASE_URL` to Vercel preview scope for that exact branch, value set to the branch alias, `https://mada-commander-public-mcp-auto-git-ops-mcp-preview-nanou3.vercel.app`. This variable is plain non-secret configuration, not credentials. Read-back with `decrypt=false` confirmed key, target `preview`, branch `ops-mcp-preview`, and expected value; production environment remained unchanged.
+- Created preview deployment `dpl_GB1thEngEvdFKkBnnF6GHoygFzZu` from the same commit, ref `ops-mcp-preview`. Second read confirms state `READY`, target `null` (preview), alias `mada-commander-public-mcp-auto-git-ops-mcp-preview-nanou3.vercel.app`, and `aliasError=null`. This is a preview deployment only; do not promote it to production. Public HTTP route/E2E validation is still BLOCKED because the browser connector is disconnected and direct URL fetch route is inaccessible. No production secrets were copied; preview OAuth end-to-end remains unconfigured and fail-closed.
+- A first Vercel request using `target=preview` was rejected because that endpoint accepts only production/staging/custom-environment targets; no deployment or config was changed by that rejected call. Retried with target omitted, the documented default preview behavior, and the preview deployment reached READY.
+
+### Alternatives and remaining external blockers
+- Desktop Commander quota is 4% remaining, confirmed by its usage endpoint; no further calls were made after reading it. Opera Browser Connector still returns `Browser not connected`. I used connected GitHub and Vercel app tools instead and did not touch Railway.
+- Official CircleCI pricing currently lists a $0/month Free plan, no credit card, and up to 6,000 build minutes for small Docker jobs; official setup requires an authenticated CircleCI web session and GitHub repository authorization. Existing PR #2 already has `.circleci/config.yml`, and prior isolated local `npm run ci:gate` passed 342 tests. No CircleCI hosted run is claimed because no authenticated CircleCI session/connector is available to complete the one-time project setup. Sources: https://circleci.com/pricing/ and https://circleci.com/docs/guides/getting-started/create-project/.
+- Native GitHub Actions still has failed jobs with zero steps; underlying root cause remains UNDIAGNOSED. No billing/spending cause is inferred without exact-run evidence. No production deployment, merge, gate weakening, secret read, or dirty-worktree modification occurred.
