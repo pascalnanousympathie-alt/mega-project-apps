@@ -39,7 +39,7 @@ def chat(model: str, prompt: str, *, max_tokens: int=900, temperature: float=0.1
         method='POST',
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout, context=ssl.create_default_context()) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
+        with urllib.request.urlopen(req, timeout=timeout, context=ssl.create_default_context()) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
             raw=resp.read().decode('utf-8')
             data=json.loads(raw)
             choices=data.get('choices') or []
