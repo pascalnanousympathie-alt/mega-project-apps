@@ -45,7 +45,7 @@ function metric(value) {
   // Directory rows and the header leave the numeric cells blank. Number('')
   // is 0, which used to classify those rows as files with 0% coverage.
   const text = String(value === undefined || value === null ? '' : value)
-    .replace('%', '')
+    .replace(/%/g, '')
     .trim();
   if (!text) return null;
   const n = Number(text);
