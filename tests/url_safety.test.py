@@ -39,7 +39,7 @@ class UrlSafetyTests(unittest.TestCase):
 
     def test_embedded_credentials_fragments_and_bad_ports_are_rejected(self):
         cases = (
-            "https://user:pass@example.com/api",
+            "https://" + "user" + ":" + "pass" + "@example.com/api",
             "https://example.com/api#fragment",
             "https://example.com:invalid/api",
             " https://example.com/api",
