@@ -144,7 +144,7 @@ def call_gemini(prompt,model,key):
         headers={"Content-Type":"application/json","x-goog-api-key":key},
     )
     try:
-        with urllib.request.urlopen(req,timeout=45) as res:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected -- fixed provider endpoint validated by require_safe_http_url
+        with urllib.request.urlopen(req,timeout=45) as res:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- fixed provider endpoint validated by require_safe_http_url
             payload=json.loads(res.read().decode())
     except urllib.error.HTTPError:
         raise
