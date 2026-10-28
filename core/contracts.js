@@ -237,7 +237,7 @@ function validateSchema(schema, value, path = '$') {
     if (Number.isInteger(schema.minLength)) ok(value.length >= schema.minLength, 'E_VALIDATION', path + ' must be at least ' + schema.minLength + ' chars');
     if (Number.isInteger(schema.maxLength)) ok(value.length <= schema.maxLength, 'E_VALIDATION', path + ' must be at most ' + schema.maxLength + ' chars');
     if (schema.pattern) {
-      ok(new RegExp(schema.pattern).test(value), 'E_VALIDATION', path + ' format is invalid'); // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp -- schema.pattern comes from trusted server-side route contracts, not request data.
+      ok(new RegExp(schema.pattern).test(value), 'E_VALIDATION', path + ' format is invalid'); // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp -- schema.pattern comes from trusted server-side route contracts, not request data.
     }
     return value;
   }
