@@ -1193,3 +1193,22 @@ Vercel team project inventory returned five projects. Runtime-error aggregation 
 - **BLOCKED:** CircleCI validation awaits GitHub App repository authorization and workflow trigger; Buildkite first-failing-command diagnosis awaits authorized `read_build_logs`; Vercel production update requires explicit approval.
 - **UNDIAGNOSED:** GitHub Actions pre-runner/startup failures; no current annotation/log proves a billing cause, a failing test assertion, or scanner findings.
 - No source change was duplicated; no local worktree was modified; no security gate was weakened; no credentials/secrets were read/rotated; no PR was merged; no production deployment, payment, wallet setting, or configuration was changed.
+
+## Buildkite diagnostic expansion — 2026-10-28 09:35 EAT
+
+A second, independent read path (`mcp__GitHub__fetch` against the public GitHub REST `commits/{sha}/check-runs` and `actions/runs/{id}/jobs` resources) exposed the newest external-provider check summaries for status-branch head `030b753e0fa0eff9bb03517bba6bacb5932b5096`. This is newer evidence than the prior Buildkite #227/#225 snapshot.
+
+### Buildkite runs that actually executed
+
+- Security Audit [Buildkite build #233](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/233): OSV PR scan PASS (exit 0; check `122652423169`); Semgrep PASS (exit 0; check `122652422967`); Gitleaks FAIL (exit 1; check `122652422899`); Trivy FAIL (exit 1; check `122652423160`). The OSV full scan check `122652423098` was rejected before execution: the adapter requires the reusable workflow's `download-artifact` `name` to be an exact literal. The adapter also says `concurrency.cancel-in-progress` is ignored and must be configured as Buildkite Cancel Intermediate Builds under Settings > Builds. No Buildkite setting was changed.
+- ACEP CI [Buildkite build #231](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/231): gate exited 1 (check `122652410257`). The check summary contains only exit status; first failing command not exposed.
+- These results are separate from GitHub Actions: `semgrep-cloud-platform/scan` check `122652373672` passed; native GitHub Actions Security Audit [run #40638960087](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40638960087) and ACEP CI [run #40638959412](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40638959412) show `runner_id=0`, blank runner and `steps=[]` for all attempted native jobs.
+
+### Exact annotation/log access and existing fixes
+
+- The public GitHub REST check-runs collection exposed native check `annotations_count` values (Trivy 1; OSV PR, Gitleaks, Semgrep and ACEP gate 2 each), but the dedicated `/check-runs/{id}/annotations` endpoint is rejected by the connected GitHub fetch allowlist with HTTP 400. Job-log downloads for Gitleaks/ACEP still return HTTP 404 `BlobNotFound`. This alternate route therefore confirms which checks ran and their summaries, but still does not disclose the annotation bodies or the first failing commands.
+- **UNDIAGNOSED:** Gitleaks, Trivy and ACEP exit-1 causes; do not infer secret/vulnerability findings from exit status alone. **UNDIAGNOSED:** current native GitHub Actions startup reason; no fresh exact-run annotation ties it to Billing & plans or application code.
+- The known OSV fix is already in [PR #4](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/4), head `5d4ea29af52c1ac483903d879eb4f588ef75df90`, which remains OPEN/DRAFT/UNMERGED. Buildkite #233 came from the status branch head containing the older workflow, so it does not validate that fix. Do not duplicate/copy the fix; require owner review and a real executed full-scan PASS on a suitable trigger.
+- **BLOCKED — Buildkite logs:** the exact next requirement remains a supported authenticated read-only route with least-privilege `read_build_logs`; the connected Opera Browser Connector is offline, the generic web fetch cannot reach Buildkite, and no Buildkite plugin was available. Preserve scanner gates.
+
+No source/config changes were made in this diagnostic expansion. No PR was merged, no production deployment or configuration was changed, and no local worktree was touched.
