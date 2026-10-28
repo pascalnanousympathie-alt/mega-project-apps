@@ -40,7 +40,7 @@ def call(model,messages,tools=None,timeout=120,deadline=None,phase=None,attempt_
         req=urllib.request.Request(endpoint,data=raw,
             headers={"Authorization":"Bearer "+key(),"Content-Type":"application/json"},method="POST")
         try:
-            with urllib.request.urlopen(req,timeout=request_timeout) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
+            with urllib.request.urlopen(req,timeout=request_timeout) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
                 data=json.load(resp)
             if phase and attempt_id:
                 try:
