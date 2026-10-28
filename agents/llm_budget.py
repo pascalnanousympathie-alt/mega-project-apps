@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json, os, time, tempfile, urllib.request
 from pathlib import Path
+from agents.url_safety import require_safe_http_url
 
 ROOT=Path(__file__).resolve().parents[1]
 BASE=os.environ.get("BANKR_BASE_URL","https://llm.bankr.bot/v1").rstrip("/")
@@ -25,9 +26,10 @@ def _key():
     return key
 
 def _get(path):
-    req=urllib.request.Request(BASE+path,headers={"Authorization":"Bearer "+_key()})
+    endpoint = require_safe_http_url(BASE + path)
+    req=urllib.request.Request(endpoint,headers={"Authorization":"Bearer "+_key()})
     try:
-        with urllib.request.urlopen(req,timeout=10) as r:
+        with urllib.request.urlopen(req,timeout=10) as r:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
             return json.load(r)
     except Exception as e:
         raise BudgetError("BUDGET_ENDPOINT_UNAVAILABLE:"+path+":"+type(e).__name__) from e
