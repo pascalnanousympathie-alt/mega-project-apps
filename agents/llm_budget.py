@@ -29,7 +29,7 @@ def _get(path):
     endpoint = require_safe_http_url(BASE + path)
     req=urllib.request.Request(endpoint,headers={"Authorization":"Bearer "+_key()})
     try:
-        with urllib.request.urlopen(req,timeout=10) as r:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
+        with urllib.request.urlopen(req,timeout=10) as r:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
             return json.load(r)
     except Exception as e:
         raise BudgetError("BUDGET_ENDPOINT_UNAVAILABLE:"+path+":"+type(e).__name__) from e
