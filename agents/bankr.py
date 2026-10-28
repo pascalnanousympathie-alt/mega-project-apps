@@ -2,6 +2,11 @@
 import json, os, urllib.request, urllib.error, ssl
 from typing import Any
 
+try:
+    from agents.url_safety import require_safe_http_url
+except ModuleNotFoundError:  # Support direct execution as `python agents/bankr.py`.
+    from url_safety import require_safe_http_url
+
 BASE_URL = os.environ.get('BANKR_BASE_URL', 'https://llm.bankr.bot/v1').rstrip('/')
 CONFIG = os.path.expanduser('~/.bankr/config.json')
 
@@ -26,14 +31,15 @@ def chat(model: str, prompt: str, *, max_tokens: int=900, temperature: float=0.1
         'max_tokens': max_tokens,
         'temperature': temperature,
     }
+    endpoint = require_safe_http_url(BASE_URL + '/chat/completions')
     req=urllib.request.Request(
-        BASE_URL + '/chat/completions',
+        endpoint,
         data=json.dumps(body).encode('utf-8'),
         headers={'Authorization': 'Bearer ' + _key(), 'Content-Type': 'application/json'},
         method='POST',
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout, context=ssl.create_default_context()) as resp:
+        with urllib.request.urlopen(req, timeout=timeout, context=ssl.create_default_context()) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
             raw=resp.read().decode('utf-8')
             data=json.loads(raw)
             choices=data.get('choices') or []

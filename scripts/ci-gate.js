@@ -37,6 +37,7 @@ try {
   gate('SECURITY', () => run(process.execPath, ['scripts/secret-scan.js'], { encoding: 'utf8' }));
   gate('DEPENDENCY_AUDIT', () => run('npm', ['audit', '--omit=dev', '--audit-level=high']));
   gate('PYTHON_COMPILE', () => run('python3', ['-m', 'compileall', '-q', 'agents', 'supervisor']));
+  gate('URL_SECURITY_TESTS', () => run('python3', ['tests/url_safety.test.py']));
   gate('DIFF_CHECK', () => run('git', ['diff', '--check']));
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   if (!pkg.version || !/^\d+\.\d+\.\d+$/.test(pkg.version)) throw new Error('package version must be semantic x.y.z');

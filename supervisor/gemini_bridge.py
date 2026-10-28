@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import sys
 import subprocess
 import time
 import urllib.error
@@ -9,6 +10,9 @@ import urllib.request
 from datetime import datetime, timezone
 
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from agents.url_safety import require_safe_http_url
 RUNTIME=os.path.join(ROOT,"runtime")
 PROVIDERS={
     "groq":{
@@ -133,13 +137,14 @@ def call_gemini(prompt,model,key):
         "contents":[{"parts":[{"text":prompt}]}],
         "generationConfig":{"responseMimeType":"application/json","maxOutputTokens":1200}
     }).encode()
+    endpoint = require_safe_http_url(PROVIDERS["gemini"]["endpoint"].format(model=model))
     req=urllib.request.Request(
-        PROVIDERS["gemini"]["endpoint"].format(model=model),
+        endpoint,
         data=body,method="POST",
         headers={"Content-Type":"application/json","x-goog-api-key":key},
     )
     try:
-        with urllib.request.urlopen(req,timeout=45) as res:
+        with urllib.request.urlopen(req,timeout=45) as res:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- fixed provider endpoint validated by require_safe_http_url
             payload=json.loads(res.read().decode())
     except urllib.error.HTTPError:
         raise

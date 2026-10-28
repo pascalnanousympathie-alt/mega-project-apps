@@ -5,6 +5,7 @@ if str(Path(__file__).resolve().parents[1]) not in sys.path:
     sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from supervisor.runtime_guard import lease_valid
 from agents.llm_budget import before_request, record_usage, BudgetError
+from agents.url_safety import require_safe_http_url
 class BankrError(RuntimeError):
     pass
 
@@ -35,10 +36,11 @@ def call(model,messages,tools=None,timeout=120,deadline=None,phase=None,attempt_
                 before_request(phase,attempt_id,model,messages,max_tokens)
             except BudgetError as e:
                 raise BankrError("BUDGET_GUARD:"+str(e)) from e
-        req=urllib.request.Request(BASE+"/chat/completions",data=raw,
+        endpoint = require_safe_http_url(BASE + "/chat/completions")
+        req=urllib.request.Request(endpoint,data=raw,
             headers={"Authorization":"Bearer "+key(),"Content-Type":"application/json"},method="POST")
         try:
-            with urllib.request.urlopen(req,timeout=request_timeout) as resp:
+            with urllib.request.urlopen(req,timeout=request_timeout) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- request URL passed through require_safe_http_url
                 data=json.load(resp)
             if phase and attempt_id:
                 try:
