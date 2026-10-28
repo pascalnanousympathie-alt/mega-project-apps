@@ -1212,3 +1212,13 @@ A second, independent read path (`mcp__GitHub__fetch` against the public GitHub 
 - **BLOCKED — Buildkite logs:** the exact next requirement remains a supported authenticated read-only route with least-privilege `read_build_logs`; the connected Opera Browser Connector is offline, the generic web fetch cannot reach Buildkite, and no Buildkite plugin was available. Preserve scanner gates.
 
 No source/config changes were made in this diagnostic expansion. No PR was merged, no production deployment or configuration was changed, and no local worktree was touched.
+
+## Existing hosted runner evidence for PR #2 — 2026-10-28
+
+A fresh read of the public GitHub `commits/{sha}/check-runs` collection for exact PR #2 head `087460f74f9b6a07f2b53184e2f3c03efd7533b8` found a real Buildkite `ACEP CI / gate (pull_request)` execution: [build #25](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/25#01a15061-8aac-47ff-92fc-6cf0a6990dd4), check `117761104759`, completed `2026-10-18T19:00:28Z`, `conclusion=success`, `output.title=Exited with status 0`. This is hosted Buildkite evidence for the complete `ci:gate` command on that exact source head, separate from the previously recorded local Termux run. It does **not** establish that CircleCI ran.
+
+Fresh compare against current `main` `3b86e64019dfe2d1945b5d44a09bc25d50f55279` remains `diverged`: PR #2 head is 4 commits ahead and 7 behind. The existing fix is on the isolated PR branch; no rebase, force-push, rewrite, or merge was performed. Treat the source fix as validated on that historical hosted gate, while requiring a reviewed synchronization decision before landing it.
+
+For PR #4 exact head `5d4ea29af52c1ac483903d879eb4f588ef75df90`, the latest visible check-runs remain Buildkite Security Audit build #62 (2026-10-20: OSV PR scan/Semgrep PASS, Gitleaks/Trivy exit 1) and ACEP build #60 (exit 1). There is still no executed-run PASS for the separated `osv-full-scan.yml`; do not infer it from static checks. PR #4 remains open/draft and is 4 commits ahead / 0 behind `main`.
+
+This fresh evidence changes prioritization: an existing cloud Buildkite route has already executed the ACEP gate on PR #2's exact head, so CircleCI authorization is an optional alternative rather than the only evidence that the gate can run. The still-actionable blockers are the unexecuted current GitHub Actions jobs, inaccessible first-failure logs for Buildkite Gitleaks/Trivy/ACEP, and owner review/runtime validation of the OSV workflow split.
