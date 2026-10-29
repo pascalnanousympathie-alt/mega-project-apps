@@ -1448,3 +1448,16 @@ After the preceding status update triggered a new run on head `414ea6fcb5eb57ab2
 - [Security Audit run #40859555547](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40859555547): **SUCCESS**.
 - The earlier #40859188434 failure did not reproduce on the newer PR #3 head. Inspection confirmed that `main` still lacks the monotonic `updated_at` logic in draft PR #2. The successful run does not disprove a timing race; the original failed log has no assertion/stack output, so its exact failing assertion remains **UNDIAGNOSED**. The deterministic regression test and targeted code fix remain available in [draft PR #2](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/2), still open and unmerged.
 - No source fix was duplicated, and no PR was merged or deployment/production setting changed.
+
+
+## Latest rerun confirmation — 2026-10-29 (EAT)
+
+This supersedes the historical failed-attempt state for PR #2 while preserving the fact that the original failure's exact assertion was not captured.
+
+- Re-ran the failed jobs associated with [ACEP CI run #39156625936](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/39156625936) and [Security Audit run #39156626117](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/39156626117) on PR #2 head `087460f74f9b6a07f2b53184e2f3c03efd7533b8`. Both rerun workflows now report **SUCCESS**.
+- The fresh ACEP log confirms `TESTS=PASS`, `TEST_COUNT=342`, `SECURITY=PASS`, `DEPENDENCY_AUDIT=PASS`, `PYTHON_COMPILE=PASS`, `DIFF_CHECK=PASS`, and `CI_GATE=PASS`; `npm ci` reported 0 vulnerabilities.
+- Fresh Security Audit jobs Gitleaks, Semgrep, Trivy Repository Scan and OSV-Scanner PR Scan completed **SUCCESS**; OSV Full Scan was skipped by its configured workflow conditions.
+- The old `tests/users.test.js` failure did not reproduce in this rerun. The millisecond timestamp collision remains a credible intermittent race; however, the original failure log did not capture the failing assertion, so do not claim that exact assertion has been proven. PR #2 includes the deterministic regression test and monotonic timestamp fix.
+- [Latest PR #3 status-doc checks](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40860946790) also passed ACEP CI and [Security Audit](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40860947371). The new status-doc commit was `fd4f203aa71f3868f5d5d68d15842130a344bb67`.
+- Live read-only service checks remain unchanged: canonical Mada Commander `HTTP 200 / ready=true`; auto project `HTTP 503 / ready=false` with database/OAuth/schema checks false. Opera Browser Connector returned “Browser not connected” on the latest probe after earlier intermittent successes. No production config/secrets were changed.
+- PR #2 and PR #3 remain open and unmerged. No deployment, payment/wallet mutation, or dirty-worktree synchronization occurred.
