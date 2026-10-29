@@ -1439,3 +1439,12 @@ After the preceding status update triggered a new run on head `414ea6fcb5eb57ab2
 - [ACEP CI #40859188434](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40859188434): **FAILURE** at `Run CI gate`; checkout, Node setup and locked dependency installation succeeded. The latest job log again identifies `tests/users.test.js` with child status 1 and wrapper result `CI_GATE=FAIL`, without revealing a failing assertion stack. The cause therefore remains **UNDIAGNOSED at assertion level**; no new billing/spending-limit or pre-runner cause is supported.
 - The existing fix remains in draft PR #2; focused test result is 5/5. A full local gate on its clean isolated verification clone was stopped with `CI_GATE_EXIT=143` after prolonged sequential execution to protect device resources. All matching gate/test processes were subsequently absent; this is deliberately stopped, not PASS and not a product-code regression.
 - No additional CI or source patch was made. PR #3 and PR #2 remain open draft/unmerged; owner review is still required.
+
+
+## CI recheck — 2026-10-29 (EAT, current PR #3 head)
+
+- Current PR #3 head: `35f13440b35fe9081f6d85fbc280605bd2bffcab`.
+- [ACEP CI run #40859554803](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40859554803): **SUCCESS**. The gate reported `TESTS=PASS`, `TEST_COUNT=342`, `SECURITY=PASS`, `DEPENDENCY_AUDIT=PASS`, `PYTHON_COMPILE=PASS`, `DIFF_CHECK=PASS`, and `CI_GATE=PASS`. `npm ci` completed; audit reported 0 vulnerabilities.
+- [Security Audit run #40859555547](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40859555547): **SUCCESS**.
+- The earlier #40859188434 failure did not reproduce on the newer PR #3 head. Inspection confirmed that `main` still lacks the monotonic `updated_at` logic in draft PR #2. The successful run does not disprove a timing race; the original failed log has no assertion/stack output, so its exact failing assertion remains **UNDIAGNOSED**. The deterministic regression test and targeted code fix remain available in [draft PR #2](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/2), still open and unmerged.
+- No source fix was duplicated, and no PR was merged or deployment/production setting changed.
