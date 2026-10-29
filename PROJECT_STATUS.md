@@ -1404,3 +1404,28 @@ This section supersedes the earlier same-day statements where new live evidence 
 2. Opera's ChatGPT connector is intermittent even though local CDP is alive; use the official Browser Connector sign-in/allow-connection flow only if requested by the browser UI, with the owner completing any authentication or consent.
 3. CI's production fix is already present in draft PR #2; wait for its isolated full gate result before promoting that check as PASS. Keep PR #2 and PR #3 unmerged until reviewed.
 4. Continue protecting dirty LudoMada, NanouBrowser Android, Nanoumada, and Opera Android-agent worktrees. No pull/reset/clean/stash/rebase/overwrite, production deployment, or payment/wallet mutation was performed.
+
+
+## Latest confirmation — 2026-10-29 (EAT)
+
+This supersedes the prior “full gate in progress” note.
+
+### PR #3 CI outcome
+
+- On PR #3 head `8d3a1aced2b7b04ba1a7352644cbc9d6c71fdad5`, [Security Audit run #40857711126](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40857711126) completed **SUCCESS** and [ACEP CI run #40857710677](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40857710677) completed **FAILURE**.
+- The ACEP steps show checkout, Node setup, and `npm ci` succeeded; `Run CI gate` failed. The retrieved wrapper log identifies `tests/users.test.js` and exits with child status 1, but contains no assertion stack or `not ok` output. The specific assertion remains UNDIAGNOSED; no fresh evidence ties this failure to Billing & plans or a runner-start issue.
+- The probable timestamp-collision cause and its targeted regression fix already exist in draft [PR #2](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/2), head `087460f74f9b6a07f2b53184e2f3c03efd7533b8`. `node --test tests/users.test.js` passed **5/5** on that branch. PR #2 is still OPEN/DRAFT and is 4 commits ahead / 7 behind main; no merge or rebase occurred.
+- The full `npm run ci:gate` attempt on the clean isolated clone at HEAD `087460f` was stopped after roughly 13 minutes because the sequential 43-module suite was consuming device resources without producing a final result. Its recorded `CI_GATE_EXIT=143` is the deliberate stop, **not** a test assertion failure and **not** PASS. The exact verification processes were terminated; no remaining test process was found. The verification clone stayed clean.
+- No application-code or CI change was made in this follow-up; the fix was not duplicated because it already exists in PR #2.
+
+### Current live service/connector state
+
+- The later read-only health check confirmed canonical Mada Commander returns HTTP 200 with `ready=true`; the auto project returns HTTP 503 with `ready=false`, `databaseConfigured=false`, `googleOAuthConfigured=false`, and `schemaReady=false`. No production setting or secret was changed.
+- Opera Browser Connector remains **PARTIAL / INTERMITTENT**: `list_tabs` and page-content reading succeeded repeatedly after waking the installed Browser Connector popup, but a later call again returned “Browser not connected”. CDP itself remains HTTP 200 and the AI settings page is present. Do not mark this permanently fixed; any requested Opera sign-in or connection consent remains the owner's action.
+- Existing dirty LudoMada, NanouBrowser Android, Nanoumada, and Opera Android-agent worktrees remain untouched. No reset, clean, stash, rebase, pull, overwrite, merge, deployment, payment, or wallet mutation occurred.
+
+### Next safe actions
+
+1. Review and approve draft PR #2 if the existing `updated_at` monotonicity fix should be merged; otherwise main remains exposed to the repeatable `users.test.js` CI failure.
+2. Confirm the intended role and database/OAuth configuration of the duplicate `mada-commander-public-mcp-auto` project before any production environment change.
+3. Complete any official Opera Browser Connector account authorization on the owner side, then re-test `list_tabs` for stability.
