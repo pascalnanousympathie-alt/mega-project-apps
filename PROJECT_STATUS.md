@@ -1222,3 +1222,45 @@ Fresh compare against current `main` `3b86e64019dfe2d1945b5d44a09bc25d50f55279` 
 For PR #4 exact head `5d4ea29af52c1ac483903d879eb4f588ef75df90`, the latest visible check-runs remain Buildkite Security Audit build #62 (2026-10-20: OSV PR scan/Semgrep PASS, Gitleaks/Trivy exit 1) and ACEP build #60 (exit 1). There is still no executed-run PASS for the separated `osv-full-scan.yml`; do not infer it from static checks. PR #4 remains open/draft and is 4 commits ahead / 0 behind `main`.
 
 This fresh evidence changes prioritization: an existing cloud Buildkite route has already executed the ACEP gate on PR #2's exact head, so CircleCI authorization is an optional alternative rather than the only evidence that the gate can run. The still-actionable blockers are the unexecuted current GitHub Actions jobs, inaccessible first-failure logs for Buildkite Gitleaks/Trivy/ACEP, and owner review/runtime validation of the OSV workflow split.
+
+## Fresh coordination pass — 2026-10-29 (EAT)
+
+This entry records new evidence checked on 2026-10-29. All claims below are scoped to the cited check or deployment; no merge, production mutation, environment change, or restart was performed.
+
+### Control-plane pull requests and executable CI evidence
+
+- **PR #6 — Security hardening** ([PR](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/6), head `5d36a7376d1d9fbe25f21c33cfcdfcb56ef86256`) remains OPEN and unmerged. The current runs actually executed and passed: [ACEP CI #40654285854](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40654285854), [Security Audit #40654286355](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40654286355), and [Plugin Workflow Orchestrator #40654286010](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40654286010). Checked step summaries show the ACEP `Run CI gate`, Gitleaks secret scan, Trivy repository scan, Semgrep source scan, and OSV PR scan succeeded. The PR-triggered OSV full-scan job was SKIPPED, as expected for the separated full-scan workflow. Do not merge without explicit owner approval.
+- **PR #3 — central status/runbook** ([PR](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/3), head `5c2e1ed377f1c5fb4095253f4fbbfade62843d89`) remains OPEN/DRAFT. ACEP CI run [#40644940701](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40644940701) failed at job `gate` (job ID `122671446374`), but the job-step endpoint returned an empty list. Security Audit run [#40644941010](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40644941010) succeeded. The ACEP cause remains UNDIAGNOSED; this evidence does not establish a code/test failure or billing cause.
+- **PR #4 — OSV full-scan adapter** ([PR](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/4), head `5d4ea29af52c1ac483903d879eb4f588ef75df90`) remains OPEN/DRAFT. Its associated ACEP gate run [#39376607853](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/39376607853) and Security Audit run [#39376608123](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/39376608123) are failures; fetched job steps for the ACEP gate and Semgrep job were empty. Treat these as UNDIAGNOSED/pre-step failures until actual command output or a fresh annotation is available. Earlier Buildkite results and the static workflow-separation assertions remain separately scoped evidence; they do not turn these GitHub runs into passed checks.
+- Never infer a new Billing & plans/spending-limit cause from `runner_id=0`, empty steps, or old annotations. A fresh exact-run annotation/log is required.
+
+### Mada Commander public MCP — confirmed production configuration blocker
+
+- Vercel's last listed production deployment for **`mada-commander-public-mcp-auto`** is READY at [deployment `dpl_4t8NBn1e9vawm9cbHksnm4EoDqmY`](https://vercel.com/nanou3/mada-commander-public-mcp-auto/4t8NBn1e9vawm9cbHksnm4EoDqmY), source commit `5aceac1e04ae2199366578004d4a65c43cbac82d`. READY is not application-health proof.
+- The last-24-hour runtime-error query returned eight grouped errors for `/api/router`, HTTP 503, during `google-start`; the corresponding stage errors identify `database_ready`. The deployed source at the recorded SHA implements `databaseConfigured` solely from `MADA_COMMANDER_DATABASE_URL` and `requireDatabase()` returns 503 when that setting is absent. A non-decrypting Vercel environment-variable inventory for this project contained six entries and did **not** include either `MADA_COMMANDER_DATABASE_URL` or `GOOGLE_OAUTH_CLIENT_SECRET`. This confirms an incomplete production environment as the immediate blocker; the database connection itself was not tested with credentials.
+- The canonical **`mada-commander-public-mcp`** project has those variable names configured and had no grouped runtime errors in the selected last-24-hour window. Values were not retrieved or displayed. **Do not copy production credentials blindly:** before changing the auto project's production settings, the owner must confirm whether the duplicate production project is meant to use a dedicated database/configuration or should remain unused. No Vercel environment, database, or deployment was changed.
+- Vercel Hobby runtime-log retrieval rejected the 24-hour raw-log request because the retention window exceeds the plan's available retention; a 30-minute raw-log query returned no entries. This is a log-retention limitation, not evidence that the 503s did not happen.
+- **Nanoumada** production deployment `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf` is READY at source `7acac6037b574160d60dd7b58fe0de96c7d63578`; the selected 24-hour runtime-error query returned no grouped errors. This does not replace browser/E2E and provider-backed chat verification.
+
+### Opera connection and Android browser-agent distinction
+
+- The native Opera Browser Connector still returns “Browser not connected”. The latest read-only Termux diagnostic found no listeners for CDP ports `9222/9223` or tunnel port `39200`; the watchdog log recorded that the Opera main process/CDP target enumeration was unavailable. No noVNC restart or manual CDP launch was initiated by this audit.
+- The separate local `opera-android-mcp-agent` bridge was checked without editing files. `node --test` passed **5/5** tests and `npm run check` exited successfully. Package `com.nanou.operaagent` and Chrome are installed, but this does not prove Android Accessibility consent is enabled or that the native Opera connector is connected.
+- Keep the projects separate: Nanou Browser Android, Nanou Browser browser agent, Nanoumada web app, Mada Commander public MCP, and the personal local controller are not interchangeable.
+
+### Local working-copy preservation and automation
+
+- `~/LudoMada`: branch `feat/gameplay-cosmetics-v1`, HEAD `78e6af2`, dirty with modified/untracked game and Mada Commander files. **Protected; no pull/reset/stash/rebase/overwrite.**
+- `~/NanouBrowser`: branch `android-alternative`, HEAD `ece5cd9`, dirty Android changes and `build-manual/`. **Protected.**
+- `~/projects/nanoumada`: branch `main`, HEAD `0467119`, reports `behind 32`, seven modified files. **Protected; do not pull/synchronize.**
+- `~/opera-android-mcp-agent`: branch `main`, HEAD `a71567c`, dirty Android/bridge files. Tests above were read/test-only; no source was changed.
+- Local `~/RamiMada`, `~/LotoMada`, and `~/DominoMada` are clean at September 26 heads but their local tracking refs are older than the October 13 GitHub heads. No synchronization was done. No standard `~/PC-Free` or `~/mega-project-apps` clone was found; isolated verification clones remain separate.
+- The two enabled coordination automations report `next_run_time=null`; recorded prior runs exist (Oct 27 and Oct 28), but future dispatch is not independently verified.
+
+### Prioritized next actions
+
+1. Obtain owner approval and confirm the intended architecture before adding any missing production secret/config to `mada-commander-public-mcp-auto`; then test health, OAuth, MCP initialize/tools/list and a harmless authenticated call. Never use the LudoMada game/wallet database.
+2. Keep PR #6 open for owner review; its listed required checks passed. Do not merge automatically.
+3. Get a different authorized diagnostic route for PR #3/#4 jobs that returned empty step lists. Do not repeat identical pre-step failures or weaken CI/security gates.
+4. Restore the actual Opera process/CDP/tunnel path and verify `list_tabs`; do not restart noVNC. In parallel, verify the Android agent's user-authorized Accessibility setting without bypassing Android consent.
+5. Preserve the dirty worktrees until their owners' changes have been checkpointed and reviewed; address the existing LudoMada dependency-security work only in a clean isolated branch.
