@@ -41,11 +41,25 @@ test('rejects invalid usernames and roles', (t) => {
   expectDataError(() => layer.createUser({ username: 'valid_phone', phone: 'nope' }), 'E_ARG');
 });
 
-test('changes user status', (t) => {
+test('changes user status and advances updated_at when the wall clock stays in one millisecond', (t) => {
   const { layer } = makeDataLayer(t);
-  const user = makeUser(layer, 'status_user');
-  const blocked = layer.setUserStatus(user.id, 'blocked');
-  assert.equal(layer.getById(user.id).status, 'blocked');
-  assert.notEqual(blocked.updated_at, user.updated_at);
-  expectDataError(() => layer.setUserStatus(user.id, 'ghost'), 'E_ARG');
+  const NativeDate = global.Date;
+  const fixedMs = NativeDate.parse('2026-10-18T12:00:00.000Z');
+  class FixedDate extends NativeDate {
+    constructor(...args) { super(...(args.length ? args : [fixedMs])); }
+    static now() { return fixedMs; }
+  }
+
+  // Force the exact same millisecond for createUser and setUserStatus. This
+  // reproduces fast-runner timing deterministically instead of relying on luck.
+  global.Date = FixedDate;
+  try {
+    const user = makeUser(layer, 'status_user');
+    const blocked = layer.setUserStatus(user.id, 'blocked');
+    assert.equal(layer.getById(user.id).status, 'blocked');
+    assert.equal(Date.parse(blocked.updated_at), Date.parse(user.updated_at) + 1);
+    expectDataError(() => layer.setUserStatus(user.id, 'ghost'), 'E_ARG');
+  } finally {
+    global.Date = NativeDate;
+  }
 });
