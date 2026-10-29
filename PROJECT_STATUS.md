@@ -1374,3 +1374,33 @@ Source baseline was re-read before this entry: status branch `ops/central-projec
 - Mada Commander auto still has missing production environment names `MADA_COMMANDER_DATABASE_URL` and `GOOGLE_OAUTH_CLIENT_SECRET`; its recent `google-start/database_ready` 503 is confirmed. Production remains unchanged pending owner confirmation of the duplicate project's intended database/configuration.
 - The existing local LudoMada, NanouBrowser Android, Nanoumada, and Opera Android agent worktrees remain protected. No pull, reset, clean, stash, rebase, overwrite, merge, deployment, payment or wallet mutation was performed.
 - The Nanou48 Desktop Commander device is Online and its usage response reports 95% of monthly calls remaining. The separate Mercia device was Offline in the latest check; it was not used for the current diagnosis.
+
+
+## Follow-up verification — 2026-10-29 (EAT, later pass)
+
+This section supersedes the earlier same-day statements where new live evidence changes the diagnosis. It records only the checks actually performed; production configuration and protected worktrees remain unchanged.
+
+### Direct production health checks: Mada Commander
+
+- `GET https://mada-commander-public-mcp.vercel.app/api/health` returned **HTTP 200**, `ready=true`, with `publicBaseConfigured`, `databaseConfigured`, `googleOAuthConfigured`, `oauthClientModeConfigured`, `oauthRedirectAllowlistConfigured`, `oauthCimdEnabled`, and `schemaReady` all true. `domainChallengeConfigured=false` remains the public-submission challenge state; it does not negate the observed runtime health.
+- `GET https://mada-commander-public-mcp-auto.vercel.app/api/health` returned **HTTP 503**, `ready=false`. Its health payload explicitly reports `databaseConfigured=false`, `googleOAuthConfigured=false`, and `schemaReady=false`; public base and OAuth client-mode/redirect configuration are true. This independently confirms that the auto project's production configuration is incomplete and is not fully healthy despite its Vercel deployment being labelled READY.
+- No environment values were decrypted, printed, copied, or changed. The unresolved action is still an owner decision: confirm the intended role of the duplicate auto project and its dedicated database/OAuth configuration before any production environment update.
+
+### Opera Browser Connector: intermittent recovery, not yet stable
+
+- The existing CDP endpoint remains responsive: `http://127.0.0.1:9223/json/version` returns HTTP 200 and reports protocol 1.3. Opening the already-installed Browser Connector popup showed “ChatGPT connected!”; read-only extension storage reported `connectorEnabled=true`. The Opera AI settings page lists the Browser Connector feature as installed.
+- `mcp__Opera_Browser_Connector__list_tabs` then succeeded repeatedly and returned the three current tabs (Speed Dial, Opera AI settings, and an existing Google search tab). A later call did again return “Browser not connected”, but subsequent calls succeeded. Therefore the connector is **PARTIAL / intermittently connected**, not permanently fixed. The internal `chrome://` settings page is correctly blocked by the tab-content safety layer; no attempt was made to bypass that restriction.
+- Do not repeat CDP-start attempts: CDP is already live. The remaining issue is the connector/session handoff between the installed extension and ChatGPT. Browser sign-in/consent must remain an owner action if the official connector requests it. No noVNC restart, password/consent bypass, extension uninstall, or new profile was performed.
+
+### ACEP CI and existing fix
+
+- Latest inspected PR #3 ACEP run [`40856449144`](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40856449144) failed in `Run CI gate` (job `123388509946`) after checkout, Node setup, and locked dependency installation succeeded. Its wrapper log identifies `tests/users.test.js` as the failing child file but does not expose the assertion stack; the specific failing assertion remains unobserved.
+- The existing draft [PR #2](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/2), head `087460f74f9b6a07f2b53184e2f3c03efd7533b8`, already contains a targeted fix: `setStatus` guarantees an increasing `updated_at` timestamp when the wall clock remains in the same millisecond, and the test deterministically reproduces that timing case. Its focused `node --test tests/users.test.js` passed **5/5** on this branch. PR #2 remains draft, 4 commits ahead / 7 behind main; no rebase, pull, or merge was done.
+- A full `npm run ci:gate` is currently being checked in the existing clean isolated verification checkout at `~/tmp/mega-project-apps-circleci-pr2-verify-20261027`, HEAD `087460f`; output is being captured separately at `~/tmp/mega-project-apps-pr2-ci-gate-20261029.log`. At the last inspection the run was still progressing through sequential test files and no final exit code was available. This is **IN PROGRESS / NOT YET VERIFIED**, not PASS. The verification checkout was confirmed clean before starting; no user's application worktree was changed.
+
+### Remaining blockers
+
+1. Owner approval is required before correcting the auto project's missing database/OAuth production configuration.
+2. Opera's ChatGPT connector is intermittent even though local CDP is alive; use the official Browser Connector sign-in/allow-connection flow only if requested by the browser UI, with the owner completing any authentication or consent.
+3. CI's production fix is already present in draft PR #2; wait for its isolated full gate result before promoting that check as PASS. Keep PR #2 and PR #3 unmerged until reviewed.
+4. Continue protecting dirty LudoMada, NanouBrowser Android, Nanoumada, and Opera Android-agent worktrees. No pull/reset/clean/stash/rebase/overwrite, production deployment, or payment/wallet mutation was performed.
