@@ -1351,3 +1351,26 @@ Source baseline was re-read before this entry: status branch `ops/central-projec
 3. **Pre-runner CI failures:** obtain an authorized route to the missing GitHub check-run annotations/runner-dispatch diagnostics. Do not retry the same runs or blame billing without fresh exact-run evidence.
 4. **Fallbacks:** confirm a real CircleCI authorization/project route before attempting it; existing Buildkite/Termux checks are not CircleCI evidence. Keep PRs open for human review.
 5. Continue other workstreams independently; preserve dirty local worktrees and all production/security boundaries.
+
+
+## Follow-up verification — 2026-10-29 (EAT, later pass)
+
+### ACEP CI failure diagnosis and isolated correction
+
+- The completed [PR #3 ACEP CI run #40818990598](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40818990598) did start its runner, installed dependencies, and executed `npm run ci:gate`. The first failing gate was `npm test`; the log explicitly names `tests/users.test.js` and child exit status 1. The workflow did not print the failing assertion from the child test, so that exact assertion remains unavailable in this log.
+- Read `core/repos.js` and `tests/users.test.js` on main. `setUserStatus()` previously always used `nowIso()` (millisecond precision), while the test required `updated_at` to change. In a same-millisecond write, this can produce an identical timestamp; a small backward wall-clock adjustment can also make the timestamp non-monotonic. The same defect and deterministic frozen-clock test had already been implemented on the existing CircleCI fallback branch.
+- Created a separate draft fix PR [#7 — monotonic user status timestamps](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/7), head `1b828ff9c55191ddc701214ea039f89b89d347e6`. The patch changes only `core/repos.js` and `tests/users.test.js`. When the new clock value is not greater than the prior `updated_at`, it advances by 1 ms; the regression test freezes the clock to reproduce the collision deterministically. Both files were re-fetched after saving.
+- **Exact-head CI evidence for PR #7: PASS.** [ACEP CI #40856093691](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40856093691) completed successfully, with `Run CI gate` succeeding and the log showing `TESTS=PASS`, `SECURITY=PASS`, `DEPENDENCY_AUDIT=PASS`, `PYTHON_COMPILE=PASS`, `DIFF_CHECK=PASS`, and `CI_GATE=PASS`. [Security Audit #40856094708](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40856094708) also completed successfully: Gitleaks, Trivy, Semgrep and OSV PR Scan all passed; the PR-triggered OSV full scan was skipped as intended. PR #7 remains draft, open and unmerged; no merge was performed.
+- PR #3 itself still has the failing pre-fix code because PR #7 is not merged. Do not call PR #3's old CI result fixed until the fix is reviewed/merged by the owner and the resulting check passes. No tests were skipped and no gate was weakened.
+
+### Opera Browser Connector — exact boundary of recovery
+
+- The local Opera process is running. Safe local CDP metadata reads now return HTTP 200 at `127.0.0.1:9223/json/version`, protocol version `1.3`, and `/json/list` returns 14 targets (6 pages, 1 background page, 1 iframe and 6 service workers). Only target counts and schemes were emitted; debugging WebSocket URLs, page URLs, cookies and tokens were not displayed.
+- The ChatGPT Opera Browser Connector tool still returns **“Browser not connected”** and requests that “Allow AI connection” be enabled in the Browser Connector and the user sign in to Opera. This means the local CDP process is alive, but the ChatGPT connector's browser/session authorization is not established. That owner interaction remains required; no sign-in or consent was bypassed.
+- The noVNC proxy/tunnel services and watchdog are present. I did not restart noVNC, alter the persistent browser profile, or expose any tunnel URL/key. The CDP result changes the diagnosis: do not keep repeating a CDP-start attempt; finish by connecting/authorizing the supported Browser Connector, then re-test `list_tabs`.
+
+### Remaining external blockers (unchanged)
+
+- Mada Commander auto still has missing production environment names `MADA_COMMANDER_DATABASE_URL` and `GOOGLE_OAUTH_CLIENT_SECRET`; its recent `google-start/database_ready` 503 is confirmed. Production remains unchanged pending owner confirmation of the duplicate project's intended database/configuration.
+- The existing local LudoMada, NanouBrowser Android, Nanoumada, and Opera Android agent worktrees remain protected. No pull, reset, clean, stash, rebase, overwrite, merge, deployment, payment or wallet mutation was performed.
+- The Nanou48 Desktop Commander device is Online and its usage response reports 95% of monthly calls remaining. The separate Mercia device was Offline in the latest check; it was not used for the current diagnosis.
