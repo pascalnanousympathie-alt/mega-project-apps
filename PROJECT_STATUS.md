@@ -1429,3 +1429,13 @@ This supersedes the prior “full gate in progress” note.
 1. Review and approve draft PR #2 if the existing `updated_at` monotonicity fix should be merged; otherwise main remains exposed to the repeatable `users.test.js` CI failure.
 2. Confirm the intended role and database/OAuth configuration of the duplicate `mada-commander-public-mcp-auto` project before any production environment change.
 3. Complete any official Opera Browser Connector account authorization on the owner side, then re-test `list_tabs` for stability.
+
+
+## CI freshness check — 2026-10-29 (EAT, latest head)
+
+After the preceding status update triggered a new run on head `414ea6fcb5eb57ab2f9f39a98374420933cbdc2a`, the latest runs were checked again:
+
+- [Security Audit #40859189495](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40859189495): **SUCCESS**.
+- [ACEP CI #40859188434](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40859188434): **FAILURE** at `Run CI gate`; checkout, Node setup and locked dependency installation succeeded. The latest job log again identifies `tests/users.test.js` with child status 1 and wrapper result `CI_GATE=FAIL`, without revealing a failing assertion stack. The cause therefore remains **UNDIAGNOSED at assertion level**; no new billing/spending-limit or pre-runner cause is supported.
+- The existing fix remains in draft PR #2; focused test result is 5/5. A full local gate on its clean isolated verification clone was stopped with `CI_GATE_EXIT=143` after prolonged sequential execution to protect device resources. All matching gate/test processes were subsequently absent; this is deliberately stopped, not PASS and not a product-code regression.
+- No additional CI or source patch was made. PR #3 and PR #2 remain open draft/unmerged; owner review is still required.
