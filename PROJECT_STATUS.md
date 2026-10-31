@@ -1683,3 +1683,12 @@ Fresh GitHub compare results supersede older ahead/behind statements in historic
 - Canonical Mada Commander public MCP production SHA `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246` versus LudoMada main: **16 commits behind / 0 ahead**. Deployment remains READY; no promotion was attempted.
 
 These are compare-metadata corrections only. No branch was synchronized or rewritten, no PR was merged, and no deployment/configuration was changed.
+
+## Evidence correction — 2026-10-31 08:33 EAT (05:33 UTC)
+
+- Status branch self-validation on prior status commit `94c0e0fa72cd9cd2c89c8eef25846bff71fcb99f`: ACEP CI [#41172930295](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41172930295) **PASS** (checkout, Node setup, locked install, `Run CI gate` all succeeded); Security Audit [#41172930617](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41172930617) **PASS** for executed Gitleaks, Semgrep, Trivy and OSV PR scan. OSV Full Scan was skipped for the PR event.
+- LudoMada PR #156 Release Gate [#41172741766](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41172741766) has now completed **PASS**: backend-staging migration, full backend tests/build, readiness, native HTTP/4-player/concurrency/idempotency tests and staging load smoke all passed; android-final scene-budget check, Gradle tests/builds, artifact/signing verification and APK upload all passed.
+- PR #156 Android UI Instrumentation [#41172741769](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41172741769) remains **IN_PROGRESS** at the API 30 connected instrumentation step; no screenshot-export PASS is claimed yet. Security [#41172741943](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41172741943), V6.3 [#41172741760](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41172741760), and Framebuffer [#41172741727](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41172741727) are **PASS**.
+- Compare confirms PR #156 is **56 commits ahead / 0 behind PR #151** (`16db311...`), so #156 contains the #151 line and is the newer candidate; both remain open, with #156 still Draft. No PR was merged.
+
+This correction is based on exact completed job/run metadata. No source, deployment, production or security configuration was changed by this status entry.
