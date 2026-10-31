@@ -1761,3 +1761,23 @@ This correction supersedes the previous run-as-after-teardown diagnosis. No app 
 - Automation schedule saved as daily from 2026-11-01 08:00, timezone Indian/Antananarivo, enabled. The automation metadata still reports next_run_time=null after reread, so future dispatch remains UNVERIFIED; no duplicate automation or manual retry was created.
 
 No local worktree was changed. No Railway, Desktop Commander, or metered TinyFish was used. No secrets were read or copied, no security gate weakened, and no PR merge, production deployment/promotion, production/payment/wallet configuration change, or destructive action occurred.
+
+## Evidence correction — 2026-10-31 08:50 EAT (05:50 UTC)
+
+### LudoMada PR #156 current head validation
+
+- Current PR head remains 88707b5add9e7eaf5075851162c0c1faf9e9122c, OPEN/DRAFT.
+- [Release Gate #41173705233](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705233) completed PASS on this exact head: backend-staging and android-final both succeeded. APK 3D asset check passed, release signing verified true, release APK SHA-256 c8aded20837ac6fc99297f21b973b7ab8c15dd21594feeee6dbf5b57c21067e5; artifact [#13032167695](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705233/artifacts/13032167695).
+- [APK build #41173700580](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173700580) PASS; debug APK artifact [#13032451786](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173700580/artifacts/13032451786), SHA-256 4324c339e61fbfe335daaa4df1bab0bbab795f1bf5dace02b78ca796032e4df1.
+- [V6.3 CI #41173705177](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705177), [Security Audit #41173705482](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705482) (Gitleaks, Semgrep, Trivy, OSV PR scan), and [Framebuffer contract #41173705284](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705284) PASS. OSV Full Scan skipped on the PR event.
+- [UI Instrumentation #41173705273](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705273): API 30 connected instrumentation and screenshot-preservation steps PASS; Android 8.1/API 27 connected test remained IN_PROGRESS at the last read. Do not mark the whole UI workflow PASS until API 27 and report upload finish.
+- [Android Emulator Automated Tests #41173700568](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173700568) remained IN_PROGRESS at Ramus smoke after APK/asset/framebuffer prechecks. No PASS claimed yet for this exact head.
+
+### Central status commit self-validation and Buildkite adapter evidence
+
+- Status commit c3e9f6ce94c425d856d1c33c67748ef6b0d354c2 GitHub Actions [ACEP gate #41173880431](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41173880431) PASS. [Security Audit #41173880929](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41173880929) passed executed Gitleaks, Trivy, OSV PR scan and Semgrep; OSV Full Scan was skipped for the PR event.
+- Buildkite ACEP [#327](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/327) exited 1 (step 01a1907e-5ade-4f73-90b9-da6ecb16b7ea); first failing command/log unavailable, so UNDIAGNOSED.
+- Buildkite Security [#328](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/328): Gitleaks exited 1 (step 01a1907e-6047-427b-a12b-b86fe0eb3748), Trivy exited 1 (step 01a1907e-6055-4ad8-99da-56204243efd6), Semgrep and OSV PR scan passed. OSV full scan was rejected pre-execution: the adapter requires an exact literal download-artifact name; it also ignores cancel-in-progress and directs Cancel Intermediate Builds to Buildkite Settings > Builds. No read-only Buildkite log route is available, so Gitleaks/Trivy/ACEP exits are UNDIAGNOSED, not confirmed scanner findings. No billing/spending-limit cause is inferred.
+- These are self-check results for the prior status commit. No additional status commit will be created solely to capture checks triggered by this correction, avoiding a status→CI loop.
+
+No merge, production change, security-gate weakening, or secret access occurred in this correction.
