@@ -1781,3 +1781,17 @@ No local worktree was changed. No Railway, Desktop Commander, or metered TinyFis
 - These are self-check results for the prior status commit. No additional status commit will be created solely to capture checks triggered by this correction, avoiding a status→CI loop.
 
 No merge, production change, security-gate weakening, or secret access occurred in this correction.
+
+## Evidence correction — 2026-10-31 08:55 EAT (05:55 UTC)
+
+### LudoMada PR #156: API 27 screenshot-export root cause and next patch
+
+- The [UI Instrumentation run #41173705273](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705273) on head 88707b5 failed only after both API 30 and API 27 test suites completed 2/2 with zero test failures and Gradle BUILD SUCCESSFUL. API 30 exported a valid 720,398-byte 1080x1920 PNG through UTP and passed screenshot preservation. API 27 created the screenshot in app-specific external media storage, but UTP did not collect it; the host helper then found no UTP file and no shared-Pictures file and emitted ANDROID_SURFACE_SCREENSHOT_PULL_FAILED. This is a test-artifact transport issue, not a gameplay test failure.
+- Targeted follow-up commit [2b513aa341334ed992f25105d3c6b6b7d4682b59](https://github.com/pascalnanousympathie-alt/LudoMada/commit/2b513aa341334ed992f25105d3c6b6b7d4682b59) adds a debug-only WRITE_EXTERNAL_STORAGE permission capped at API 28 and captures the API 27 screenshot into shared Pictures before teardown; API 29+ continues using UTP additional output. The release manifest is not changed. PR #156 remains OPEN/DRAFT, 72 ahead / 0 behind main.
+- Current head 2b513aa checks are running: APK build #41174205031, Release Gate #41174209191, V6.3 CI #41174209034, Emulator/Ramus #41174205085, UI Instrumentation #41174209030; Framebuffer contract #41174209112 PASS. No new-head screenshot-export PASS is claimed until UI and Ramus workflows complete.
+
+### Mega-project-apps: fresh executed CI failure on status commit 08dd06a
+
+- GitHub Actions ACEP [#41174045865](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41174045865) executed setup, checkout, Node, npm ci and npm test, then failed because the child test process for tests/users.test.js exited 1. The assertion text was not emitted by the wrapper. The current main test contains assert.notEqual(blocked.updated_at, user.updated_at), which is timing-sensitive at millisecond precision; existing [PR #7 head 1b828ff9c55191ddc701214ea039f89b89d347e6](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/7) changes setStatus to ensure a monotonic timestamp and replaces the assertion with a deterministic fixed-clock regression test. PR #7 is 2 ahead / 0 behind and its GitHub Actions gate/security checks pass. Root-cause mapping is PARTIAL (source/test match; exact failed assertion not printed); no duplicate patch or merge.
+- Buildkite ACEP #329 failed without accessible first-failing command; Buildkite Security #330 Gitleaks and Trivy exited 1, Semgrep and OSV PR scan passed, and OSV full scan was rejected pre-execution by the adapter's exact-literal download-artifact requirement. Read-only Buildkite logs remain unavailable. These exits are UNDIAGNOSED, not confirmed scanner findings; no billing/spending-limit cause is inferred.
+- This correction records evidence from the prior status commit. No further status commit will be made solely to capture checks triggered by this correction, avoiding a status→CI loop.
