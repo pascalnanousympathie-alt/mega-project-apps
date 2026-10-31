@@ -1705,3 +1705,59 @@ This correction is based on exact completed job/run metadata. No source, deploym
 - New validation runs on this head: Framebuffer [#41173160243](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160243) **PASS**; UI [#41173160310](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160310), Release Gate [#41173160247](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160247), V6.3 [#41173160257](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160257), and Security [#41173160629](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160629) were **IN_PROGRESS/QUEUED** at the last check. No PASS is claimed for the new shared-copy path yet.
 
 This correction supersedes the previous run-as-after-teardown diagnosis. No app gameplay/security code or production settings were changed by these CI-only commits.
+## Coordination refresh — 2026-10-31 08:45 EAT (05:45 UTC)
+
+### Central status and exact repository heads
+
+- Re-read the existing status branch at 6363279ce6a5a617a02dc8727e28e015398db633 (PROJECT_STATUS blob 62b643c1947716a016c67493e7ea2e016a57e91c) and PARALLEL_ORCHESTRATION_RUNBOOK blob e5d9e149331fb400f3ede237639d21e429c89559. PR #3 remains OPEN/DRAFT. The prior status commit's self-checks passed: [ACEP CI #41173206278](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41173206278) and [Security Audit #41173206513](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41173206513).
+- Current main/default heads:
+  - mega-project-apps main: 3b86e64019dfe2d1945b5d44a09bc25d50f55279.
+  - LudoMada main: c3bb4d400d7d762d8f1f2a0c0094a2016fbfcdb8.
+  - Nanoumada main: 7acac6037b574160d60dd7b58fe0de96c7d63578.
+  - Nanou Browser Android branch android-alternative: a504f7fcd18cd190a12dfee47a44a7d23d496900.
+  - RamiMada main: fe3152c0847e5ae87337352d00974a33ed9ec5b3.
+  - LotoMada main: 03f3ba21753a6a0454270eef983c438e6b8e83bf.
+  - DominoMada main: 31481559c78c421ace5237b0275d595223981707.
+  - PC-Free main: e66dde7383ea93beb20ab398db9ad86f116cb9cc.
+- Nanou Browser agent remains separate: PR #2 head e1e2163c8e67…; agent PR CI and Service CI [#39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478) and [#39778777356](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778777356) passed on the ARM64 runner. No Android build is inferred from those results.
+
+### LudoMada — PR #156 targeted screenshot fix and current validation
+
+- PR #156 remains OPEN/DRAFT at [head 88707b5add9e7eaf5075851162c0c1faf9e9122c](https://github.com/pascalnanousympathie-alt/LudoMada/commit/88707b5add9e7eaf5075851162c0c1faf9e9122c), 71 commits ahead / 0 behind main. Compare from the prior Ramus-pass commit e51eb26720a7d92571741797f066a50caf22283d shows only the UI test and screenshot helper changed; gameplay/runtime sources are unchanged across those three test-harness commits.
+- Exact failure on [UI Instrumentation #41173333560](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173333560), head 5204ecfc66e7db535f823a5c039416660121023a: Gradle tests/build executed, but StartupUiTest failed at “Screenshot must be copied before teardown; shell output:” with no success marker. The run-as stderr was not captured, so its exact command-level reason remains UNDIAGNOSED. The earlier host retrieval had produced 44 bytes “run-as: unknown package: com.ludomadagascar” after instrumentation teardown.
+- Targeted commit [88707b5](https://github.com/pascalnanousympathie-alt/LudoMada/commit/88707b5add9e7eaf5075851162c0c1faf9e9122c) removes run-as from the test: it captures directly into app-specific external media / UTP additional_test_output before teardown. The host helper now prefers UTP output, validates PNG signature/dimensions, and uses shared Pictures only as fallback. The change is test-harness-only.
+- Local regression harness passed: valid UTP candidate selected; invalid UTP candidate fell back to valid shared-Pictures PNG; missing UTP candidate fell back to valid shared-Pictures PNG. The 43-byte non-PNG candidate was rejected by the PNG validator.
+- Current head checks:
+  - [APK build #41173700580](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173700580) PASS; debug APK artifact [#13032451786](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173700580/artifacts/13032451786), 4,222,241 bytes, SHA-256 4324c339e61fbfe335daaa4df1bab0bbab795f1bf5dace02b78ca796032e4df1.
+  - [V6.3 CI #41173705177](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705177) PASS.
+  - [Security Audit #41173705482](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705482) PASS for executed Gitleaks, Semgrep, Trivy and OSV PR scan; OSV Full Scan skipped on the PR event.
+  - [Framebuffer contract #41173705284](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705284) PASS.
+  - [UI Instrumentation #41173705273](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705273) IN_PROGRESS at the last read, before connected API 30 instrumentation; no no-runner condition.
+  - [Release Gate #41173705233](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173705233) IN_PROGRESS at staging load smoke; Android-final still pending.
+  - [Android Emulator Automated Tests #41173700568](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173700568) IN_PROGRESS at Ramus smoke.
+- Prior exact-head validation on 5204ec: [Release Gate #41173333590](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173333590) PASS for backend staging and android-final. Release signing verified true; release APK SHA-256 1a76064605e898c51a689f6c917d5080f4b54e8bc1208b76c280e1734af7345a; artifact [#13032600709](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173333590/artifacts/13032600709). This is the previous head, not a claim that the new head's Release Gate has completed.
+- [Ramus smoke #41173151368](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173151368) PASS on e51eb267: 3D board surface, GLES3 PBR, scene/surface framebuffer readbacks, 4/3/2-player turn rotations, dice-six/pawn/replay and navigation passed; screenshot and smoke-log artifacts were uploaded. This validates gameplay on the same runtime code, not the current screenshot-export harness.
+
+### Mega-project-apps
+
+- PR #7 timestamp fix head 1b828ff9c55191ddc701214ea039f89b89d347e6 is 2 ahead / 0 behind main; GitHub Actions gate/security checks passed, and Buildkite ACEP [#295](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/295) passed.
+- Buildkite Security [#296](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/296): Gitleaks and Trivy exit 1; OSV full scan did not execute due adapter/configuration incompatibility. No authenticated read-only Buildkite log route is available, so scanner exit-1 cause is UNDIAGNOSED, not a confirmed finding. PR #7 remains open/draft; no merge.
+- PR #4 OSV workflow split head 5d4ea29af52c1ac483903d879eb4f588ef75df90 remains open/draft, 4 ahead / 0 behind; no fresh runtime PASS for the separated full-scan workflow.
+- Main Security Audit [#40381546336](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/40381546336) has jobs with runner_id=0, blank runner, and steps=[]: NOT RUN / UNDIAGNOSED. No billing/spending-limit cause is inferred.
+
+### Vercel and Mada Commander
+
+- Canonical public MCP production deployment [dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q](https://vercel.com/nanou3/mada-commander-public-mcp/8kUAkAshjsGJdx6fvqz3k93oJh4q) remains READY on SHA f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246, 16 commits behind LudoMada main; no grouped runtime errors in 24h. No promotion.
+- Auto/fail-closed project production deployment [dpl_CZuUexdeiDsq8G8r2ywHTrWd8ysN](https://vercel.com/nanou3/mada-commander-public-mcp-auto/CZuUexdeiDsq8G8r2ywHTrWd8ysN) is READY on current LudoMada main SHA c3bb4d400d7d762d8f1f2a0c0094a2016fbfcdb8. Its 10 grouped 503 errors in 24h align with the runtime-watch's intentional fail-closed OAuth-start probes. [Runtime watch #41170158643](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41170158643) PASS explicitly validates canonical ready mode and auto fail-closed mode. Environment-name inventory with decrypt=false confirms the auto project intentionally lacks MADA_COMMANDER_DATABASE_URL and GOOGLE_OAUTH_CLIENT_SECRET; canonical production has those names. Do not copy secrets. Mark PASS for fail-closed behavior; BLOCKED only if the owner later requests enabling OAuth with a dedicated DB/credential plan.
+- Nanoumada production [dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf](https://vercel.com/nanou3/nanoumada/3ARF5uGjmpH356JWQXWXjUbUYAXf) READY on main SHA 7acac6037b574160d60dd7b58fe0de96c7d63578. 24h runtime metadata shows 4 grouped 404s at /api/export-api-keys, 2 at /api/system/git-info, and 1 at /api/check-env-key/openai, last seen 2026-10-30 10:23:23 UTC. Current main tree has no matching route definitions or code references; no runtime error logs in the last 50 minutes. Request origin is UNDIAGNOSED; no route was added without a product requirement.
+- Nanou Browser CI lab has no deployments and no grouped errors. Controller-control Vercel deployment [dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN](https://vercel.com/nanou3/ludomada-commander-control/FzcDcYA9wmXzn5Y2AX9jdAgKnofN) READY, no Git SHA metadata and no runtime errors; this does not prove the personal local controller is online.
+- Personal local controller NOT RUN in this pass: Desktop Commander quota is 4%; no local command, file operation, or noVNC restart was attempted. Last recorded device state remains stale/offline pending a fresh authorized low-quota route.
+
+### Other repositories and CI
+
+- Nanou Browser Android: latest [run #39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214) failed before execution; job has runner_id=0, blank runner, steps=[]: NOT RUN / UNDIAGNOSED. The android-alternative tree has no .circleci/config.yml; Vercel CI lab is not an Android APK route. No billing attribution.
+- Nanoumada main CI [#39155068575](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39155068575) PASS on executed setup/build/typecheck/tests; PR #13/#14 remain open and their Vercel previews READY.
+- RamiMada scheduled Security Audit [#40381487819](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/40381487819), LotoMada [#40381459562](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/40381459562), DominoMada [#40381473001](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/40381473001), and PC-Free [#40381409552](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/40381409552) all passed their executed scheduled scanner jobs, including OSV full scan. Existing PRs remain open; no merge.
+- Automation schedule saved as daily from 2026-11-01 08:00, timezone Indian/Antananarivo, enabled. The automation metadata still reports next_run_time=null after reread, so future dispatch remains UNVERIFIED; no duplicate automation or manual retry was created.
+
+No local worktree was changed. No Railway, Desktop Commander, or metered TinyFish was used. No secrets were read or copied, no security gate weakened, and no PR merge, production deployment/promotion, production/payment/wallet configuration change, or destructive action occurred.
