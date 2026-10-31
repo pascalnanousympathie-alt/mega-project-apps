@@ -1692,3 +1692,16 @@ These are compare-metadata corrections only. No branch was synchronized or rewri
 - Compare confirms PR #156 is **56 commits ahead / 0 behind PR #151** (`16db311...`), so #156 contains the #151 line and is the newer candidate; both remain open, with #156 still Draft. No PR was merged.
 
 This correction is based on exact completed job/run metadata. No source, deployment, production or security configuration was changed by this status entry.
+
+## Evidence correction — 2026-10-31 08:35 EAT (05:35 UTC)
+
+### PR #156 screenshot export: exact failure and second targeted fix
+
+- Android UI run [#41172741769](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41172741769) completed **FAIL** on the host screenshot validation step after API 30 instrumentation. The exact XML report from artifact `13032535040` shows **2 tests, 0 failures**; Gradle reported `BUILD SUCCESSFUL`. The host retrieval produced a 44-byte file containing exactly `run-as: unknown package: com.ludomadagascar\n`. This proves the target package had been uninstalled before the host `run-as` step; the new app-private retrieval strategy was not viable after teardown. The UI test itself passed.
+- Targeted PR #156 commits after that evidence:
+  - [`e51eb26720a7d92571741797f066a50caf22283d`](https://github.com/pascalnanousympathie-alt/LudoMada/commit/e51eb26720a7d92571741797f066a50caf22283d): the instrumentation now streams the API-specific app-private PNG through `run-as ... cat` into shell-writable shared Pictures **before teardown**, asserts the copy marker, and keeps the optional UTP copy.
+  - [`05b481db04a920f3a97b279128b42de767e5ca4f`](https://github.com/pascalnanousympathie-alt/LudoMada/commit/05b481db04a920f3a97b279128b42de767e5ca4f): host helper pulls the shared Pictures file first, then UTP fallback, and validates PNG signature/dimensions.
+- Independently re-read the updated test blob `fb554663902a3afa92a61edfe52dcfac677a134a` and helper blob `c5084c1eaa92f5bb6645f4c9d82dd725f743d309`. PR #156 remains OPEN/DRAFT at `05b481db04a920f3a97b279128b42de767e5ca4f`.
+- New validation runs on this head: Framebuffer [#41173160243](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160243) **PASS**; UI [#41173160310](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160310), Release Gate [#41173160247](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160247), V6.3 [#41173160257](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160257), and Security [#41173160629](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41173160629) were **IN_PROGRESS/QUEUED** at the last check. No PASS is claimed for the new shared-copy path yet.
+
+This correction supersedes the previous run-as-after-teardown diagnosis. No app gameplay/security code or production settings were changed by these CI-only commits.
