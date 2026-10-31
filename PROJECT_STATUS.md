@@ -1672,3 +1672,14 @@ This supersedes the historical failed-attempt state for PR #2 while preserving t
 6. Keep all PRs unmerged and production unchanged pending explicit approval.
 
 No PR was merged; no production deployment/promotion, production/payment/wallet configuration, secret access/rotation, destructive action, or security-gate weakening occurred.
+
+## Evidence correction — 2026-10-31 08:31 EAT (05:31 UTC)
+
+Fresh GitHub compare results supersede older ahead/behind statements in historical entries:
+
+- mega-project-apps PR #7 `1b828ff9c55191ddc701214ea039f89b89d347e6` versus current main `3b86e64019dfe2d1945b5d44a09bc25d50f55279`: **2 ahead / 0 behind**, exactly `core/repos.js` and `tests/users.test.js`. It is not currently diverged; no base synchronization/rebase is needed before owner review.
+- LudoMada PR #156 `ebdbbe11a2c244d99d98d2160dcf1e02cf6333ba` versus current main `c3bb4d400d7d762d8f1f2a0c0094a2016fbfcdb8`: **67 ahead / 0 behind**, with the 3D integration, Android tests/workflows, runtime smoke and supporting assets/docs. Keep it Draft for broad review and current CI completion.
+- LudoMada PR #155 `bd2d996adeba6b1d6c18f7772a5ebe4ecd2a46bc` versus current main: **2 ahead / 0 behind**, only `.codex/config.toml`.
+- Canonical Mada Commander public MCP production SHA `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246` versus LudoMada main: **16 commits behind / 0 ahead**. Deployment remains READY; no promotion was attempted.
+
+These are compare-metadata corrections only. No branch was synchronized or rewritten, no PR was merged, and no deployment/configuration was changed.
