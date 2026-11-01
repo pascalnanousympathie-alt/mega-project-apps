@@ -1864,3 +1864,41 @@ Production deployment metadata from the connected Vercel project list/deployment
 - No PR was merged; no deployment/promotion was performed.
 - Next: review the existing PR #7 timestamp fix; for PR #162, use a separately authorized load generator and approved staging endpoint rather than another identical co-located GitHub-runner retry; diagnose Nanou Browser Android's current status-check route; keep the Mada Commander auto project fail-closed until owner approval; verify the local controller only when quota is safely confirmed.
 
+
+### Open PR/branch snapshot — 2026-11-01
+
+All entries below are OPEN; “draft” is the current GitHub PR state. Heads were read from the current PR listing, not inferred from local worktrees.
+
+| Workstream | PR / branch | Head SHA | State / note |
+|---|---|---|---|
+| mega-project-apps | #7 \`fix/users-updated-at-monotonic-20261029\` | \`1b828ff9c55191ddc701214ea039f89b89d347e6\` | draft; 2 ahead / 0 behind |
+| mega-project-apps | #6 \`security/pin-github-actions-20261028\` | \`5d36a7376d1d9fbe25f21c33cfcdfcb56ef86256\` | ready for review |
+| mega-project-apps | #5 \`chore/cursor-multi-project-safety-20261022\` | \`4916f1c7ec13b63cfa03dac1d02fc9e6b564c1f4\` | draft |
+| mega-project-apps | #4 \`fix/buildkite-osv-full-scan-compat-20261020\` | \`5d4ea29af52c1ac483903d879eb4f588ef75df90\` | draft |
+| mega-project-apps | #3 \`ops/central-project-status-20261020\` | \`c1949e7738862e74060ab2c95e9b3c073bdb1a35\` | draft; status branch |
+| mega-project-apps | #2 \`ci/circleci-node-fallback-20261013\` | \`087460f74f9b6a07f2b53184e2f3c03efd7533b8\` | draft; CircleCI route not verified |
+| LudoMada | #162 \`perf/game-state-10k-capacity-gate-20261031\` | \`850fa7a6aee9987e523f90e11b06e51bb3741ab3\` | draft; 10k profile failed |
+| LudoMada | #161 \`fix/ludomada-api27-ui-instrumentation-integration-20261031\` | \`b599b7de4447d017332d86a5735504e8dbd2375f\` | draft; based on older candidate |
+| LudoMada | #160 \`docs/multi-agent-orchestration-20261031\` | \`26717ce31504b060a83217d0a42854f02151b817\` | draft |
+| LudoMada | #159 \`fix/nginx-sse-http11-without-upgrade-20261031\` | \`03aaf92504b17b58b18c602d44c0a5726d2974a0\` | draft |
+| LudoMada | #158 \`fix/api27-ui-screenshot-permission-20261031\` | \`e9467b33395c0d9480c76c64e2fa99fc89dc69a4\` | draft; based on earlier API27 fix |
+| LudoMada | #157 \`fix/android-27-runtime-storage-permission-20261031\` | \`b332fb49f1b85fa4b1c128da3f28f2b53e9b226f\` | draft; based on earlier API27 fix |
+| LudoMada | #156 \`fix/3d-apk-runtime-asset-current-head-20261030\` | \`b26f9c4b9ab7623eb325a9b46e366a149cc58685\` | draft; combined 3D candidate |
+| LudoMada | #155 \`chore/codex-mcp-tools-20261030\` | \`bd2d996adeba6b1d6c18f7772a5ebe4ecd2a46bc\` | ready for review |
+| LudoMada | #154 \`fix/3d-apk-asset-check-20261030-v2\` | \`f037b2654532c959d3656cbb2dd0f365472e287a\` | draft; older feature base |
+| LudoMada | #152 \`feat/google-signin-secure-20261030\` | \`10b6252a5e57cd4ca11b96a075284b1368944217\` | ready for review |
+| LudoMada | #151 \`feat/3d-board-integration-20261029\` | \`16db311b8eed1597e3a31507fddab9dfb81729a1\` | ready for review; historical, do not merge separately from #156 |
+| Nanoumada | #14 \`docs/nanoumada-web-scope-20261020\` | \`70038d15a87b838c1117d0b8d83ddeebdb327ffd\` | ready for review |
+| Nanoumada | #13 \`fix/nanoumada-composite-action-metadata-20261020\` | \`c0aba0cdee03ba82098f91265e8a906d969edbc2\` | draft |
+| Nanou Browser | #2 \`feat/cloud-browser-agent-mcp\` | \`e1e2163c8e6725c3840bcde4fc210cc4a34ea7df\` | draft; web agent/MCP, base android-alternative |
+| Nanou Browser | #1 \`fix/navigation-and-low-memory-build\` | \`2631664c93dfd78ef2a4e2bc9eec9ada8a2b790d\` | draft; Android/navigation |
+| RamiMada | #2 \`security/review-launcher-export-20261028\` | \`00b7c4bd1f455e57194d08928f2989640054a264\` | ready for review |
+| RamiMada | #1 \`ci/circleci-android-fallback-20261013\` | \`86bb3202bcad0c7484f845472c2e9581244a4971\` | draft |
+| LotoMada | #2 \`security/review-launcher-export-20261028\` | \`cc492df41a5a15f8c499fb0c15fe175fcbe057c5\` | ready for review |
+| LotoMada | #1 \`ci/circleci-android-fallback-20261013\` | \`0351f404fb741026f26119d4345510bd9bbc5df8\` | draft |
+| DominoMada | #2 \`security/review-launcher-export-20261028\` | \`6a99b69743de7d649099967be141cc9f22d77e58\` | ready for review |
+| DominoMada | #1 \`ci/circleci-android-fallback-20261013\` | \`4fd7c90b1a5210d4c71c19ee488e44ba8dd814b4\` | draft |
+| PC-Free | #2 \`fix/pc-free-setup-files\` | \`3c3d109ed755e91ccb731a9f3469c0181af36fc3\` | draft |
+
+Mada Commander public MCP has no separate repository in this accessible set; its canonical/auto Vercel deployments are tracked above and its implementation remains within LudoMada. The personal local controller is a separate device/runtime, not a GitHub PR.
+
