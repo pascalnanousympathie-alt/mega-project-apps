@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-10-13",
+  "lastReviewed": "2026-11-01",
   "purpose": "Live-audited snapshot of ChatGPT integrations and external verification runners; statuses must be paired with evidence notes and do not claim end-to-end health.",
   "statusValues": [
     "connected",
@@ -46,19 +46,21 @@
       "notes": "Connector verified. Projects found: mada-commander-public-mcp-auto, mada-commander-public-mcp, ludomada-commander-control. Latest sampled auto-project deployments were ERROR; canonical public MCP and control-project samples were READY. Verify health endpoints and deployment logs before declaring overall readiness."
     },
     {
-      "id": "railway",
-      "name": "Railway",
+      "id": "render",
+      "name": "Render",
       "status": "connected",
       "capabilities": [
-        "backend_deploy",
+        "service_status",
         "service_logs",
-        "deployment_diagnosis"
+        "resource_metrics",
+        "free_staging_hosting"
       ],
       "useFor": [
-        "api_services",
-        "backend_smoke_checks"
+        "backend_staging",
+        "web_agent_hosting",
+        "runtime_diagnostics"
       ],
-      "notes": "Connector authentication verified. This check returned no active workspace/repository binding; backend service actions remain blocked until a Railway project/workspace is selected. No production deployment was performed."
+      "notes": "Render connector and the current workspace are verified. Free services include ludomada-api-staging (currently blocked by a missing protected DATABASE_URL), nanou-browser, and mega-project-apps. Use only the exact project-bound service; keep secrets in Protected Environment, verify health/logs after an explicitly approved deploy, and do not create paid resources or deploy production from the coordinator."
     },
     {
       "id": "supabase",
