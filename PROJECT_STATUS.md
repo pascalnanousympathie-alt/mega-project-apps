@@ -1902,3 +1902,23 @@ All entries below are OPEN; “draft” is the current GitHub PR state. Heads we
 
 Mada Commander public MCP has no separate repository in this accessible set; its canonical/auto Vercel deployments are tracked above and its implementation remains within LudoMada. The personal local controller is a separate device/runtime, not a GitHub PR.
 
+
+
+## Evidence addendum — 2026-11-01 08:45 EAT (05:45 UTC)
+
+### PR #162 capacity artifact reconciliation — PASS for artifact inspection; capacity gate remains FAIL / NOT CERTIFIED
+
+The exact GitHub artifacts were downloaded and inspected independently:
+
+- Report artifact [13071240969](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41274362018/artifacts/13071240969) and API log artifact [13070666976](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41274362018/artifacts/13070666976).
+- The report's server response-time histogram is p95 278.7 ms / p99 3,534.1 ms. The end-to-end http.total histogram is p95 308 ms / p99 11,501.8 ms. These are different metrics; the higher total tail includes connection/socket delays. The previously recorded 278.7/3,534.1 values are the response-time histogram, not total latency.
+- API log contains 36 CAPACITY_RUNTIME_SAMPLE snapshots: CPU max 111.6% of one core; event-loop delay max observed p95 248.25 ms / p99 362.28 ms; PostgreSQL pool max 60 connections with waiting=0; stateReadsFailed=0; game-state cache reached 1,000 entries with 196,564 hits and 3,294 misses.
+- This supports that the backend process/DB pool did not show sustained pool wait or failed state reads during the captured samples; the 113,196 failed VUs and socket errors remain concentrated in the co-located load-test environment. Because Artillery, API and disposable DB shared the GitHub runner, application 10k RPS capacity remains UNDIAGNOSED / NOT CERTIFIED. No repeat load run was launched.
+
+### Render replacement observations — 2026-11-01
+
+- **LudoMada staging service** srv-dbj32afb9u1s73ctr880 (ludomada-api-staging, Free/Singapore, main c3bb4d400d7d762d8f1f2a0c0094a2016fbfcdb8, auto-deploy off): both recorded deploy attempts built successfully but ended update_failed; the latest runtime log explicitly throws DATABASE_URL_IS_REQUIRED from dist/server.js:31. No successful deployment; 24h CPU/memory/request/latency metrics are empty. Supabase project ludomada-cloudflare-staging is ACTIVE_HEALTHY but is not confirmed as the intended Render staging DB. **BLOCKED:** owner must select/authorize the dedicated staging database and configure DATABASE_URL in Render. No credential was read or copied; no service configuration was changed.
+- **mega-project-apps Render service** srv-dbd2n6o473hc73aliodg (Free/Oregon, main 3b86e64019dfe2d1945b5d44a09bc25d50f55279, auto-deploy enabled): build succeeded, deploy ended nonZeroExit 127. Service metadata configures uvicorn app:app; the current repository has Node package.json and server/boot.js, and no root app.py, requirements.txt, or render.yaml. This is a confirmed entrypoint/runtime mismatch; exact startup log was unavailable. **BLOCKED/UNDIAGNOSED:** owner must decide whether this legacy service should host the Node API and what persistence/runtime target is intended. No Render settings, source, or deployment was changed.
+- **Nanou Browser agent Render service** srv-dbd317jncjis73e3s0pg remains LIVE on agent head e1e2163c8e6725c3840bcde4fc210cc4a34ea7df; 24h metrics/log queries returned no data. This is agent service evidence only, not Android app validation.
+
+No local worktree, production/payment/wallet setting, secret, PR merge, or deployment/promotion was changed in this addendum.
