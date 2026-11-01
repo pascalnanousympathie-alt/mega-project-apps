@@ -236,11 +236,11 @@
         },
         {
           "id": "staging",
-          "title": "Deploy backend staging and inspect logs",
+          "title": "Deploy backend staging to Render and inspect logs",
           "integrations": [
-            "railway"
+            "render"
           ],
-          "gate": "Health checks must pass before continuing."
+          "gate": "Use the exact owner-approved Render Free staging service, confirm its Supabase staging target and health checks, and keep production and paid resources out of this workflow."
         },
         {
           "id": "runtime-observability",

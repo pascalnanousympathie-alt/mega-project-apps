@@ -1,6 +1,6 @@
 # Operations, Security & Connectivity Master Plan
 
-**Audit date:** 2026-10-13 (UTC)  
+**Audit date:** 2026-11-01 (UTC)  
 **Scope:** LudoMada, DominoMada, LotoMada, RamiMada, mega-project-apps/ACEP, PC-Free, Mada Commander, and relevant ChatGPT integrations.
 
 > This document supplements (does not replace) [MASTER_PLAN_P00_P30.md](./MASTER_PLAN_P00_P30.md). P00–P30 remains the overall delivery plan. This file is the operational snapshot, security backlog, connector inventory and ordered recovery plan. Plugin-directory status is not proof of a working deployment; only live connector responses, workflow runs and inspected artifacts count as evidence.
@@ -13,7 +13,7 @@
 - **Android release:** repository Gradle builds and APK artifacts; MobSF static APK analysis is a separate manual gate.
 - **Web/MCP hosting:** Vercel. Health and authenticated tool-contract checks are required even if a deployment is labelled READY.
 - **Database:** Supabase project mada-commander-public-mcp; keep it separate from LudoMada gameplay/wallet data.
-- **Runtime backend:** Railway connector is authenticated, but this audit did not find a bound Railway workspace/project.
+- **Runtime backend:** Render is the active hosting replacement. The Free `ludomada-api-staging` service exists but remains blocked until its exact Supabase `DATABASE_URL` is configured in Render Protected Environment. `nanou-browser` and `mega-project-apps` also have Render service records. Railway is retired and must not be used.
 - **Tracking/telemetry:** Linear for delivery issues; PostHog for runtime telemetry only after events are actually ingested.
 - **Design/media:** Figma for design work; Higgsfield/OpenArt for assets when needed. Check credit use and validate 3D assets inside the real GLES renderer.
 
@@ -90,7 +90,7 @@ The statuses below reflect connector/tool responses and relevant plugin-director
 | Vercel | Connected; deployment health mixed | Projects found: mada-commander-public-mcp-auto, mada-commander-public-mcp, and ludomada-commander-control. Recent sampled deployments for the auto project were ERROR; sampled deployments for the canonical MCP and control projects were READY. Check deployment logs and live endpoints before declaring full health. |
 | Supabase | Connected | mada-commander-public-mcp reports ACTIVE_HEALTHY in ap-south-1. This does not prove OAuth/MCP health or tenant isolation. |
 | Figma | Connected | Confirmed by the owner and plugin directory; no reconnection work is required. |
-| Railway | Connector authenticated | No workspace/repository binding was returned in this audit; do not claim a backend project is deployed through Railway. |
+| Render | Connected | Free staging/web services are present. LudoMada staging still requires its protected Supabase `DATABASE_URL`; verify health and logs before any approved deploy. |
 | Linear | Connected | Workspace/team Nanou Projet resolves; no Linear projects were found, and GitHub review-diff sync was not proven. |
 | Lovable | Connected | Free workspace Nanou's Lovable resolves; 0 projects returned. |
 | Replit | Connected | Connector authenticated; 0 apps returned. |
@@ -150,3 +150,15 @@ Close these items in order: inspect Vercel errors/logs and fix the auto deployme
 - **Product owner:** requirements and approval for release/signing, payments, production migration, OAuth/identity, account access and irreversible actions.
 
 Each backlog item is **BLOCKED** until the required evidence is attached: commit SHA, exact workflow run, log/artifact, test result and a written triage decision. Do not mark a CVE fixed solely because a version string changed; confirm a fresh scanner run and regression suite.
+
+
+## 9. Hosting provider correction — 2026-11-01
+
+Railway has been retired from this portfolio. Do not select the Railway connector, use Railway URLs from historical CI metadata, or treat old Railway references as active deployment targets.
+
+The active replacement is Render for the currently registered free staging/web services:
+- `ludomada-api-staging`: Free plan, manual deployment, no health-check path configured yet. The last inspected deploy built its Docker image but the process exited because `DATABASE_URL_IS_REQUIRED`. The exact Supabase staging pooler URL must be entered only in Render Protected Environment by the owner; no migration or retry deployment is implied.
+- `nanou-browser`: Free preview service on `feat/cloud-browser-agent-mcp`; public GET `/healthz` returned HTTP 200 with service status `ok`. The service API key and optional autonomous model are configured (boolean status only; no secret was read).
+- `mega-project-apps`: Free Render service record exists. Runtime readiness must be checked before relying on it.
+
+Do not create paid resources, promote production, change protected environments, or run deployments from this coordinator without the required owner approval. Historical run records that contain Railway URLs remain historical evidence only.
