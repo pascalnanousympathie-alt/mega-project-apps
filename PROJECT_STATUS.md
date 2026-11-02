@@ -2013,3 +2013,73 @@ No local worktree, production/payment/wallet setting, secret, PR merge, or deplo
 5. Nanou Browser Android needs a runner route that actually starts jobs; no CircleCI integration is currently verified.
 6. Mada Commander auto project remains fail-closed; local controller is offline and must be brought online by the owner before process/readiness checks.
 7. Do not create another status commit solely to chase checks triggered by this status refresh; avoid a status→CI loop.
+
+
+## Daily coordination pass — 2026-11-02 08:48 EAT (05:48 UTC)
+
+### Start gate and central branch
+- Re-read this `PROJECT_STATUS.md` and `PARALLEL_ORCHESTRATION_RUNBOOK.md` on the existing branch `ops/central-project-status-20261020` before the pass. Runbook blob SHA remains `e5d9e149331fb400f3ede237639d21e429c89559`; no runbook edit was needed.
+- Central status PR [#3](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/3) is OPEN/DRAFT at head `6c2ddcf981f8b4d3b00b6a386e19f4caccad9001`; compare to main is 93 ahead / 0 behind. Current file blob before this addendum: `5f4c892e26e57806f58b05a94e7dc77a2c8b1de7`.
+- No local worktree was accessed. No source-code, PR state, production, payment/wallet, secret, or security-policy change was made.
+
+### Exact default refs and active PR heads
+| Workstream | Default branch / HEAD | Active PR heads (OPEN) |
+|---|---|---|
+| mega-project-apps | main `3b86e64019dfe2d1945b5d44a09bc25d50f55279` | #3 status `6c2ddcf981f8b4d3b00b6a386e19f4caccad9001` DRAFT; #7 `1b828ff9c55191ddc701214ea039f89b89d347e6` DRAFT; #8 `14fec585ae595fe0354342e02d0980ee65cdbd67` DRAFT; #6 `5d36a7376d1d9fbe25f21c33cfcdfcb56ef86256` review-ready |
+| LudoMada | main `158d77d3443564bb3774ee5949b09f1309d1132b` | #176 `f6c350f8d9d27e970fcbaf489a5b981e6a030845` DRAFT (base #174); #175 `c849fb4eeba8a162be65742ff48deacbf1f6b6d4` DRAFT; #174 `e4f3bb97fa93b936ca5da7bcde90429a8548efc2` DRAFT; #162 `b50d82c4d5ac7044d599b1edff10b611cbec6743` DRAFT; #156 `b26f9c4b9ab7623eb325a9b46e366a149cc58685` DRAFT |
+| Nanoumada web | main `7acac6037b574160d60dd7b58fe0de96c7d63578` | #13 `c0aba0cdee03ba82098f91265e8a906d969edbc2` DRAFT; #14 `70038d15a87b838c1117d0b8d83ddeebdb327ffd` review-ready |
+| Nanou Browser Android | `android-alternative` `a504f7fcd18cd190a12dfee47a44a7d23d496900` | #1 Android `2631664c93dfd78ef2a4e2bc9eec9ada8a2b790d` DRAFT |
+| Nanou Browser agent | PR #2 branch `e1e2163c8e6725c3840bcde4fc210cc4a34ea7df` | #2 web agent/MCP DRAFT; separate from Android |
+| RamiMada | main `fe3152c0847e5ae87337352d00974a33ed9ec5b3` | #3 `db5290879138d0c88dd2dca81ffbe9ac4bb2ac0d` DRAFT; #2 `00b7c4bd1f455e57194d08928f2989640054a264` review-ready |
+| LotoMada | main `03f3ba21753a6a0454270eef983c438e6b8e83bf` | #3 `e0b8ad17a7183e5e8d0f2db4d393ad257f34ac87` DRAFT; #2 `cc492df41a5a15f8c499fb0c15fe175fcbe057c5` review-ready |
+| DominoMada | main `31481559c78c421ace5237b0275d595223981707` | #3 `bab28f8a75673bf944dc32e9e84ec4035016655d` DRAFT; #2 `6a99b69743de7d649099967be141cc9f22d77e58` review-ready |
+| PC-Free | main `e66dde7383ea93beb20ab398db9ad86f116cb9cc` | #2 `3c3d109ed755e91ccb731a9f3469c0181af36fc3` DRAFT |
+
+### mega-project-apps — exact CI failures and existing remedy
+- Status PR #3 head `6c2ddcf981f8b4d3b00b6a386e19f4caccad9001`: ACEP [run #41393854987](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41393854987) **FAIL (executed)**. Job `gate` ran on a hosted runner; checkout, Node setup and locked install passed. First failing step was `Run CI gate`, command `npm run ci:gate` → `npm test`; child `tests/users.test.js` exited 1. The retrieved log does not include the underlying assertion, and the connected route does not expose annotations. No billing/spending-limit cause is inferred.
+- Security Audit [#41393855532](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41393855532) **PASS** for Gitleaks, Trivy, Semgrep and OSV PR scan; OSV Full Scan was skipped for the PR event.
+- PR #8 ACEP [#41321199971](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41321199971) failed at the same `tests/users.test.js` child exit 1; Security Audit [#41321200241](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/41321200241) passed. Buildkite ACEP #345 passed; Buildkite Security #347 had Gitleaks/Trivy exit 1 and OSV full scan adapter-blocked, with detailed logs still unavailable (HTTP 403). Keep Buildkite and GitHub Actions results separate.
+- Existing PR [#7](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/7) is the targeted monotonic timestamp/fixed-clock regression fix; its ACEP #40856093691 and Security #40856094708 passed. No duplicate patch was created. Main's legacy `acep-api` status points at a retired Railway URL; it is not used as current service evidence.
+- PR #2 CircleCI fallback remains DRAFT; no authenticated CircleCI project/run route was confirmed, so no CircleCI result is claimed.
+
+### LudoMada — main, 3D candidate and 10k capacity
+- Main `158d77d3443564bb3774ee5949b09f1309d1132b`: Release Gate [#41343518501](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41343518501) **PASS** (backend-staging and android-final); UI Instrumentation [#41343518552](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41343518552) and emulator [#41343518516](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41343518516) **PASS**. Production canary [#41364574193](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41364574193) **PASS (executed)** for canonical-ready and auto fail-closed MCP/OAuth paths.
+- PR #176 exact head `f6c350f8d9d27e970fcbaf489a5b981e6a030845`: Release Gate #41345400035, UI Instrumentation #41345404343, emulator #41345400045 and Security Audit #41345404735 **PASS**. Artifact [13099232458](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41345404343/artifacts/13099232458) was independently inspected: valid 1080×1920 Home/gameplay PNG screenshots on API 27 and API 30. PR #176 remains DRAFT; no merge/release.
+- PR #162 exact head `b50d82c4d5ac7044d599b1edff10b611cbec6743`: Release Gate [#41286589821](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41286589821) **FAIL (executed)** at backend-staging step 15, `Run authenticated game-state capacity profile (up to 10k RPS)`. Steps 1–14 passed; step 16 SLO validator and android-final were skipped.
+- The exact report artifact [13075147531](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41286589821/artifacts/13075147531) and job log show: 300,334 VUs; 203,054 HTTP 200; 97,280 failed VUs (32.4%); 2,686 observed RPS; response p95/p99 528.6/2,186.8 ms; end-to-end p95/p99 1,200.1/11,274.1 ms; 95,075 socket timeouts and 2,205 ECONNRESET. Gate thresholds (≤0.1% failures, ≥10k RPS, response p95<250/p99<500 ms) failed.
+- Runner socket summary after the profile showed 8,646 TCP orphaned sockets and 10,114 TIME_WAIT; SQL plan execution was 0.269 ms with indexed reads. This strongly supports co-located load-generator/runner socket pressure, but does not certify application capacity because API and generator shared the runner. State: **UNDIAGNOSED / NOT CERTIFIED for 10k RPS**. Do not repeat the same co-located profile; next certification needs a separately authorized load generator and approved staging topology.
+- Prior Render staging evidence remains from 2026-11-01: LudoMada service required an owner-selected dedicated staging DB/DATABASE_URL; mega-project-apps Render service had a Node/uvicorn entrypoint mismatch. Render was not rechecked because the workspace/resource route was not confirmed in this pass. No Render settings changed.
+
+### Nanoumada and Nanou Browser — kept separate
+- Nanoumada main CI/CD [#39155068575 attempt 2](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39155068575) **PASS**: Setup/Build, type check and tests executed. PR #13 CI/CD [#39374796101 attempt 2](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39374796101) and PR #14 [#39483862281 attempt 2](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/39483862281) **PASS** on executed tests. However, a separate `Mada Termux CI` status context still reports failure on PR #13 and pending on main without an accessible run ID/log; mark that external context **UNDIAGNOSED**, not a failure of the passed CI/CD test job.
+- Nanou Browser Android default branch `android-alternative` has a current combined `Mada Termux CI` **failure**, but no workflow-run entry was returned for exact HEAD `a504f7fcd18cd190a12dfee47a44a7d23d496900`. Android PR #1 run [#38790950055](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/38790950055) is failed with `steps=[]`; its job-log retrieval returned BlobNotFound/404. PR #1's external status context says success, so the providers disagree. **UNDIAGNOSED**; no proof of Android compilation failure or billing cause.
+- Nanou Browser agent remains separate: PR #2 head `e1e2163c8e6725c3840bcde4fc210cc4a34ea7df`; Agent PR CI [#39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478) **PASS**. Render agent service was last verified LIVE on this head; this is not Android APK evidence.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+- RamiMada PR #3 head `db5290879138d0c88dd2dca81ffbe9ac4bb2ac0d`: Android build/rules [#41322617486](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/41322617486) and Security Audit [#41322617765](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/41322617765) **PASS**. Scheduled full Security Audit #40381487819 and PR #2 security review checks passed in prior evidence.
+- LotoMada PR #3 head `e0b8ad17a7183e5e8d0f2db4d393ad257f34ac87`: Android build/rules [#41322600174](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/41322600174) and Security Audit [#41322600342](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/41322600342) **PASS**. Scheduled full Security Audit #40381459562 passed in prior evidence.
+- DominoMada PR #3 head `bab28f8a75673bf944dc32e9e84ec4035016655d`: Android build/rules [#41322596915](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/41322596915) and Security Audit [#41322597237](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/41322597237) **PASS**. Scheduled full Security Audit #40381473001 passed in prior evidence.
+- PC-Free PR #2 Compose validation [#39142762767](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/39142762767) and Security Audit [#39142762931](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/39142762931) **PASS**. Scheduled full Security Audit #40381409552 passed in prior evidence. Real host/KVM runtime smoke remains NOT RUN.
+
+### Vercel production and runtime errors (current read-only snapshot)
+| Project | Latest production deployment | Runtime errors, last 24h |
+|---|---|---|
+| Mada Commander public MCP canonical | [READY dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q](https://vercel.com/nanou3/mada-commander-public-mcp/8kUAkAshjsGJdx6fvqz3k93oJh4q), LudoMada SHA `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246` (older than current main) | No grouped errors |
+| Mada Commander public MCP auto | [READY dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT](https://vercel.com/nanou3/mada-commander-public-mcp-auto/4YnMfsrE86PeXjNf1VseZp1ZfgvT), current LudoMada main SHA `158d77d3443564bb3774ee5949b09f1309d1132b` | No grouped errors; previous 503 clusters are not current |
+| Nanoumada | [READY dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf](https://vercel.com/nanou3/nanoumada/3ARF5uGjmpH356JWQXWXjUbUYAXf), main SHA `7acac6037b574160d60dd7b58fe0de96c7d63578` | No grouped errors |
+| Nanou Browser CI lab | No production deployment | No grouped errors |
+| Mada Commander personal-controller UI | [READY dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN](https://vercel.com/nanou3/ludomada-commander-control/FzcDcYA9wmXzn5Y2AX9jdAgKnofN), no Git SHA metadata | No grouped errors; does not prove local controller readiness |
+
+### Local controller, automation and remaining blockers
+- Personal local controller: **NOT RUN / BLOCKED**. Current Desktop Commander quota was not safely verified; the previous report was very low. No remote command, process/file inspection or noVNC restart was issued.
+- Two overlapping daily coordination automations are enabled. Both report `next_run_time=null`; Mega-Project Daily Orchestration last ran 2026-11-01 05:39 UTC, while Mega-project Auto-Coordination last ran 2026-11-02 05:25 UTC. Dispatch timing is **UNVERIFIED**. Schedules were not changed.
+- No CircleCI connector/project authorization route was confirmed; existing fallback PRs remain unvalidated. No Railway route was used.
+- No PR was merged; no production deployment/promotion, payment/wallet operation, secret access, security-gate weakening, destructive action or local-worktree modification occurred.
+
+### Next actions
+1. Review the existing PR #7 timestamp fix; do not duplicate it. Resolve the failing users.test assertion only after a diagnostic route exposes the underlying assertion.
+2. For LudoMada #162, obtain approval for an independent load generator and staging target before another capacity run; 10k RPS remains NOT CERTIFIED.
+3. Diagnose Nanou Browser Android's exact `Mada Termux CI` route; current evidence does not establish that the Android build started.
+4. Keep Mada Commander auto fail-closed; owner approval and a dedicated DB/OAuth plan are required before enabling OAuth/configuration.
+5. Keep personal controller NOT RUN until a safe quota check and online device are available.
+6. Avoid another status-only CI loop; this addendum is the current evidence snapshot.
