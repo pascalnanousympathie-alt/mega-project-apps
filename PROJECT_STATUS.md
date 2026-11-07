@@ -2631,3 +2631,78 @@ This pass began by re-reading this status ledger and [PARALLEL_ORCHESTRATION_RUN
 - **PARTIAL:** LudoMada telemetry capture and full Ramus gameplay smoke now pass, but FPS is not stable/accepted and the 311-ahead/4-behind PR stack needs integration review.
 - **BLOCKED/UNDIAGNOSED:** mega-project-apps users test underlying assertion; Nanou Browser Android runner execution and PR boundary; Mada Commander auto DB/OAuth owner configuration; personal local controller device offline; 10k-RPS independent staging test.
 - Only this status ledger is updated in this pass. No application source patch, merge, production deploy/promotion, payment/wallet action, secret access/rotation, security-gate weakening, destructive action, local worktree mutation, Railway/TinyFish use or noVNC restart occurred.
+
+
+## Daily coordination refresh — 2026-11-07 (GitHub/Vercel API snapshot through 2026-11-07T05:53:11Z / 08:53:11 EAT)
+
+### Control-plane and current repository refs
+
+- Read the current `PROJECT_STATUS.md` and `PARALLEL_ORCHESTRATION_RUNBOOK.md` first from `ops/central-project-status-20261020`. Before this append, status branch HEAD was `11f1105df3bff3635d7a6ae92eaad882a81135bc`; the runbook blob remains `e5d9e149331fb400f3ede237639d21e429c89559`.
+- All eight default refs were independently re-read from GitHub:
+  - mega-project-apps/main `3b86e64019dfe2d1945b5d44a09bc25d50f55279`
+  - LudoMada/main `158d77d3443564bb3774ee5949b09f1309d1132b`
+  - Nanoumada/main `7acac6037b574160d60dd7b58fe0de96c7d63578`
+  - nanou-browser/android-alternative `a504f7fcd18cd190a12dfee47a44a7d23d496900`
+  - RamiMada/main `fe3152c0847e5ae87337352d00974a33ed9ec5b3`
+  - LotoMada/main `03f3ba21753a6a0454270eef983c438e6b8e83bf`
+  - DominoMada/main `31481559c78c421ace5237b0275d595223981707`
+  - PC-Free/main `e66dde7383ea93beb20ab398db9ad86f116cb9cc`
+- No standalone GitHub repository exists at `pascalnanousympathie-alt/mada-commander-public-mcp` in the previously verified repository lookup. Keep the public MCP deployment and personal-controller UI as distinct Vercel projects, both separate from the local controller process.
+- Status PR [#3](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/3) is OPEN/DRAFT, head `11f1105df3bff3635d7a6ae92eaad882a81135bc`, base main `3b86e64019dfe2d1945b5d44a09bc25d50f55279`.
+
+### mega-project-apps — current status-branch gates now PASS
+
+- ACEP CI [run #42342797494](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42342797494) **PASS (executed)** on exact status head `11f1105df3bff3635d7a6ae92eaad882a81135bc`. Job `128313987670` ran setup, checkout, Node setup, locked dependency install and `npm run ci:gate`; all completed successfully.
+- Retrieved job log confirms `TESTS=PASS`, `TEST_COUNT=342`, `SECURITY=PASS`, `DEPENDENCY_AUDIT=PASS`, `PYTHON_COMPILE=PASS`, `DIFF_CHECK=PASS`, `CI_GATE=PASS`. This is fresh hosted-runner evidence, not local Termux evidence.
+- Security Audit [run #42342797681](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42342797681) **PASS (executed)**: Gitleaks, Semgrep, Trivy and OSV PR scan all completed successfully. OSV Full Scan was skipped for this pull-request event.
+- The earlier ACEP failure [run #42172231299](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42172231299) on older status head `3119470b...` did not reproduce on the current status head. Do not claim that PR #7 caused this recovery: status PR #3 does not include PR #7's source changes, and the earlier failing assertion was not captured. Classify that historical failure as **UNDIAGNOSED / NOT REPRODUCED on current head**.
+- [PR #7](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/7), monotonic user `updated_at` fix, remains OPEN/DRAFT at `1b828ff9c55191ddc701214ea039f89b89d347e6`; it is not merged. No duplicate source patch was created.
+- No fresh annotation/log ties any current job failure to billing or spending limits; no such cause is attributed.
+
+### LudoMada — Blender revision-7 asset blocker resolved on PR #198; FPS still unaccepted
+
+- [PR #198](https://github.com/pascalnanousympathie-alt/LudoMada/pull/198) current head `408525a152d333ffcdb85a4a17ab044132cfebf9`, branch `feat/gameplay-blender-chrome-trays-r5-20261106`, base feature branch `feat/gameplay-blender-environment-runtime-20261105` at `d1df54e4a9491d08862dd374cebf64df29d569ac`. PR remains OPEN/DRAFT and is stacked, not based directly on main.
+- Exact-head workflow runs were found by querying commit `408525a...`:
+  - Android Emulator/Ramus [#42177835755](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42177835755) **PASS (executed)**; job `127761287202`.
+  - Android UI Instrumentation [#42177835748](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42177835748) **PASS (executed)**; job `127760322866`, including API 30 and Android 8.1/API 27 connected tests and evidence preservation.
+  - Security Audit [#42177836249](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42177836249) **PASS (executed)**: Gitleaks, Semgrep, Trivy and OSV PR scan pass; OSV Full Scan skipped on PR event.
+  - Framebuffer Readback Contract [#42177835854](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42177835854) **PASS (executed)**.
+- The exact Ramus job log [#127761287202](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42177835755) now confirms `sourceSceneRevision=7`, gameplay environment `meshCount=13`, `trays=4`, `archiveParts=35`, and `runtimePackaged=true`. Runtime assertions report GLES3 PBR, hero 6 parts, board 95 parts, gameplay environment 13 parts, and **Blender revision-7 batch/tray contract PASS**. The run also passed 2P/3P/4P turn rotation, dice-six/reroll guard, pawn taps/replay, Home/Online/Offline navigation, and 1920×1072 RGB565 Home fallback; final marker `RAMUS_SMOKE_PASS`.
+- PR #198's changed-file list independently confirms 35 revision-7 binary source parts, manifest/optimization-budget updates, loader/material changes and asset packaging tests. Thus the prior missing-revision-7-asset blocker is **RESOLVED ON THIS PR HEAD**, not on main. The PR remains draft/stacked; no merge or deployment.
+- LudoMada main scheduled production runtime watch [#42328162687](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42328162687) remains **PASS (executed)** on main `158d77d...`.
+- Renderer telemetry capture remains restored by PR #204 head `3133e1992db7b52f667fe2207e4192da3261d256`, but the latest documented SwiftShader sample is only 5.25 FPS across 11 frame intervals, with GPU time not measured. This is not Honor 8X/Mali hardware evidence. **FPS is still NOT STABLE / NOT ACCEPTED**; no fresh hardware profile was run.
+- The 10k-RPS capacity gate remains **NOT CERTIFIED**: independent load generation and owner-approved staging are still required. Do not repeat the old co-located benchmark unchanged.
+
+### Nanoumada and Nanou Browser — keep app and agent distinct
+
+- Nanoumada main remains `7acac6037b574160d60dd7b58fe0de96c7d63578`. Latest run [#42190328819](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/42190328819) is the scheduled stale-issue workflow **PASS**, not app CI. No fresh app-CI run was observed on current main. Vercel production and PR #13/#14 previews remain READY; production has 0 runtime-error groups / 24h.
+- Nanou Browser Android branch remains `android-alternative` at `a504f7fcd18cd190a12dfee47a44a7d23d496900`. Latest branch-specific Android CI is still [#39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214), created 2026-10-18; no newer Android branch run exists in the branch-filtered workflow list. Its job `117777417291` is failed and the connected job-detail wrapper returns no step data. Earlier exact job metadata recorded `runner_id=0`, blank runner and `steps=[]`; this is **NOT RUN / PRE-RUNNER**, not proof of an Android compilation failure.
+- Browser-agent PR [#2](https://github.com/pascalnanousympathie-alt/nanou-browser/pull/2) remains OPEN/DRAFT, head `e1e2163c8e6725c3840bcde4fc210cc4a34ea7df`, base `android-alternative` at `ece5cd9f00578ec50c10e43a71f9dc0c2b313833`. Agent PR CI [#39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478) and agent service CI [#39778777356](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778777356) **PASS** on the agent head, but do not validate Android.
+- Current PR #2 file list still adds agent-service files and a CircleCI config, removes `.github/workflows/android-ci.yml`, and modifies Android `app/build.gradle` and `BrowserActivity.java`. This is a confirmed boundary conflict. Keep the Android app and browser-agent work separate; do not merge this PR until the owner selects a separate repository or an approved non-Android base. No CircleCI execution was verified.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+
+- Main refs above are unchanged. Latest main scheduled Security Audits remain:
+  - RamiMada [#41532768334](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/41532768334) **PASS**, 2026-11-02.
+  - LotoMada [#41532756560](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/41532756560) **PASS**, 2026-11-02.
+  - DominoMada [#41532804966](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/41532804966) **PASS**, 2026-11-02.
+  - PC-Free [#41532725343](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/41532725343) **PASS**, 2026-11-02.
+- Their Android build/rules PR checks from 2026-11-01 remain PASS; no newer relevant main app-build/security run was returned in the latest six-run snapshots. CircleCI fallback PRs are configuration-only; no authenticated CircleCI project/run route was available.
+
+### Vercel — current deployment and 24-hour runtime-error metadata
+
+- Mada Commander public MCP canonical: production deployment [`dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q`](https://vercel.com/nanou3/mada-commander-public-mcp/8kUAkAshjsGJdx6fvqz3k93oJh4q) **READY**, source LudoMada/main SHA `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246`; 0 runtime-error groups / 24h.
+- Mada Commander auto/fail-closed: production deployment [`dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT`](https://vercel.com/nanou3/mada-commander-public-mcp-auto/4YnMfsrE86PeXjNf1VseZp1ZfgvT) **READY**, source LudoMada/main SHA `158d77d3443564bb3774ee5949b09f1309d1132b`. Eight grouped 503 errors remain in the last 24h; latest sample `2026-11-07T02:13:53Z`, route `/api/router`, OAuth stage `database_ready`. Main runtime watch #42328162687 passed the expected fail-closed health/MCP/OAuth checks. Classify **EXPECTED FAIL-CLOSED / OWNER DB-OAUTH CONFIG BLOCKED**, not an unverified regression. No database or OAuth setting was changed.
+- Nanoumada production deployment [`dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf`](https://vercel.com/nanou3/nanoumada/3ARF5uGjmpH356JWQXWXjUbUYAXf) **READY** on main SHA `7acac603...`; 0 runtime-error groups / 24h. PR previews [`dpl_684RMsu3iziLotTA6Vz8ZEY592sS`](https://vercel.com/nanou3/nanoumada/684RMsu3iziLotTA6Vz8ZEY592sS) and [`dpl_CfCydFkm5CEedqRD3MVTpqxfiRJ7`](https://vercel.com/nanou3/nanoumada/CfCydFkm5CEedqRD3MVTpqxfiRJ7) are READY.
+- Nanou Browser CI lab has no deployments and 0 runtime-error groups / 24h.
+- Personal-controller UI deployment [`dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN`](https://vercel.com/nanou3/ludomada-commander-control/FzcDcYA9wmXzn5Y2AX9jdAgKnofN) is READY, has no Git SHA metadata and 0 runtime-error groups / 24h. This does not establish local controller process/device readiness.
+- The personal local controller was not probed in this pass: the only known remote route is Desktop Commander, and Nanou48 has only 4% quota remaining. No task-specific need justified spending that quota; noVNC was not restarted.
+
+### Outcomes, blockers and safeguards
+
+- **PASS:** current eight main/default refs; central branch and PR state; current mega-project-apps status PR ACEP/security gates; exact Ludo PR #198 Ramus/UI/framebuffer/security gates; Vercel deployment and 24h runtime-error inventory; status file reread before append.
+- **RESOLVED ON PR #198 ONLY:** revision-7 Blender gameplay environment packaging and Ramus acceptance.
+- **PARTIAL:** Ludo renderer telemetry is captured, but FPS is not stable/accepted and no Honor 8X hardware profile is available.
+- **BLOCKED:** Mada Commander auto needs owner-approved DB/OAuth setup; 10k-RPS needs independent load generation plus authorized staging; Nanou Browser Android needs a real authorized runner; browser-agent PR #2 needs an owner-approved separate repository/base; local controller online state remains unverified.
+- **UNDIAGNOSED / NOT REPRODUCED:** earlier mega-project-apps users-test failure on older status head did not reproduce on current status head; no underlying historical assertion was retrieved.
+- No application source patch was justified: the Ludo asset fix is already in an exact-head green PR; other remaining blockers require owner approval, provider authorization, a separate runner, or physical-device evidence. No merge, production deployment/promotion, payment/wallet configuration change, secret read/rotation, security-gate weakening, destructive action, dirty local worktree mutation, Railway/TinyFish use, Desktop Commander call, or noVNC restart occurred. Do not create a status-only CI chase for this append.
