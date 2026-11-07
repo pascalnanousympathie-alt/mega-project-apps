@@ -2558,74 +2558,74 @@ This pass began by re-reading this status ledger and [PARALLEL_ORCHESTRATION_RUN
 
 ### Control-plane preflight and repository refs
 
-- Read this file and \`PARALLEL_ORCHESTRATION_RUNBOOK.md\` first on \`ops/central-project-status-20261020\`. Pre-update branch HEAD was \`3119470bfa4ab520d376b7ea645e9b258454e05d\`; status blob was \`ef3288c8b3177835ed2eed27268a694f1f2470f6\`; runbook blob remains \`e5d9e149331fb400f3ede237639d21e429c89559\`.
-- \`mega-project-apps\` main \`3b86e64019dfe2d1945b5d44a09bc25d50f55279\`; 7 open PRs. Status PR #3 is OPEN/DRAFT at the pre-update status head, base main.
-- \`LudoMada\` main \`158d77d3443564bb3774ee5949b09f1309d1132b\`; 74 open PRs.
-- \`Nanoumada\` main \`7acac6037b574160d60dd7b58fe0de96c7d63578\`; 2 open PRs.
-- \`nanou-browser\` default branch \`android-alternative\` \`a504f7fcd18cd190a12dfee47a44a7d23d496900\`; 2 open PRs.
-- \`RamiMada\` main \`fe3152c0847e5ae87337352d00974a33ed9ec5b3\`; 3 open PRs.
-- \`LotoMada\` main \`03f3ba21753a6a0454270eef983c438e6b8e83bf\`; 3 open PRs.
-- \`DominoMada\` main \`31481559c78c421ace5237b0275d595223981707\`; 3 open PRs.
-- \`PC-Free\` main \`e66dde7383ea93beb20ab398db9ad86f116cb9cc\`; 1 open PR.
-- No standalone GitHub repository was found at \`pascalnanousympathie-alt/mada-commander-public-mcp\` (repository lookup returned 404). The public MCP and personal-controller UI are separately represented by Vercel projects; deployment metadata links the MCP projects to the LudoMada repository. Do not merge these scopes.
+- Read this file and `PARALLEL_ORCHESTRATION_RUNBOOK.md` first on `ops/central-project-status-20261020`. Pre-update branch HEAD was `3119470bfa4ab520d376b7ea645e9b258454e05d`; status blob was `ef3288c8b3177835ed2eed27268a694f1f2470f6`; runbook blob remains `e5d9e149331fb400f3ede237639d21e429c89559`.
+- `mega-project-apps` main `3b86e64019dfe2d1945b5d44a09bc25d50f55279`; 7 open PRs. Status PR #3 is OPEN/DRAFT at the pre-update status head, base main.
+- `LudoMada` main `158d77d3443564bb3774ee5949b09f1309d1132b`; 74 open PRs.
+- `Nanoumada` main `7acac6037b574160d60dd7b58fe0de96c7d63578`; 2 open PRs.
+- `nanou-browser` default branch `android-alternative` `a504f7fcd18cd190a12dfee47a44a7d23d496900`; 2 open PRs.
+- `RamiMada` main `fe3152c0847e5ae87337352d00974a33ed9ec5b3`; 3 open PRs.
+- `LotoMada` main `03f3ba21753a6a0454270eef983c438e6b8e83bf`; 3 open PRs.
+- `DominoMada` main `31481559c78c421ace5237b0275d595223981707`; 3 open PRs.
+- `PC-Free` main `e66dde7383ea93beb20ab398db9ad86f116cb9cc`; 1 open PR.
+- No standalone GitHub repository was found at `pascalnanousympathie-alt/mada-commander-public-mcp` (repository lookup returned 404). The public MCP and personal-controller UI are separately represented by Vercel projects; deployment metadata links the MCP projects to the LudoMada repository. Do not merge these scopes.
 
 ### mega-project-apps — exact current CI failure
 
-- Status PR #3 head before this documentation update: \`3119470bfa4ab520d376b7ea645e9b258454e05d\`.
-- ACEP CI [run #42172231299](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42172231299) **FAIL (executed)**. Job \`127742485291\` ran setup, checkout, Node setup and \`npm ci\) successfully; dependency audit reported 0 vulnerabilities.
-- First failing workflow step: \`Run CI gate\`; command \`npm run ci:gate\` → \`node scripts/ci-gate.js\` → \`npm test\`. The test wrapper reports \`tests/users.test.js\` child status 1 and \`CI_GATE=FAIL\`; it does not expose the underlying assertion/stack. Exact root assertion remains **UNDIAGNOSED**.
+- Status PR #3 head before this documentation update: `3119470bfa4ab520d376b7ea645e9b258454e05d`.
+- ACEP CI [run #42172231299](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42172231299) **FAIL (executed)**. Job `127742485291` ran setup, checkout, Node setup and `npm ci` successfully; dependency audit reported 0 vulnerabilities.
+- First failing workflow step: `Run CI gate`; command `npm run ci:gate` → `node scripts/ci-gate.js` → `npm test`. The test wrapper reports `tests/users.test.js` child status 1 and `CI_GATE=FAIL`; it does not expose the underlying assertion/stack. Exact root assertion remains **UNDIAGNOSED**.
 - Security Audit [run #42172231726](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42172231726) **PASS**; Gitleaks, Trivy, Semgrep and OSV PR scan passed; OSV Full Scan was skipped for the PR event.
-- Existing [PR #7](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/7), head \`1b828ff9c55191ddc701214ea039f89b89d347e6\), already contains the monotonic \`updated_at\` fix and deterministic same-millisecond regression test. It is a separate OPEN/DRAFT PR against main. Reuse/review it; do not create a duplicate fix. The current log contains no fresh billing/spending annotation, so no billing cause is attributed.
+- Existing [PR #7](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/7), head `1b828ff9c55191ddc701214ea039f89b89d347e6\), already contains the monotonic `updated_at` fix and deterministic same-millisecond regression test. It is a separate OPEN/DRAFT PR against main. Reuse/review it; do not create a duplicate fix. The current log contains no fresh billing/spending annotation, so no billing cause is attributed.
 
 ### LudoMada — telemetry capture restored; FPS remains unaccepted
 
-- Main scheduled production runtime watch [run #42328162687](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42328162687) **PASS (executed)** on main \`158d77d...\`. Job \`128268227296\` passed canonical health, MCP \`initialize\`/ \`tools/list\`, canonical OAuth preflight, and the auto deployment's expected fail-closed health/MCP/OAuth checks.
-- [PR #204](https://github.com/pascalnanousympathie-alt/LudoMada/pull/204) is OPEN/DRAFT, exact head \`3133e1992db7b52f667fe2207e4192da3261d256\`, based on PR #203 head \`a6d6bdf358758c43b55b83c76749a26f3d57f3ed\`. PR #203 is OPEN/DRAFT against main.
-- Ramus [run #42279217376](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217376), job \`128103462388\), **PASS (executed)**. APK build, 3D asset packaging, framebuffer contract, and the full Ramus smoke passed. Log ends \`RAMUS_SMOKE_PASS\`.
-- Exact Ramus gameplay evidence: GLES3 PBR; hero 6 parts; board 95 parts; Blender r7 environment 13 parts; \`ENV_R7_COMPLETE=1\`; board batches 95→9; pawn batches 5→1; environment batches 13→7; six die-face meshes with one pip draw per die. Two-, three- and four-player rotation, dice-six, reroll guard, 3D pawn taps/movement/replay, Home/Online/Offline navigation, and landscape 4-player gameplay passed. Static Home reference marker passed at 1920×1072 RGB565; gameplay viewport 1419×424.
+- Main scheduled production runtime watch [run #42328162687](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42328162687) **PASS (executed)** on main `158d77d...`. Job `128268227296` passed canonical health, MCP `initialize`/ `tools/list`, canonical OAuth preflight, and the auto deployment's expected fail-closed health/MCP/OAuth checks.
+- [PR #204](https://github.com/pascalnanousympathie-alt/LudoMada/pull/204) is OPEN/DRAFT, exact head `3133e1992db7b52f667fe2207e4192da3261d256`, based on PR #203 head `a6d6bdf358758c43b55b83c76749a26f3d57f3ed`. PR #203 is OPEN/DRAFT against main.
+- Ramus [run #42279217376](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217376), job `128103462388\), **PASS (executed)**. APK build, 3D asset packaging, framebuffer contract, and the full Ramus smoke passed. Log ends `RAMUS_SMOKE_PASS`.
+- Exact Ramus gameplay evidence: GLES3 PBR; hero 6 parts; board 95 parts; Blender r7 environment 13 parts; `ENV_R7_COMPLETE=1`; board batches 95→9; pawn batches 5→1; environment batches 13→7; six die-face meshes with one pip draw per die. Two-, three- and four-player rotation, dice-six, reroll guard, 3D pawn taps/movement/replay, Home/Online/Offline navigation, and landscape 4-player gameplay passed. Static Home reference marker passed at 1920×1072 RGB565; gameplay viewport 1419×424.
 - Ramus artifacts: debug APK [#13534493499](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217376/artifacts/13534493499), screenshots/evidence [#13534543366](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217376/artifacts/13534543366), smoke log [#13534473399](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217376/artifacts/13534473399).
-- Renderer telemetry is now captured from the gameplay accessibility tree, not dependent on Android app-tag logcat. \`RENDER_TELEMETRY=1\) and usable frame/scene/pipeline samples were captured. Renderer was Google SwiftShader / OpenGL ES 3.0 on the cloud emulator. Active FPS was 5.25 over only 11 frame intervals; frame interval P50/P95 218.28/234.03 ms; GL CPU submission P50/P95 18.12/84.03 ms; scene CPU P50/P95 16.62/82.61 ms; backdrop CPU P95 70.75 ms; particle upload P50/P95 0.12/1.90 ms. \`GPU_TIME=NOT_MEASURED\`.
+- Renderer telemetry is now captured from the gameplay accessibility tree, not dependent on Android app-tag logcat. `RENDER_TELEMETRY=1\) and usable frame/scene/pipeline samples were captured. Renderer was Google SwiftShader / OpenGL ES 3.0 on the cloud emulator. Active FPS was 5.25 over only 11 frame intervals; frame interval P50/P95 218.28/234.03 ms; GL CPU submission P50/P95 18.12/84.03 ms; scene CPU P50/P95 16.62/82.61 ms; backdrop CPU P95 70.75 ms; particle upload P50/P95 0.12/1.90 ms. `GPU_TIME=NOT_MEASURED`.
 - **FPS is not stable or accepted.** This is a short software-emulator sample, not Honor 8X Mali hardware evidence. No improvement is claimed from 5.25 FPS versus earlier short SwiftShader samples. Next profiling target is backdrop CPU P95 and GL CPU submission P95; retain visual quality and effects until measured evidence supports a change.
-- Android UI Instrumentation [run #42279217490](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217490), job \`128103462776\), **PASS**: Kotlin/JVM tests and instrumentation APK build, API 30 connected tests, screenshot/diagnostic preservation, Android 8.1/API 27 connected tests and evidence preservation all completed successfully.
+- Android UI Instrumentation [run #42279217490](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217490), job `128103462776\), **PASS**: Kotlin/JVM tests and instrumentation APK build, API 30 connected tests, screenshot/diagnostic preservation, Android 8.1/API 27 connected tests and evidence preservation all completed successfully.
 - Security Audit [run #42279217961](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42279217961) **PASS**: Semgrep, Gitleaks, Trivy and OSV PR scan passed; OSV Full Scan skipped for the PR event.
-- Earlier Semgrep failure [run #42277499721](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42277499721) was executed, not a pre-runner failure. First failing step \`Scan source code\`; command \`semgrep scan --error --config auto --json-output semgrep-results.json\`; one blocking \`javascript.lang.security.audit.detect-non-literal-regexp\` finding in \`scripts/ramus-smoke.mjs:98\` for a dynamically constructed \`RegExp\`. PR #204 replaces that extractor with fixed delimiter/string scanning; the exact-head Security Audit #42279217961 passes. No scanner rule was suppressed.
-- **Integration risk:** PR #204 is stacked on PR #203. GitHub compare for PR #203 head \`a6d6bdf...\` against main reports \`diverged\`, 311 commits ahead and 4 behind, merge base \`c3bb4d400d7d762d8f1f2a0c0094a2016fbfcdb8\`. Do not treat the PR's mergeable flag or its green tests as permission to merge; review the full stack/base and changed-file scope before any integration.
+- Earlier Semgrep failure [run #42277499721](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42277499721) was executed, not a pre-runner failure. First failing step `Scan source code`; command `semgrep scan --error --config auto --json-output semgrep-results.json`; one blocking `javascript.lang.security.audit.detect-non-literal-regexp` finding in `scripts/ramus-smoke.mjs:98` for a dynamically constructed `RegExp`. PR #204 replaces that extractor with fixed delimiter/string scanning; the exact-head Security Audit #42279217961 passes. No scanner rule was suppressed.
+- **Integration risk:** PR #204 is stacked on PR #203. GitHub compare for PR #203 head `a6d6bdf...` against main reports `diverged`, 311 commits ahead and 4 behind, merge base `c3bb4d400d7d762d8f1f2a0c0094a2016fbfcdb8`. Do not treat the PR's mergeable flag or its green tests as permission to merge; review the full stack/base and changed-file scope before any integration.
 - PR #201's scene-telemetry duration-unit test correction remains a separate draft stacked on PR #200; no new exact-head CI result was established for that PR in this pass.
 - PR #162's 10k-RPS gate remains **NOT CERTIFIED**; no identical co-located benchmark rerun was performed. Independent load generation and owner-approved staging remain prerequisites.
 
 ### Nanoumada web app
 
-- Main remains \`7acac6037b574160d60dd7b58fe0de96c7d63578\`; PR #13 and #14 remain OPEN (one draft, one ready-for-review).
+- Main remains `7acac6037b574160d60dd7b58fe0de96c7d63578`; PR #13 and #14 remain OPEN (one draft, one ready-for-review).
 - Latest main workflow [#42190328819](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/42190328819) is the scheduled stale-issue automation **PASS**, not application CI. No new app-CI execution on current main was found; do not report this as app test coverage.
-- Vercel production deployment \`dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf\` is READY on main; 0 runtime-error groups / 24h. PR #13/#14 preview deployments remain READY in the deployment inventory.
+- Vercel production deployment `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf` is READY on main; 0 runtime-error groups / 24h. PR #13/#14 preview deployments remain READY in the deployment inventory.
 
 ### Nanou Browser — Android app and browser agent remain conflated in PR #2
 
-- Android default branch remains \`android-alternative\` at \`a504f7fcd18cd190a12dfee47a44a7d23d496900\`. Latest Android CI [#39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214) remains a failure with the previously recorded \`runner_id=0\`, blank runner and \`steps=[]\`: execution did not start; this is not proof of Android compilation/test failure. No newer Android-branch run was found.
-- Browser-agent PR #2 head \`e1e2163c8e6725c3840bcde4fc210cc4a34ea7df\` is based on \`android-alternative\` at \`ece5cd9f00578ec50c10e43a71f9dc0c2b313833\). Its changed-file list adds the agent service and service workflow, **removes** \`.github/workflows/android-ci.yml\`, and also modifies Android \`app/build.gradle\` and \`BrowserActivity.java\`. This is direct evidence of a boundary conflict, not an isolated browser-agent PR.
+- Android default branch remains `android-alternative` at `a504f7fcd18cd190a12dfee47a44a7d23d496900`. Latest Android CI [#39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214) remains a failure with the previously recorded `runner_id=0`, blank runner and `steps=[]`: execution did not start; this is not proof of Android compilation/test failure. No newer Android-branch run was found.
+- Browser-agent PR #2 head `e1e2163c8e6725c3840bcde4fc210cc4a34ea7df` is based on `android-alternative` at `ece5cd9f00578ec50c10e43a71f9dc0c2b313833\). Its changed-file list adds the agent service and service workflow, **removes** `.github/workflows/android-ci.yml`, and also modifies Android `app/build.gradle` and `BrowserActivity.java`. This is direct evidence of a boundary conflict, not an isolated browser-agent PR.
 - Agent PR/service CI [#39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478) / [#39778777356](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778777356) remain PASS on agent head; they are not Android APK evidence. Keep PR #2 unmerged until an owner-approved separate repository or dedicated non-Android base is chosen.
 - Vercel Nanou Browser CI lab has no deployments and 0 runtime-error groups / 24h.
 
 ### RamiMada, LotoMada, DominoMada and PC-Free
 
-- RamiMada main \`fe3152c0847e5ae87337352d00974a33ed9ec5b3\`: latest main Security Audit [#41532768334](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/41532768334) PASS.
-- LotoMada main \`03f3ba21753a6a0454270eef983c438e6b8e83bf\`: latest main Security Audit [#41532756560](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/41532756560) PASS.
-- DominoMada main \`31481559c78c421ace5237b0275d595223981707\`: latest main Security Audit [#41532804966](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/41532804966) PASS.
-- PC-Free main \`e66dde7383ea93beb20ab398db9ad86f116cb9cc\`: latest main Security Audit [#41532725343](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/41532725343) PASS.
+- RamiMada main `fe3152c0847e5ae87337352d00974a33ed9ec5b3`: latest main Security Audit [#41532768334](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/41532768334) PASS.
+- LotoMada main `03f3ba21753a6a0454270eef983c438e6b8e83bf`: latest main Security Audit [#41532756560](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/41532756560) PASS.
+- DominoMada main `31481559c78c421ace5237b0275d595223981707`: latest main Security Audit [#41532804966](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/41532804966) PASS.
+- PC-Free main `e66dde7383ea93beb20ab398db9ad86f116cb9cc`: latest main Security Audit [#41532725343](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/41532725343) PASS.
 - No source/head changes or newer relevant CI runs were observed for these four repositories; prior exact-head evidence was reused. Their CircleCI fallback PRs remain configuration-only; no authenticated CircleCI project/run route was confirmed.
 
 ### Vercel deployments and runtime errors — team nanou3
 
-- Mada Commander public MCP canonical: production deployment \`dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q\` READY, linked to LudoMada main source \`f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246\); 0 grouped runtime errors / 24h.
-- Mada Commander public MCP auto: production deployment \`dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT\` READY, linked to LudoMada main \`158d77d...\); 8 grouped 503 error clusters / 24h on \`/api/router\`, OAuth \`google-start\`, stage \`database_ready\`; latest sample \`2026-11-07T02:13:53Z\`. The fresh main runtime-watch #42328162687 explicitly passed the auto deployment's expected fail-closed health, MCP and OAuth behavior. Classify **EXPECTED FAIL-CLOSED / OWNER CONFIG BLOCKED**, not an unexpected application regression. No DB/OAuth configuration was changed.
-- Nanoumada production: \`dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf\` READY, main SHA \`7acac603...\`; 0 grouped runtime errors / 24h.
+- Mada Commander public MCP canonical: production deployment `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q` READY, linked to LudoMada main source `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246\); 0 grouped runtime errors / 24h.
+- Mada Commander public MCP auto: production deployment `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT` READY, linked to LudoMada main `158d77d...\); 8 grouped 503 error clusters / 24h on `/api/router`, OAuth `google-start`, stage `database_ready`; latest sample `2026-11-07T02:13:53Z`. The fresh main runtime-watch #42328162687 explicitly passed the auto deployment's expected fail-closed health, MCP and OAuth behavior. Classify **EXPECTED FAIL-CLOSED / OWNER CONFIG BLOCKED**, not an unexpected application regression. No DB/OAuth configuration was changed.
+- Nanoumada production: `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf` READY, main SHA `7acac603...`; 0 grouped runtime errors / 24h.
 - Nanou Browser CI lab: no deployment; 0 grouped runtime errors / 24h.
-- Personal-controller UI: \`dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN\` READY, no Git SHA metadata; 0 grouped runtime errors / 24h. This does not prove the local controller device is online.
+- Personal-controller UI: `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN` READY, no Git SHA metadata; 0 grouped runtime errors / 24h. This does not prove the local controller device is online.
 - The Vercel runtime-error aggregation route returned usable 24-hour groups. The separate individual runtime-log query failed before returning records; that is a log-query failure, not evidence of no logs.
 
 ### Personal local controller and safeguards
 
-- Checked the distinct Mercia Desktop Commander account before any device call: \`remote_calls_left_pct=100\). Its one listed device \`localhost\` is **OFFLINE**, last seen 233 hours ago. No remote command was started. This is separate from Nanou48's previously recorded low quota; Nanou48 was not used.
+- Checked the distinct Mercia Desktop Commander account before any device call: `remote_calls_left_pct=100`. Its one listed device `localhost` is **OFFLINE**, last seen 233 hours ago. No remote command was started. This is separate from Nanou48's previously recorded low quota; Nanou48 was not used.
 - noVNC was not restarted. No Railway or TinyFish route was used. CircleCI remains unverified because no authenticated project/run route was exposed.
 - **PASS:** central status/runbook preflight; exact repository refs and open-PR inventory; exact CI job/step/log inspection for the fresh mega-project-apps failure; exact LudoMada Ramus/UI/security job evidence; Vercel deployment/error aggregation; Mercia quota/device metadata.
 - **PARTIAL:** LudoMada telemetry capture and full Ramus gameplay smoke now pass, but FPS is not stable/accepted and the 311-ahead/4-behind PR stack needs integration review.
