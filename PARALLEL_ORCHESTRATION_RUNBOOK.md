@@ -47,13 +47,17 @@ Never promote PASS based only on a model response, successful build, or unrelate
 ## Update the control plane
 Update PROJECT_STATUS.md after every material test/fix/PR state change. Each entry must include timestamp, repository/branch/HEAD, action, test output or evidence link, result, unresolved risks and next action.
 
-## Current first actions (in order)
-1. Protect uncommitted state in ~/LudoMada, ~/NanouBrowser, and ~/projects/nanoumada; inspect diffs and back up before any synchronization.
-2. Diagnose latest CI test failure in Nanoumada and Android CI failure in Nanou Browser.
-3. Retrieve scanner job output for mega-project-apps, LudoMada, RamiMada, LotoMada and DominoMada; separate real findings from scanner/network/runtime failures without disabling gates.
-4. Review current open PRs and their full required checks rather than merging any.
-5. Synchronize local games against remote branches only after checkpointing and verifying the exact repository/branch.
-6. Resume work in independent tracks while noVNC remains parked until explicit instruction.
+## Current first actions (updated 2026-11-08)
+
+1. **LudoMada FPS acceptance:** use PR #205's exact-head SwiftShader telemetry as a diagnostic sample only. It reports 5.32 FPS, 21 frame intervals and GPU_TIME=NOT_MEASURED; frame P95 is 244.08 ms. Do not claim stable FPS or make another speculative renderer patch. The next valid acceptance requires a sustained, repeatable profile on an authorized Honor 8X/Mali device or equivalent hardware runner, with the same scene/build and preserved telemetry.
+2. **LudoMada stacked performance PRs:** review the dependency chain #203 → #204 → #205 and their exact heads/checks as one integration plan. Keep all draft PRs unmerged until an owner reviews the full diff/base and the hardware performance acceptance is met.
+3. **Mada Commander deployments:** keep canonical public MCP, auto/fail-closed deployment, personal-controller UI and local controller process as separate components. Auto's 503/ready=false is expected while production DB/OAuth are intentionally absent. Any production DB/OAuth setup requires owner authorization; do not read or change secret values.
+4. **Nanou Browser separation:** Android app stays on android-alternative; browser-agent PR #2 is not isolated because it removes the Android CI workflow and changes Android files. Keep it unmerged until the owner selects a separate repository or approved non-Android base. Android CI has no newer branch run than 2026-10-18; use only a supported authorized runner, not an unverified CircleCI configuration.
+5. **Nanoumada:** distinguish scheduled stale-issue automation from app CI. Main has no fresh app-CI run; PR #13/#14 preview deployments are READY. Do not label stale-issue PASS as application-test coverage.
+6. **RamiMada/LotoMada/DominoMada/PC-Free:** retain the 2026-11-02 main security PASS and 2026-11-01 Android build/rules PR PASS as dated evidence. Do not rerun unchanged suites merely to refresh timestamps; run relevant app gates after a source change or an explicitly authorized dispatch.
+7. **mega-project-apps:** status PR #3 exact head 78224bc has executed ACEP and Security PASS. PR #7 already carries the monotonic updated_at fix and passes its exact-head gate. PR #8's executed ACEP failure is in tests/users.test.js but the assertion is missing; review PR #7 as a possible dependency before changing PR #8. Keep both drafts unmerged. PR #8's staging-provider change remains draft and has no deployment authorization.
+8. **Capacity and local controller:** 10k-RPS needs an independent load generator plus owner-approved staging. Personal local controller remains unverified; do not spend the remaining Desktop Commander quota or restart noVNC without a newly proven need and explicit authorization.
+9. **Control-plane hygiene:** preserve all dirty local worktrees; keep GitHub Actions, CircleCI, Vercel and local-device evidence separate. No status-only CI chase after a documentation append.
 
 ## Security and operations
 - Keep repository credentials, .env, OAuth tokens, API keys, signing keys, wallet private keys and payment secrets out of logs, prompts, commits and status reports.
