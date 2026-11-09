@@ -98,3 +98,9 @@ Update PROJECT_STATUS.md after every material test/fix/PR state change. Each ent
 6. **RamiMada/LotoMada/DominoMada/PC-Free:** retain the dated 2026-11-02 main security PASS and earlier PR build/security PASS evidence; no newer relevant runs or source changes. Do not rerun unchanged suites merely to refresh timestamps.
 7. **Capacity/provider fallback:** no authenticated CircleCI execution route was found; existing CircleCI PR configs are not proof of an available runner. 10k-RPS still needs independent load generation and owner-approved staging. Personal local controller needs fresh online device evidence. Preserve all dirty local worktrees.
 8. **Control-plane hygiene:** this pass updated only the central status and runbook on the existing status branch. No source-code patch, merge, production deployment/promotion, payment/wallet mutation, secret access/rotation, security-gate weakening or destructive operation.
+
+
+## Provider diagnostic addendum (2026-11-09 08:58 EAT)
+
+- Keep the GitHub Actions ACEP failure on pre-update status head fe7f0a1 separate from the Buildkite ACEP check #128998953556 (Buildkite build #388). Buildkite reports FAIL with zero annotations; its log page is inaccessible through available read-only routes. Do not infer that it shares the GitHub Actions tests/users.test.js root cause.
+- Required next diagnostic: obtain read-only Buildkite access to pipeline pascalnanousympathie-alt/mega-project-apps build #388 or an exported log. No Buildkite retry or pipeline change is authorized. The status branch has advanced to 35419244 with documentation-only updates; do not launch a CI chase solely for that append.
