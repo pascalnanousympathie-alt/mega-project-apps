@@ -3042,3 +3042,74 @@ This pass began by re-reading this status ledger and [PARALLEL_ORCHESTRATION_RUN
 - **BLOCKED:** Honor 8X/Mali hardware profile; owner-provided sanitized Gitleaks reports; Render workspace selection before resolving service `nanou-browser`; local Termux/PRoot connection for Grok MCP doctor; owner-approved DB/OAuth setup; independent load generator plus staging approval for 10k-RPS.
 - **UNDIAGNOSED:** Nanou Browser Android runner/log failure; exact Gitleaks findings; no inference from historical billing annotations.
 - No application source patch was justified: existing Ludo performance PRs are still being measured and fail the same gate, the timestamp fix already exists in mega-project-apps PR #7, and the Gitleaks findings require a sanitized owner report before any remediation. No merge, production deployment/promotion, payment/wallet mutation, secret read/rotation, security-gate weakening, destructive operation, dirty local worktree mutation, CircleCI execution, Railway/TinyFish use, Desktop Commander device command or noVNC restart occurred.
+
+
+## Daily coordination refresh — 2026-11-10 (EAT)
+
+### Control-plane snapshot
+- Started from existing status branch ops/central-project-status-20261020, HEAD b414fe8609bdfd8aa1a38c276f48246e128e51d6. At read time PROJECT_STATUS.md blob was e2681d4b22de6ead42b212f448d5390fa21871e4; PARALLEL_ORCHESTRATION_RUNBOOK.md blob was 30e29530e0319cd3b0ab67f23ea0f8934c764339.
+- Status PR #3 remains OPEN/DRAFT. This refresh is documentation-only; no status-only CI chase is planned.
+- Default refs/open PR inventory:
+  - mega-project-apps/main 3b86e64019dfe2d1945b5d44a09bc25d50f55279 — 8 open PRs after creating PR #9.
+  - LudoMada/main 158d77d3443564bb3774ee5949b09f1309d1132b — 80 open PRs.
+  - Nanoumada/main 7acac6037b574160d60dd7b58fe0de96c7d63578 — 2 open PRs.
+  - nanou-browser/android-alternative a504f7fcd18cd190a12dfee47a44a7d23d496900 — 2 open PRs. Android app and browser-agent remain separate workstreams.
+  - RamiMada/main fe3152c0847e5ae87337352d00974a33ed9ec5b3 — 3 open PRs.
+  - LotoMada/main 03f3ba21753a6a0454270eef983c438e6b8e83bf — 3 open PRs.
+  - DominoMada/main 31481559c78c421ace5237b0275d595223981707 — 3 open PRs.
+  - PC-Free/main e66dde7383ea93beb20ab398db9ad86f116cb9cc — 1 open PR.
+- No default branch HEAD changed versus the previous inventory. No local worktree was inspected or modified.
+
+### mega-project-apps — main Gitleaks finding and new draft PR #9
+- Main scheduled Security Audit [#42714362512](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42714362512), on main SHA 3b86e64019dfe2d1945b5d44a09bc25d50f55279: FAIL (executed) at Gitleaks. Semgrep, Trivy and OSV Full Scan passed; OSV PR Scan was skipped for the scheduled event.
+- The Gitleaks SARIF artifact metadata was inspected without printing or copying matched values. It reports exactly three generic-api-key findings, all on original commit d812c618d544d6755f9203b71ff2548543866320, in tests/crypto-ledger.test.js at lines 25, 51 and 56. Each is an idempotency_key passed to cryptoLedger.reserve in deterministic unit-test cases. This is test-only idempotency data, not an environment-loaded provider credential; no matched value is present in this status or PR.
+- Created [PR #9](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/9), OPEN/DRAFT, head b89c77a589fa88e974837b6e92decc68c6c28f62, base main. It adds only three exact historical fingerprints to .gitleaksignore and documents their test-only context. No path-wide, rule-wide, prefix or future-commit suppression was added.
+- Exact-head GitHub Actions:
+  - [ACEP CI #42765723732](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42765723732): PASS (executed); 342 tests, security script PASS, npm audit found 0 vulnerabilities, Python compile PASS, diff check PASS, CI_GATE=PASS.
+  - [Security Audit #42765723858](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42765723858): Gitleaks, Trivy, Semgrep and OSV PR Scan PASS (executed); OSV Full Scan skipped for this PR event.
+- Exact-head Buildkite checks are a separate provider result:
+  - [ACEP build #404](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/404): PASS.
+  - [Security build #405](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/405): OSV full scan, OSV PR scan and Semgrep PASS; Gitleaks and Trivy FAIL (executed).
+  - Buildkite build pages were inaccessible through the available read-only web route; no Buildkite connector is available. Exact extra authorization required: read-only access to pipeline pascalnanousympathie-alt/mega-project-apps, build #405 job logs (and #402/#403 for the status PR). Do not infer the cause or weaken either gate. PR #9 remains draft until Buildkite is diagnosed and owner review is complete.
+- Status PR #3 exact head b414fe8609bdfd8aa1a38c276f48246e128e51d6: [ACEP CI #42761733223](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42761733223) FAIL (executed) at Run CI gate; the log reports tests/users.test.js child exit 1 but omits a failing assertion/stack. GitHub Security [#42761733543](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/42761733543) PASS for Gitleaks, Trivy, Semgrep and OSV PR Scan; OSV Full Scan skipped.
+- The current tests/users.test.js source still asserts that setUserStatus changes updated_at. Existing [PR #7](https://github.com/pascalnanousympathie-alt/mega-project-apps/pull/7) implements monotonic timestamps and a fixed-clock regression; its exact-head ACEP previously passed. This strongly supports the same-millisecond timestamp race, but the current run does not expose the exact assertion. PR #7 remains OPEN/DRAFT and requires owner review; no duplicate source patch was created.
+- Buildkite status-PR checks remain separate: [ACEP build #402](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/402) FAIL; [Security build #403](https://buildkite.com/pascalnanousympathie-alt/mega-project-apps/builds/403) has Gitleaks and Trivy FAIL, Semgrep and OSV checks PASS. Annotation counts are zero; logs are not accessible through current read-only routes. No current evidence attributes these failures to GitHub billing/spending limits.
+
+### LudoMada — Gitleaks candidate and FPS acceptance
+- Main scheduled Security Audit [#42714403609](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42714403609), on main SHA 158d77d3443564bb3774ee5949b09f1309d1132b: FAIL (executed) at Gitleaks. Trivy, Semgrep and OSV Full Scan passed; OSV PR Scan was skipped.
+- The Gitleaks SARIF metadata contains exactly eight findings in three test files: tools/mada-commander-public-mcp/tests/mcp-integrations.test.mjs lines 200–202; tools/mada-commander-public-mcp/tests/command-execution.test.mjs lines 48–49; and tools/mada-commander-public-mcp/tests/public-boundary.test.mjs line 349. No matched values were printed.
+- Existing [PR #184](https://github.com/pascalnanousympathie-alt/LudoMada/pull/184), OPEN/DRAFT at head ffa78a8bd805a2d031651a1836e8827247255966, contains exactly eight commit/path/rule/line fingerprints and a review note that these are deterministic synthetic redaction-test fixtures. Its exact-head Security Audit [#41837105862](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41837105862) passed Gitleaks, Trivy, Semgrep and OSV PR Scan; OSV Full Scan was skipped for the PR event. Manual full-scan run [#41877424481](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/41877424481) also passed the scanners. The current main findings match the same eight locations/fingerprints. PR #184 is the existing candidate fix; do not duplicate it. Main remains blocked until owner review/merge.
+- Main Mada Commander runtime-watch [#42729481017](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42729481017): PASS (executed) for canonical/auto runtime and MCP/OAuth canaries. This is not Android gameplay/FPS evidence.
+- PR #210 exact head a9b3bcace2fac68fb51651280a5dd9af266b39f8: APK build [#42653430312](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42653430312), UI instrumentation [#42653453860](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42653453860) and Security [#42653454846](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42653454846) PASS (executed). Ramus [#42653454106](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/42653454106) FAIL (executed) at gameplay animation cadence: 17.58 FPS, 120 frame samples, frame P95 88.55 ms, GL CPU P95 69.98 ms, backdrop CPU P95 64.40 ms. Renderer is Google SwiftShader, not Honor 8X/Mali hardware. The required gate is at least 24 FPS and frame P95 at most 50 ms. FPS NOT STABLE / NOT ACCEPTED; require repeatable same-build/same-scene hardware telemetry. Keep PRs #203–#210 OPEN/DRAFT; do not lower the gate or speculate with another renderer patch.
+
+### Nanoumada, Nanou Browser and local controller separation
+- Nanoumada latest main workflow [#42589308546](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/42589308546): PASS (executed) for scheduled stale-issue automation only, not app CI. No new main app-CI run was found. Production and PR #13/#14 previews are READY.
+- Nanou Browser Android branch latest run [#39162120214](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39162120214): job 117777417291 returned steps=[] from the job-steps route. No Android tests executed; this is NOT RUN / UNDIAGNOSED, not a compile failure. The older runner metadata recorded runner_id=0/blank runner; the latest job response did not expose a runner ID.
+- Browser-agent PR #2 remains OPEN/DRAFT at head e1e2163c8e6725c3840bcde4fc210cc4a34ea7df, base android-alternative. Its last agent CI [#39778782478](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/39778782478) passed, but the PR changes Android files and removes the Android CI workflow. This is not Android APK evidence. Owner must select a separate repository or approved non-Android base before integration.
+- Render read-only discovery returned one workspace, “Nanou Sympathie's workspace” (ID tea-dbcugko473hc73a9kcn0). get_selected_workspace reports no workspace selected and explicitly requires user confirmation. No service listing was attempted and no nanou-browser service ID/domain was guessed. Exact next authorization: user confirms this workspace, then call Render list_services with that workspace ID.
+- Vercel personal-controller UI READY does not prove the local controller process is online. No Desktop Commander action was justified; its quota remains user-reported at 4%, and no device command/noVNC restart was issued.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+- Latest scheduled main Security Audits all PASS (executed) on unchanged main heads:
+  - RamiMada [#42714197827](https://github.com/pascalnanousympathie-alt/RamiMada/actions/runs/42714197827): Gitleaks, Trivy, Semgrep and OSV Full Scan passed; OSV PR Scan skipped for schedule.
+  - LotoMada [#42714240989](https://github.com/pascalnanousympathie-alt/LotoMada/actions/runs/42714240989): same executed scanner results.
+  - DominoMada [#42714240442](https://github.com/pascalnanousympathie-alt/DominoMada/actions/runs/42714240442): same executed scanner results.
+  - PC-Free [#42714072566](https://github.com/pascalnanousympathie-alt/PC-Free/actions/runs/42714072566): same executed scanner results.
+- Nanoumada's stale-issue workflow is not application CI. Keep all repository boundaries separate.
+
+### Vercel deployment/runtime evidence — last 24 hours
+- Team nanou3; project metadata and deployments were read without changing any project.
+- Mada Commander auto latest record [dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT](https://vercel.com/nanou3/mada-commander-public-mcp-auto/4YnMfsrE86PeXjNf1VseZp1ZfgvT): READY / production, source LudoMada main SHA 158d77d3443564bb3774ee5949b09f1309d1132b, created 2026-11-01. Runtime aggregation: 6 error groups in the last 24h, all /api/router, Google google-start, OAuth stage database_ready, HTTP 503; latest sample 2026-11-10T00:35:48Z. Classify EXPECTED FAIL-CLOSED / OWNER DB-OAUTH CONFIG BLOCKED, not a new production regression.
+- Canonical public MCP [dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q](https://vercel.com/nanou3/mada-commander-public-mcp/8kUAkAshjsGJdx6fvqz3k93oJh4q): READY / production, source SHA f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246, 0 runtime-error groups.
+- Nanoumada production [dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf](https://vercel.com/nanou3/nanoumada/3ARF5uGjmpH356JWQXWXjUbUYAXf): READY / production, main SHA 7acac6037b574160d60dd7b58fe0de96c7d63578, 0 runtime-error groups. PR #13 and #14 previews are READY.
+- Nanou Browser CI lab: no Vercel deployment records and 0 runtime-error groups; this is not the separate Render browser-agent service.
+- Personal-controller UI [dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN](https://vercel.com/nanou3/ludomada-commander-control/FzcDcYA9wmXzn5Y2AX9jdAgKnofN): READY / production, no Git SHA metadata, 0 runtime-error groups. Local controller online state remains unverified.
+- No deployment, promotion, rollback, DB/OAuth configuration, environment-variable read/change or production operation occurred.
+
+### Current outcomes and exact blockers
+- PASS: central status/runbook initial read; exact default branch refs/open-PR inventory; Mega PR #9 GitHub Actions ACEP (342 tests) and Security Audit; Ludo PR #184 exact-head GitHub Security; Ludo main runtime-watch; RamiMada/LotoMada/DominoMada/PC-Free scheduled Security Audits; Vercel metadata reads.
+- PARTIAL/BLOCKED: Mega PR #9 GitHub Actions passes, but Buildkite Gitleaks/Trivy fail on build #405; read-only Buildkite logs required. Mega status PR #3 ACEP failure is strongly consistent with the existing monotonic timestamp issue in PR #7, but current assertion stack is missing. Ludo main Gitleaks candidate fix exists in PR #184 but is not merged.
+- FAIL (executed): Ludo PR #210 Ramus cadence acceptance; SwiftShader sample remains below 24 FPS and above 50 ms P95.
+- NOT RUN / UNDIAGNOSED: Nanou Browser Android job has no steps; Render service nanou-browser not queried because workspace confirmation is required.
+- BLOCKED: owner DB/OAuth approval for Mada Commander auto readiness; user-confirmed Render workspace; separate browser-agent repository/base decision; Honor 8X/Mali hardware telemetry; independent load generator and owner-approved staging for 10k-RPS; local controller online evidence.
+- No inference of GitHub billing/spending limit was made. No merge, production deployment/promotion, payment/wallet change, secret exposure/rotation, security-gate weakening, destructive action, dirty worktree mutation, Railway use, Desktop Commander command or noVNC restart occurred.
