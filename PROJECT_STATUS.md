@@ -3270,3 +3270,59 @@ This pass began by re-reading this status ledger and [PARALLEL_ORCHESTRATION_RUN
 - **FAIL (executed):** central ACEP #42971878585; Ludo Ramus cadence runs #43067219829 and #43069598304.
 - **UNDIAGNOSED/BLOCKED:** Buildkite #412/#413 exact logs unavailable; Nanou Browser Android has no executable steps in its latest branch run; Render service identity/deployment and current healthz require workspace confirmation; local Grok MCP requires an online authorized device; Mada Commander auto OAuth/DB readiness requires owner-approved configuration; Honor 8X/Mali FPS acceptance and 10k-RPS staging/load-generator authorization remain outstanding.
 - No merge, production deployment/promotion, payment/wallet mutation, secret access/rotation, security-gate weakening, destructive action, dirty worktree modification, Railway use, TinyFish/browser automation, CircleCI dispatch, Desktop Commander command, or noVNC restart occurred.
+
+
+## Daily coordination refresh — 2026-11-13 08:31 EAT
+
+> Evidence cut: GitHub refs/open PRs, exact workflow runs/jobs/steps/logs, Vercel production deployments/runtime-error clusters, Render workspace metadata, and read-only Nanou48 device/MCP diagnostics. No application source, local file, deployment, production setting, payment/wallet setting, secret, or worktree was modified.
+
+### Central control plane and exact repository inventory
+
+- Pre-update status branch: ops/central-project-status-20261020 at HEAD 91fe6f53ccb6a8178c7bdd3821d40077c880ccaa; PROJECT_STATUS blob c0c56bd3a39e44dc22e42d67f2583d5f451e60c0. PARALLEL_ORCHESTRATION_RUNBOOK blob remains 9363b68a2065573fa72cd100c66103ac2bcc6b64.
+- Central status PR #3 remains OPEN/DRAFT/UNMERGED, base main 3b86e64019dfe2d1945b5d44a09bc25d50f55279, head 91fe6f53ccb6a8178c7bdd3821d40077c880ccaa.
+- Exact default refs and open PR counts: mega-project-apps/main 3b86e64019dfe2d1945b5d44a09bc25d50f55279 (8); LudoMada/main 158d77d3443564bb3774ee5949b09f1309d1132b (84); Nanoumada/main 7acac6037b574160d60dd7b58fe0de96c7d63578 (2); Nanou Browser/android-alternative a504f7fcd18cd190a12dfee47a44a7d23d496900 (2); RamiMada/main fe3152c0847e5ae87337352d00974a33ed9ec5b3 (3); LotoMada/main 03f3ba21753a6a0454270eef983c438e6b8e83bf (3); DominoMada/main 31481559c78c421ace5237b0275d595223981707 (3); PC-Free/main e66dde7383ea93beb20ab398db9ad86f116cb9cc (1). No default-branch HEAD changed.
+- PASS: latest central ACEP CI #43160490350 and Security Audit #43160490844 both completed successfully on status head 91fe6f53. No manual rerun was made.
+- PR #7 (monotonic user status timestamp fix) remains OPEN/DRAFT at 1b828ff9c55191ddc701214ea039f89b89d347e6. Reuse the existing fix; no duplicate patch was made.
+- UNDIAGNOSED: Buildkite ACEP #412 and Security #413 still lack accessible exact job logs. Existing zero-annotation summaries do not identify a cause. No billing/spending attribution is made.
+
+### LudoMada — new online-presentation graft candidate and Ramus evidence
+
+- Main remains 158d77d3443564bb3774ee5949b09f1309d1132b. Latest production runtime-watch #43344890716 on 2026-11-13T01:26:05Z executed its production-canary job and PASSed health, MCP initialize/tools/list and OAuth-start checks. This is not gameplay/FPS acceptance.
+- New [PR #214](https://github.com/pascalnanousympathie-alt/LudoMada/pull/214) is OPEN/DRAFT/UNMERGED: head feat/ludo-supreme-online-graft-20261112 at 9e7320a7fc279e38b83ca9fd6f901a6262f99c23; base diag/ramus-gles-fence-pacing-20261111 at 250685f6d03dc50198681e1b28573eb1456f0d3e.
+- PR #214 is a presentation-only graft of Ludo Supreme player models/badges into the online screen. Its adapter deliberately leaves dice, legal moves, turns, captures and winner decisions server-authoritative; it does not replace the online rules engine. No live staging multiplayer session is claimed. The PR description still lists staging integration as BLOCKED; that staging claim was not independently re-tested in this pass.
+- PASS: exact-head debug APK build #43359701658; Android UI instrumentation #43359708632; Security Audit #43359709159. Gitleaks, Trivy, Semgrep and OSV PR scan passed; OSV Full Scan was skipped for the PR event.
+- BLOCKED: Android Emulator run #43359708645, job 131673224542, actually ran on GitHub runner 1000006487. Steps 1–11 passed; first failing step was step 12, Run cloud Android smoke test with Ramus. APK, screenshots and smoke-log uploads then passed. The job log reports animation FPS 16.64 over 103 samples; animation frame interval P50/P95 53.55/91.53 ms; after-callback gap P50/P95 4.65/58.71 ms; UI-vsync 32.09 FPS; GL CPU P50/P95 4.09/8.41 ms; scene CPU 2.43/5.88 ms; GPU timer UNSUPPORTED; fence observation 74.71/8466.09 ms with one pending fence. The unchanged gate is >=24 FPS and P95 <=50 ms. The exact check-run summary reports 2 annotations; the annotations endpoint was rejected by the connected GitHub route (HTTP 400), while the job log identifies the failing step and metrics.
+- Baseline comparison: parent commit 250685f6 on the same diagnostic branch failed Ramus run #42925049699 with 17.77 FPS and frame P50/P95 41.53/89.34 ms, callback-gap P50/P95 4.16/58.06 ms, UI-vsync 45.88 FPS and GL CPU P95 7.85 ms. Candidate #214 is slightly worse in this single sample, but both baseline and candidate already fail the same gate; this does not prove the Compose player strip caused the failure. GPU timer remains unsupported, and fence observation is not GPU execution time.
+- Decision: keep #214 draft; do not merge or lower the gate. Repeatable same-build/same-scene profiling and authorized Honor 8X/Mali evidence remain required.
+
+### Nanoumada web app
+
+- Main remains 7acac6037b574160d60dd7b58fe0de96c7d63578; PRs #13 and #14 remain open. Latest workflow #43187794986 PASSed scheduled stale-issue automation only; it is not application CI.
+- Vercel production deployment dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf is READY on the same main SHA. Runtime errors query for 24h returned no groups. This is a runtime-error signal only, not full browser-flow acceptance.
+
+### Nanou Browser — Android app and web agent remain separate
+
+- Android branch android-alternative remains a504f7fcd18cd190a12dfee47a44a7d23d496900. Latest branch-filtered Android CI is still #39162120214 from 2026-10-18; prior exact-job evidence exposed no executable steps/log blob. UNDIAGNOSED/NOT EXECUTED: this does not prove an Android compilation or application-code failure.
+- Web-agent branch feat/cloud-browser-agent-mcp remains e1e2163c8e6725c3840bcde4fc210cc4a34ea7df. PR #2 remains OPEN/DRAFT and targets android-alternative. Its diff removes the Android CI workflow while adding the web-agent workflow; this still crosses the Android/web boundary and must not be merged as-is. The latest exact-head Agent Service/PR CI runs #39778777356 and #39778782478 are historical PASS evidence from 2026-10-22; no public deployment is proven.
+- Render workspace listing returned only Nanou Sympathie's workspace, ID tea-dbcugko473hc73a9kcn0, while the selected-workspace route reports no workspace selected. Per the Render connector's confirmation requirement, no service listing was attempted. The PR branch render.yaml declares service name nanou-browser-agent, not the requested exact service name nanou-browser. BLOCKED: actual Render service ID/domain/deployment and live /healthz remain unverified; do not substitute the blueprint name or Vercel nanou-browser-ci-lab.
+- New local MCP registration regression: Nanou48 was ONLINE and PRoot available. At 2026-11-13 08:31 EAT, read-only grok mcp doctor nanou-browser --json returned healthy=true, status=not_found, exit 0. The previous 2026-11-11 check had reported a healthy nanou-browser entry and 18 tools. Current tool discovery could not proceed because the exact named server entry is not found. This is a local Grok MCP configuration/registration failure, not proof that the remote service is down. No Grok model call, credential read, secret change or config edit was made.
+
+### Mada Commander — public MCP, local controller and UI separated
+
+- No dedicated mada-commander-public-mcp GitHub repository appears in the connected account's repository list. The Vercel canonical and auto MCP projects are linked to the LudoMada repository; the local agent code is under tools/mada-commander-public-mcp. Keep these runtime components separate.
+- Canonical public MCP Vercel deployment dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q is READY but serves commit f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246 (2026-10-13). GitHub compare against current main 158d77d3443564bb3774ee5949b09f1309d1132b reports 0 ahead / 20 behind. No preview deployment exists for the current main SHA in this Vercel project. No production promotion was attempted.
+- UNDIAGNOSED: canonical project has one 24h runtime-error group on /api/router, route agent-poll, HTTP 500 / XX000, first/last sample 2026-11-12T22:06:41Z (2026-11-13 01:06:41 EAT). The 1h runtime-error query returned no groups. The exact request's runtime-log query failed because the Hobby plan retains only 1h of runtime logs; trace lookup returned invalid_request. The runtime-watch #43344890716 PASSed health/MCP/OAuth checks but does not cover the agent-poll failure path. Root cause remains unknown; do not infer it from XX000 alone.
+- The separate auto/fail-closed MCP deployment dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT is READY on current main SHA 158d77d3443564bb3774ee5949b09f1309d1132b. Its 24h query reports 6 Google-start/database_ready HTTP 503 groups; the 1h query reports none. This is the known fail-closed state while production DB/OAuth are unconfigured, not evidence that the canonical public MCP has the same failure.
+- Personal-controller UI deployment dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN is READY with no 24h runtime-error groups. Separately, Nanou48 runit reports mada-commander running (PID 24878; 66,703 seconds at check). PASS is process-level only; no heartbeat/tool-call was sent, so end-to-end controller connectivity remains UNVERIFIED.
+- No database/OAuth secrets were inspected or changed.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+
+- Main heads are unchanged. Reuse the latest executed scheduled Security Audit PASS evidence: RamiMada #42714197827, LotoMada #42714240989, DominoMada #42714240442 and PC-Free #42714072566. No relevant source changes or newer app/security runs justify rerunning these suites.
+
+### Current outcomes and safety
+
+- PASS: central ACEP/Security on 2026-11-12; Ludo main runtime-watch; Ludo candidate build/UI/security checks; Nanoumada 24h runtime-error query; personal-controller process is running; companion scheduled security audits reused on unchanged heads.
+- BLOCKED: Ludo Ramus FPS gate; Nanou Browser Render service identity/domain/health and exact-name mismatch; Nanou Browser Android executable CI evidence; Grok MCP nanou-browser registration; owner decision on canonical Mada Commander deployment staleness; production DB/OAuth readiness; local controller end-to-end heartbeat; 10k-RPS independent generator plus owner-approved staging.
+- UNDIAGNOSED: canonical Mada Commander agent-poll HTTP 500 / XX000; Buildkite #412/#413 exact causes; Nanou Browser Android CI failure cause.
+- No merge, production deployment/promotion, payment/wallet mutation, secret access/rotation, security-gate weakening, destructive action, dirty worktree modification, Railway use, TinyFish/browser automation, CircleCI dispatch, or noVNC restart occurred. This update is documentation-only; do not run manual status-only CI retries.
