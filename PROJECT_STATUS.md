@@ -3806,3 +3806,67 @@ This pass began by re-reading this status ledger and [PARALLEL_ORCHESTRATION_RUN
 - Read-only team discovery returned the Nanou team; project inventory includes `mada-commander-public-mcp-auto`, `mada-commander-public-mcp`, `ludomada-commander-control`, `nanoumada`, and `nanou-browser-ci-lab` (plus an unrelated GPS project). The Nanou Browser CI lab has no deployments and zero runtime-error groups; it is not the Render browser agent.
 - All five relevant Vercel projects were queried for recent deployments/runtime errors. Canonical MCP, Nanoumada and personal-controller UI returned zero groups/24h; auto MCP returned the six fail-closed 503 groups above. No production deployment, promotion, alias change, environment read or environment mutation occurred.
 - No source patch, PR creation, merge, production deployment/promotion, payment/wallet mutation, secret access/rotation, security-gate weakening, destructive operation, dirty local worktree modification, Railway use, CircleCI dispatch, TinyFish/browser automation, Render workspace selection, Desktop Commander process command or noVNC restart occurred. This is a documentation-only update; it may trigger central PR checks. Do not manually rerun CI solely because of this append.
+
+
+## 2026-11-22 08:18 EAT — Daily evidence refresh
+
+Evidence scope: GitHub exact refs, PR metadata, workflow runs/jobs/logs, Vercel production deployment/runtime-error metadata, Render service/deploy metadata, and the exact Ramus screenshot artifact. No local worktree was modified. The runbook was reread and remains unchanged.
+
+### Central coordination branch
+
+- Status branch: `ops/central-project-status-20261020`
+- PR #3 remains OPEN / DRAFT / UNMERGED; prior head before this refresh: `85d4af5963b765a31e3b6b311b8caab46a3b9710`; base `main` = `3b86e64019dfe2d1945b5d44a09bc25d50f55279`.
+- PROJECT_STATUS prior blob: `d482a4ac05552f9c93903ffcf0f27936ba460450`.
+- PARALLEL_ORCHESTRATION_RUNBOOK blob: `9363b68a2065573fa72cd100c66103ac2bcc6b64` (read, unchanged).
+- Current main HEADs verified: mega-project-apps `3b86e64019dfe2d1945b5d44a09bc25d50f55279`; LudoMada `158d77d3443564bb3774ee5949b09f1309d1132b`; Nanoumada `7acac6037b574160d60dd7b58fe0de96c7d63578`; Nanou Browser Android `a504f7fcd18cd190a12dfee47a44a7d23d496900`; RamiMada `fe3152c0847e5ae87337352d00974a33ed9ec5b3`; LotoMada `03f3ba21753a6a0454270eef983c438e6b8e83bf`; DominoMada `31481559c78c421ace5237b0275d595223981707`; PC-Free `e66dde7383ea93beb20ab398db9ad86f116cb9cc`.
+
+### mega-project-apps
+
+- **UNDIAGNOSED — ACEP run #44869905574**, head `85d4af5963b765a31e3b6b311b8caab46a3b9710`, job `136741866864`. Runner executed. Setup, checkout, Node setup and `npm ci` passed. First failing step was `npm run ci:gate` → `node scripts/ci-gate.js` → `npm test` → `node scripts/test.js`; child file `tests/users.test.js` exited 1. The log shows the first two HTTP integration subtests passing and then the child process failing without an assertion stack. Annotation endpoint returned HTTP 400, so the precise assertion is not established. This is an executed test failure, not a runner-start or billing diagnosis.
+- **PASS — Security Audit #44869905884** on the same head: Gitleaks, Trivy, Semgrep and OSV PR scan passed; OSV Full Scan skipped for the PR event.
+- **BLOCKED — PR #7** remains OPEN / DRAFT, head `1b828ff9c55191ddc701214ea039f89b89d347e6`, containing the existing monotonic user timestamp fix and fixed-clock regression coverage. Do not duplicate it; owner review and exact assertion evidence are still needed.
+- PR #9 remains OPEN / DRAFT for exact Gitleaks test-fixture fingerprints. No new allowlist was added.
+
+### LudoMada
+
+- **PASS — production runtime-watch #44971263718**, job `137051341327`, 2026-11-22 01:23 UTC: canonical public MCP health, initialize, tools/list and OAuth preflight passed; auto deployment health, initialize, tools/list and fail-closed OAuth path passed.
+- **PASS — PR #228 build/UI validation**. PR #228 is OPEN / DRAFT, head `2b150ff25bbbb39e17130bbc308b6326b2ffb22c`, based on PR #225 head `9fa5a95047c7218799ee84fcc6880db13f637ce0`. Its diff is limited to `LudoBoardView.kt` and `GameplayBoardCameraFramingTest.kt`; the shared FOV policy aligns GLES2/GLES3 landscape framing.
+  - APK debug/release build and 3D asset packaging: PASS, run #44934500923.
+  - Kotlin/JVM tests plus connected UI instrumentation on API 30 and Android 8.1/API 27: PASS, run #44934586900, job `136938333237`.
+  - Emulator/Ramus smoke, framebuffer readback and 3D board assertions: PASS, run #44934587033, job `136938333825`; `RAMUS_GAMEPLAY_SMOKE_PASS`.
+  - Screenshot artifact #14719052550 was inspected. The 720×320 landscape capture shows all four player/home zones inside the viewport and no numbered Pion 1–4 controls. The board remains visually small in the playfield; the four corner dice are not clearly verified from this capture. This is not premium visual acceptance.
+- **BLOCKED — 120 FPS hardware acceptance** on the same Ramus run: only 60 Hz available, renderer is Google SwiftShader, animation FPS 29.93, animation frame P95 35.98 ms; explicit result `RAMUS_FPS_ACCEPTANCE_BLOCKED` / `display_has_no_120hz_mode`. No hardware-renderer 120 Hz evidence.
+- **FAIL — Trivy job in Security Audit #44934587763**, job `136938336276`; the executed step `Scan dependencies, secrets and configuration` exited 1. Gitleaks, Semgrep and OSV PR Scan passed; OSV Full Scan skipped. PR #228's validation note identifies `CVE-2026-121707` in transitive `effect@3.21.0`. The main and PR #228/base package-lock blobs are identical (`6f3559a9b090e4a47f45597c2973367a15a4bae2`); the lock resolves `@prisma/config@6.19.3` → `effect@3.21.0`. Thus this dependency finding is inherited, not introduced by the UI-only PR. The raw Trivy report artifact was not opened because it also carries secret-scan results. Official GHSA states affected versions <=3.22.0 and patched 3.22.1; GHSA severity is Moderate, while some CVE feeds score it High.
+- **BLOCKED — Prisma support lifecycle:** the repo still pins Prisma 6.19.3. Prisma's release-status documentation says Prisma ORM 6 support ended 2026-11-19; PostgreSQL projects should move to Prisma 7 or Prisma 8. No automatic major upgrade or dependency override was made; it requires a separate compatibility-reviewed change and CI validation.
+
+### Nanoumada web app
+
+- Main HEAD remains `7acac6037b574160d60dd7b58fe0de96c7d63578`.
+- **PASS — scheduled stale-issue workflow #44887432284**, 2026-11-21 08:59 UTC, job `136795701257`; this is issue-maintenance automation, not an application CI build.
+- Vercel production deployment `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf` is READY on the same main SHA; runtime errors: 0 in the last 24 hours. PRs #13 and #14 remain open; no new application source change.
+
+### Nanou Browser — Android and web agent remain separate
+
+- Android branch HEAD remains `a504f7fcd18cd190a12dfee47a44a7d23d496900`; agent branch HEAD remains `3ee4b676a6be30c288c410ac42c3a170bdfe5a00`.
+- Agent CI #44527951827 remains the latest verified agent test run: 62 tests passed. PR #2 remains OPEN / DRAFT but targets `android-alternative`, removes `.github/workflows/android-ci.yml`, and changes Android Gradle/activity files while adding the agent service. **BLOCKED — repository boundary**; keep Android app and web agent separate.
+- Android run #39162120214 has no recorded steps and no retrievable job log. **UNVERIFIED — execution did not start**; do not label it an Android build/test failure.
+- Render service resolved by exact name `nanou-browser`: service `srv-dbd317jncjis73e3s0pg`, domain `https://nanou-browser.onrender.com`, latest deploy `dep-dbvge9flk1mc73dp4qh0` is LIVE on agent commit `3ee4b676a6be30c288c410ac42c3a170bdfe5a00`; service is not suspended. `healthCheckPath` is empty and no GET `/healthz` request logs appeared in the queried window. A direct read-only GET could not be completed from this run's network (DNS resolution failed); this is **UNVERIFIED**, not a service failure. Last-known successful health check predates this deployment.
+- **UNVERIFIED / BLOCKED — Grok MCP local side:** Desktop Commander Nanou48 reports one device online but only 24% monthly remote-call quota remains. No remote process/doctor/tool-discovery call was made to preserve quota; Termux/PRoot availability is not proven. Do not interpret this as a failed MCP service.
+
+### Mada Commander — public MCP versus personal local controller
+
+- Vercel canonical public MCP deployment `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q` is READY; runtime errors 0 / 24h.
+- Vercel auto project deployment `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT` is READY on LudoMada main `158d77d3`. Runtime error metadata shows 8 groups / 24h, all `google-start` on `/api/router` returning HTTP 503 at `database_ready`; latest sample 2026-11-22 01:23:57 UTC. The same timestamp's runtime-watch passed the explicit fail-closed health/MCP/OAuth checks. Treat this as intentionally unconfigured DB/OAuth, not a production-ready login path. No secrets/configuration changed.
+- Vercel controller UI deployment `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN` is READY with 0 runtime error groups / 24h. This does not prove the personal local controller process is running; that remains UNVERIFIED because no local command was issued.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+
+- Main HEADs remain unchanged as listed above.
+- Latest main Security Audit runs remain RamiMada #43970680904, LotoMada #43970701771, DominoMada #43970843529 and PC-Free #43970543462; all PASS on 2026-11-16. No newer runs or source changes were found; prior evidence reused. Open PR counts: 3, 3, 3 and 1 respectively.
+
+### Operational controls
+
+- No application source patch, merge, deployment/promotion, production/payment/wallet change, secret access/rotation, security-gate weakening, destructive operation, local worktree reset/clean/stash/rebase/pull, or noVNC restart.
+- No CircleCI dispatch: the connected tool inventory did not expose a CircleCI action route. No Vercel deployment was triggered.
+- Buildkite #412/#413 remain UNDIAGNOSED until exact logs/jobs are available; no new diagnostic evidence in this pass.
+- Only this dated status entry is being added. The runbook remains unchanged.
