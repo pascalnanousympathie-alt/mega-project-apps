@@ -3870,3 +3870,74 @@ Evidence scope: GitHub exact refs, PR metadata, workflow runs/jobs/logs, Vercel 
 - No CircleCI dispatch: the connected tool inventory did not expose a CircleCI action route. No Vercel deployment was triggered.
 - Buildkite #412/#413 remain UNDIAGNOSED until exact logs/jobs are available; no new diagnostic evidence in this pass.
 - Only this dated status entry is being added. The runbook remains unchanged.
+
+
+## 2026-11-23 08:42 EAT — Daily evidence-first coordination
+
+Evidence scope: reread this file and PARALLEL_ORCHESTRATION_RUNBOOK.md on ops/central-project-status-20261020; queried exact GitHub default-branch commits, open PR metadata, workflow runs/jobs/check-runs; queried the Nanou Vercel team's project deployments and 24-hour runtime-error groups; resolved Render metadata for the exact web-agent service nanou-browser. Reused unchanged prior evidence. No local worktree was opened or modified.
+
+### Central control plane
+
+- Status branch before this update: 191bd59f47a775d4a09d44cde08c0c97462e2b37; prior PROJECT_STATUS blob bc854dacdde4accbe270d6bacf5f7c15894e2b72.
+- Runbook blob 9363b68a2065573fa72cd100c66103ac2bcc6b64: reread, unchanged.
+- Central PR #3 remains OPEN / DRAFT / UNMERGED. Its exact-head ACEP CI #44989336229 and Security Audit #44989336431 both PASS on head 191bd59f47a775d4a09d44cde08c0c97462e2b37. No application source changed.
+
+### Exact default-branch refs
+
+| Repository / branch | Verified HEAD |
+|---|---|
+| mega-project-apps / main | 3b86e64019dfe2d1945b5d44a09bc25d50f55279 |
+| LudoMada / main | 158d77d3443564bb3774ee5949b09f1309d1132b |
+| Nanoumada / main | 7acac6037b574160d60dd7b58fe0de96c7d63578 |
+| Nanou Browser Android / android-alternative | a504f7fcd18cd190a12dfee47a44a7d23d496900 |
+| Nanou Browser agent / feat/cloud-browser-agent-mcp | 3ee4b676a6be30c288c410ac42c3a170bdfe5a00 |
+| RamiMada / main | fe3152c0847e5ae87337352d00974a33ed9ec5b3 |
+| LotoMada / main | 03f3ba21753a6a0454270eef983c438e6b8e83bf |
+| DominoMada / main | 31481559c78c421ace5237b0275d595223981707 |
+| PC-Free / main | e66dde7383ea93beb20ab398db9ad86f116cb9cc |
+
+### mega-project-apps
+
+- FAIL — main Security Audit #43970913909 (2026-11-16; exact main SHA above). Trivy, Semgrep and OSV Full Scan jobs executed and passed; OSV PR Scan was skipped for the scheduled event. Gitleaks job 133662514535 executed on a runner and failed at the first failing step, Scan git history for exposed secrets. This is not a pre-runner failure. The step uses the pinned Gitleaks Action; matched values were not retrieved. Annotation payload was not opened because it may contain secret material.
+- BLOCKED — reuse existing PR #9, still OPEN / DRAFT, head b89c77a589fa88e974837b6e92decc68c6c28f62; its description records the exact three reviewed test-fixture fingerprints and exact-head ACEP/Security PASS (#42765723732 / #42765723858). No broad allowlist or duplicate patch was created.
+- PR #7 remains OPEN / DRAFT at 1b828ff9c55191ddc701214ea039f89b89d347e6 with the existing monotonic updated_at fix and fixed-clock regression test. No duplicate timestamp patch was created.
+
+### LudoMada
+
+- PASS — production runtime-watch #45102206170, job 137455386846, 2026-11-23 02:47 UTC. Log confirms PASS for canonical public MCP health, initialize, tools/list and OAuth preflight; auto deployment health remained intentionally fail-closed, while its MCP initialize/tools/list and OAuth fail-closed checks also passed.
+- PASS — PR #229, Effect ReDoS dependency patch, OPEN / DRAFT, head aed34a767667f6b6b6268dfb86d6f3f4e751bfba. It updates the @prisma/config override and lockfile from effect 3.21.0 to 3.22.1. Exact-head Security Audit #45043632224, backend CI #45043631846 and Release Gate #45043631850 all PASS. Steps executed include Gitleaks, Trivy, Semgrep, OSV PR scan, full backend tests/build, staging DB migration/readiness/load smoke, and Android debug/release/instrumentation APK/unit-test build. OSV Full Scan was skipped for the PR event.
+- PASS — PR #230, opt-in API hot-path diagnostics, OPEN / DRAFT, head 04255319d9f4eb3dab8f28758b900f5aaa215584. Exact-head CI #45052733313, Release Gate #45052733322 and Security Audit #45052733547 PASS. Diagnostics are disabled by default and require explicit LUDOMADA_PERF_DIAGNOSTICS=true / LUDOMADA_PG_POOL_DIAGNOSTICS=true flags. Coordination risk: PR #230 carries the same Effect override/lockfile change as PR #229; PR #228's current diff also contains that dependency change while being based on the PR #225 diagnostic branch. Keep drafts unmerged; owner should select one canonical dependency-fix path before integration. No automated PR-base change or rebase was performed.
+- PASS — PR #228, landscape gameplay framing, OPEN / DRAFT, current head 6496bfe587143249160c99a8ecef05fc57b2d1b6, base diag/ramus-120hz-surface-request-20261115. Exact-head emulator, UI instrumentation, backend/unit and security checks all PASS (#45044087276, #45044087280, #45044087277, #45044087592). This does not establish premium visual acceptance or 120-Hz hardware FPS.
+- FAIL — main Security Audit #43971151392 on main. Trivy, Semgrep and OSV Full Scan executed and passed; OSV PR Scan was skipped. Gitleaks job 133663331632 executed and failed at Scan git history for exposed secrets (two annotations reported in check-run metadata). Annotation text was not opened to avoid exposing possible secret material. Existing PR #184 remains OPEN / DRAFT at ffa78a8bd805a2d031651a1836e8827247255966; its exact-head Gitleaks check passed and its description documents eight narrow historical synthetic-fixture fingerprints. Main remains unremediated until owner review/merge; no new allowlist was added.
+- BLOCKED — Prisma lifecycle/security integration: PR #229 addresses the transitive Effect finding without a Prisma major upgrade. Prisma 6 support lifecycle remains a separate compatibility task; do not conflate this patch with a completed Prisma 7/8 migration.
+
+### Nanoumada web app
+
+- Main HEAD unchanged at 7acac6037b574160d60dd7b58fe0de96c7d63578.
+- PASS — latest workflow #45006034593 is scheduled stale-issue maintenance, not application CI.
+- Vercel production deployment dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf is READY on main; runtime errors: 0 / 24h. PR #13 and #14 remain OPEN (PR #13 draft, #14 ready-for-review). No source change.
+
+### Nanou Browser — Android and web agent remain separate
+
+- Android branch remains android-alternative at a504f7fcd18cd190a12dfee47a44a7d23d496900; its last recorded Android CI #39162120214 is unchanged and has no execution steps. Reuse prior evidence: execution did not start; this is not an Android build failure.
+- Agent branch remains feat/cloud-browser-agent-mcp at 3ee4b676a6be30c288c410ac42c3a170bdfe5a00; last agent CI #44527951827 recorded 62 tests passed. PR #2 remains OPEN / DRAFT and still targets the Android branch while changing Android workflow/source; repository-boundary blocker remains.
+- Render read-only metadata: exact service name nanou-browser, service srv-dbd317jncjis73e3s0pg, domain https://nanou-browser.onrender.com, workspace tea-dbcugko473hc73a9kcn0; service is not suspended. Latest deploy dep-dbvge9flk1mc73dp4qh0 is LIVE on agent commit 3ee4b676a6be30c288c410ac42c3a170bdfe5a00. Configured healthCheckPath is empty. A read-only GET to /healthz was attempted via the available web route but returned URL is not accessible; no health JSON was obtained. UNVERIFIED, not a service failure. This is unchanged from the prior unverified health state; no incident/recovery alert is warranted.
+- UNVERIFIED — local Grok MCP: no doctor/handshake/tools-list was run because current Termux/PRoot availability was not established and the last verified Desktop Commander quota (2026-11-22) was only 24%; preserve the remaining quota. This is not a service failure.
+
+### Mada Commander — keep components distinct
+
+- Vercel canonical public MCP dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q: READY, 0 runtime-error groups / 24h.
+- Auto/fail-closed project dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT: READY deployment on LudoMada main 158d77d3; 8 runtime-error groups / 24h, all google-start /api/router HTTP 503 with database_ready/unconfigured prerequisites. Latest sample is 2026-11-23 02:47:50 UTC. The same run's runtime-watch passed the expected fail-closed checks; do not call this production login readiness.
+- Personal-controller UI dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN: READY, 0 runtime-error groups / 24h. This does not prove the personal local controller process is running; local process remains UNVERIFIED.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+
+- Main HEADs are unchanged as listed above.
+- Latest relevant main Security Audits remain RamiMada #43970680904, LotoMada #43970701771, DominoMada #43970843529 and PC-Free #43970543462; all PASS on 2026-11-16. No newer runs or source changes were found, so prior exact evidence was reused. Their open PR states remain unchanged (Rami/Loto/Domino #1–#3; PC-Free #2).
+
+### Operational controls
+
+- No application source patch, merge, production deployment/promotion, DB/OAuth/payment/wallet configuration change, secret access/rotation, security-gate weakening, destructive action, dirty-worktree reset/clean/stash/rebase/pull/overwrite, Railway use, TinyFish/browser automation, CircleCI dispatch, Desktop Commander process command or noVNC restart.
+- Vercel team/project/deployment/runtime-error reads succeeded using the confirmed Nanou team. No Vercel deployment was triggered.
+- Render /healthz direct GET and local Grok MCP handshake remain UNVERIFIED for the precise access reasons above. No Render settings, environment values, secrets or deploy state were changed.
+- Only this dated status entry is being added; the runbook remains unchanged.
