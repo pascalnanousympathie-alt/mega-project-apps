@@ -3951,3 +3951,11 @@ Evidence scope: reread this file and PARALLEL_ORCHESTRATION_RUNBOOK.md on ops/ce
 - Source comparison on main confirms tests/users.test.js still asserts that setUserStatus changes updated_at; core/repos.js still writes nowIso() directly at millisecond precision. Existing PR #7 head 1b828ff9c55191ddc701214ea039f89b89d347e6 contains the monotonic timestamp guard (advance by 1 ms when the candidate is not later than the stored value) plus a fixed-clock regression test. Its exact-head ACEP #40856093691 and Security Audit #40856094708 are PASS. This strongly supports the already-documented same-millisecond collision; it is not a new root cause and no duplicate patch was made.
 - PR #7 remains OPEN / DRAFT / UNMERGED. Owner review is the required next action. This is an executed test failure, not a runner-start or Billing & plans diagnosis.
 - No manual rerun was initiated. The status update is evidence-only; do not chase CI solely for documentation changes.
+
+
+### 2026-11-23 08:51 EAT — Nanou Browser Render health GET verified
+
+- Follow-up to the earlier web-fetch limitation: used the already-connected Opera Browser Connector to perform a direct read-only GET of the exact Render domain and /healthz path, after resolving the service from the confirmed Render workspace metadata.
+- PASS — response JSON fields: status=ok, api_key_configured=true, active_runs=0. No secret values, tokens, authorization headers or environment-variable contents were retrieved or displayed.
+- The Render service remains nanou-browser (srv-dbd317jncjis73e3s0pg); the previously verified latest deployment remains LIVE on agent commit 3ee4b676a6be30c288c410ac42c3a170bdfe5a00. This supersedes the earlier 08:42 EAT UNVERIFIED health GET note. The earlier state was unverified, not a reported failure, so this is not classified as a recovery incident or a separate alert.
+- Local Grok MCP doctor/handshake/tools-list remains UNVERIFIED because Termux/PRoot availability was not established and the last verified Desktop Commander quota was low; no local process command was issued.
