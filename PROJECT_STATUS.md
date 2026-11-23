@@ -3941,3 +3941,13 @@ Evidence scope: reread this file and PARALLEL_ORCHESTRATION_RUNBOOK.md on ops/ce
 - Vercel team/project/deployment/runtime-error reads succeeded using the confirmed Nanou team. No Vercel deployment was triggered.
 - Render /healthz direct GET and local Grok MCP handshake remain UNVERIFIED for the precise access reasons above. No Render settings, environment values, secrets or deploy state were changed.
 - Only this dated status entry is being added; the runbook remains unchanged.
+
+
+### 2026-11-23 08:48 EAT — Follow-up: central PR CI after status commit
+
+- Status commit 9e9d524604abc0424302f936c7755dfaf64fcebe triggered ACEP CI #45119964068 and Security Audit #45119964223 on the central PR head.
+- PASS — Security Audit #45119964223: Gitleaks, Trivy, Semgrep and OSV PR Scan jobs executed and passed; OSV Full Scan was skipped for the pull-request event.
+- FAIL — ACEP CI #45119964068, job gate 137511238992. Runner executed; setup, checkout, Node setup and locked dependency installation passed. First failing step was Run CI gate; first command was npm run ci:gate, which invoked npm test. The child file tests/users.test.js exited 1. The job log contains no assertion stack or failing subtest line, so the precise assertion remains UNDIAGNOSED.
+- Source comparison on main confirms tests/users.test.js still asserts that setUserStatus changes updated_at; core/repos.js still writes nowIso() directly at millisecond precision. Existing PR #7 head 1b828ff9c55191ddc701214ea039f89b89d347e6 contains the monotonic timestamp guard (advance by 1 ms when the candidate is not later than the stored value) plus a fixed-clock regression test. Its exact-head ACEP #40856093691 and Security Audit #40856094708 are PASS. This strongly supports the already-documented same-millisecond collision; it is not a new root cause and no duplicate patch was made.
+- PR #7 remains OPEN / DRAFT / UNMERGED. Owner review is the required next action. This is an executed test failure, not a runner-start or Billing & plans diagnosis.
+- No manual rerun was initiated. The status update is evidence-only; do not chase CI solely for documentation changes.
