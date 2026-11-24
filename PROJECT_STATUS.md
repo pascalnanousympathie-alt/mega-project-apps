@@ -4091,3 +4091,71 @@ Evidence scope: reread PROJECT_STATUS.md and PARALLEL_ORCHESTRATION_RUNBOOK.md o
 - Vercel production deployment IDs and READY states were independently reread with Git source metadata: Mada Commander public MCP `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q`; auto/fail-closed `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT`; Nanoumada `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf`; personal-controller UI `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN`. No new Vercel deployment was triggered. The Nanou Browser agent is a separate Render service, not the Vercel CI-lab project.
 - No CircleCI dispatch route was present in the connected tool inventory. No Desktop Commander process command, TinyFish/browser automation, Railway, or noVNC restart was used.
 - This update changes only `PROJECT_STATUS.md` on the existing status branch. No application source, PR base, merge, production deployment/promotion, payment/wallet/DB/OAuth configuration, secret, security gate, or local worktree was changed. The documentation commit may trigger automatic central PR checks; do not manually rerun or chase CI solely for this status update.
+
+## 2026-11-24 08:55 EAT — Evidence-first coordination follow-up
+
+Evidence scope: exact GitHub main/status/agent refs and open PR bases, latest workflow runs and job steps, Vercel production deployments/runtime-error windows, Render service/deploy metadata, and current Ramus diagnostics. This update records only observed results; no production settings or local worktrees were changed.
+
+### Central control plane
+
+- PASS — existing status branch `ops/central-project-status-20261020` was reread at pre-update HEAD `580babfec0bbc546ca1eaa58ae8e60d2d6d93ad8`; PROJECT_STATUS blob `1e0755e5aa27f661d849ec0f67dc880220fcecd7`.
+- PASS — `PARALLEL_ORCHESTRATION_RUNBOOK.md` remains unchanged at `9363b68a2065573fa72cd100c66103ac2bcc6b64`.
+- Central PR #3 remains OPEN / DRAFT / UNMERGED, head `580babfec0bbc546ca1eaa58ae8e60d2d6d93ad8`, base main `3b86e64019dfe2d1945b5d44a09bc25d50f55279`.
+
+### Exact repository refs
+
+| Repository / branch | Verified HEAD |
+|---|---|
+| mega-project-apps / main | `3b86e64019dfe2d1945b5d44a09bc25d50f55279` |
+| LudoMada / main | `158d77d3443564bb3774ee5949b09f1309d1132b` |
+| Nanoumada web app / main | `7acac6037b574160d60dd7b58fe0de96c7d63578` |
+| Nanou Browser Android / android-alternative | `a504f7fcd18cd190a12dfee47a44a7d23d496900` |
+| Nanou Browser agent / feat/cloud-browser-agent-mcp | `3ee4b676a6be30c288c410ac42c3a170bdfe5a00` |
+| RamiMada / main | `fe3152c0847e5ae87337352d00974a33ed9ec5b3` |
+| LotoMada / main | `03f3ba21753a6a0454270eef983c438e6b8e83bf` |
+| DominoMada / main | `31481559c78c421ace5237b0275d595223981707` |
+| PC-Free / main | `e66dde7383ea93beb20ab398db9ad86f116cb9cc` |
+
+### mega-project-apps
+
+- FAIL — central PR #3 ACEP [run #45335200035](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/45335200035), exact head `580babfec0bbc546ca1eaa58ae8e60d2d6d93ad8`. Job `gate` / `138245535066` ran on hosted runner `1000007589`; setup, checkout, Node setup and locked dependency installation passed. First failing step: `Run CI gate`; first command `npm run ci:gate` → `npm test`; child `tests/users.test.js` exited 1. Check-run metadata reports two annotations; the authorized connector did not expose the annotation payload. This is an executed test failure, not a pre-runner or billing diagnosis.
+- PASS — central PR #3 Security Audit #45335200436: Gitleaks, Trivy, Semgrep and OSV PR Scan passed; OSV Full Scan was skipped by PR-event policy.
+- Existing PR #7 remains OPEN / DRAFT at `1b828ff9c55191ddc701214ea039f89b89d347e6`, base main, and already contains the monotonic `updated_at` fix plus fixed-clock regression test. The repeated users-test signature is consistent with the documented same-millisecond collision. Reuse/review PR #7; do not duplicate the fix.
+- Main Security Audit #45296761797 remains FAIL at Gitleaks (one annotation); Trivy, Semgrep and OSV Full Scan passed; OSV PR Scan skipped. Annotation payload was not opened because it may contain matched secret material. Existing PR #9 is the exact-fingerprint fixture candidate; no broader allowlist was added.
+
+### LudoMada — Ramus telemetry root cause and PR #234
+
+- PASS — PR #232 UI instrumentation #45335005866 executed API 30 and Android 8.1/API 27 connected instrumentation and screenshot-preservation steps. PR #232 remains OPEN / DRAFT, head `264dac77a7396b92029c0b70c66e85731596106e`, based on PR #231 head `1f9708bf9f590a2486eae3dc4aaf876daafbbd12`.
+- PASS — PR #232 Ramus smoke #45334985571 completed gameplay checks and uploaded APK, screenshot and smoke-log artifacts. Its 120-sample frame-pacing capture measured 4.22 average FPS, p95 frame interval 285.26 ms, p99 287.38 ms, max 288.82 ms, display 60 Hz Google SwiftShader, GL-work p95 193.36 ms, outside-render average 200.73 ms / p95 271.45 ms, and particles p95 175.57 ms. All 120/120 intervals exceeded both 120-Hz and 60-Hz budgets. Gameplay smoke PASS is not FPS acceptance.
+- The same run's `RAMUS_FRAME_PACING_CAPTURE_AFTER_DICE` contained the complete 120-sample marker, but `RAMUS_RENDERER_FINAL_CAPTURE` reported `rendererLines=0` and empty marker arrays. Source inspection isolated the defect: `ramus-log-telemetry.mjs` already accumulated markers across rolling snapshots, while the final report read only `finalRendererSnapshot.lines`. The final logcat tail can be empty after rotation; that is a reporting defect, not proof of improved renderer performance.
+- PASS — created isolated draft PR [#234](https://github.com/pascalnanousympathie-alt/LudoMada/pull/234), head `872fc0e727ed5451922a4ef095c5f7bb33504efa`, based on PR #232 head `264dac77a7396b92029c0b70c66e85731596106e`. It changes only `scripts/ramus-log-telemetry.mjs`, `scripts/ramus-log-telemetry.test.mjs` and `scripts/ramus-smoke.mjs`; no renderer/gameplay/rules/backend/auth/economy code changed. The helper now builds the final summary from accumulated evidence and records last-snapshot line count separately. The regression test covers an empty final snapshot after earlier frame-pacing/refresh/UI-VSync markers. All three file blobs and the branch ref were independently reread.
+- IN PROGRESS — exact-head Android Emulator Automated Tests #45336362600 on PR #234 head `872fc0e727ed5451922a4ef095c5f7bb33504efa`. Debug APK build, 3D asset verification and the targeted framebuffer/renderer telemetry contract step passed. The Ramus smoke step was still running at 08:55 EAT. A read-only job-log request returned HTTP 404 `BlobNotFound` while the job was active; no test failure is inferred. End-to-end verification of the corrected final summary remains PENDING.
+- PR #234 is OPEN / DRAFT and stacked on #232; #232 is stacked on #231; #231 is stacked on #227. PR #233 is separately stacked on #230. Do not rebase, change bases, merge or collapse these chains automatically.
+- PR #233 Security Audit #45335635217 passed Gitleaks, Trivy, Semgrep and OSV PR Scan; OSV Full Scan was skipped. Its Release Gate did not run because PR #233 targets `perf/guard-api-hot-path-diagnostics-20261122`, while the Release Gate pull-request filter targets base main. Signing-policy validation therefore remains not independently exercised by that workflow on this PR. Keep the security fix draft until its dependency/base coordination is resolved.
+- Main Security Audit #45296854136 remains a separate FAIL: Gitleaks and Trivy failed; Semgrep and OSV Full Scan passed; OSV PR Scan skipped. Trivy's secret-sensitive finding payload remains uninspected. Reuse PR #184 and PR #229 as existing candidates; obtain a secret-redacted Trivy summary before attributing the current findings to the Effect update.
+
+### Vercel deployments and runtime errors
+
+- PASS — Mada Commander public MCP project `prj_TERRTspe5MJdBXgrs5vLkK1wpQRz`: production deployment `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q` READY; zero runtime-error groups in the selected 24-hour window.
+- PARTIAL / FAIL-CLOSED — Mada Commander auto project `prj_AkuB5ZLmuipNASDkRkDLvEihvmYw`: production deployment `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT` READY on LudoMada main `158d77d3443564bb3774ee5949b09f1309d1132b`; four runtime-error groups remain on `/api/router`, Google `google-start`, HTTP 503 at `database_ready`. Latest sample `2026-11-23T23:47:22Z`. The deployment READY state is not application/OAuth readiness. No DB/OAuth configuration was changed.
+- PASS — personal-controller UI project `prj_cMAq2ox32s2udGd6HgfkWn298OWc`: production deployment `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN` READY; zero runtime-error groups. The local controller process remains UNVERIFIED.
+- PASS — Nanoumada project `prj_FKeRsAddkkbdsnGEEAZKUL53zI3t`: production deployment `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf` READY on main `7acac6037b574160d60dd7b58fe0de96c7d63578`; zero runtime-error groups. Latest main workflow #45152350057 is scheduled stale-issue maintenance, not application CI.
+
+### Nanou Browser — Android, web agent and local MCP remain separate
+
+- Android branch remains `android-alternative` at `a504f7fcd18cd190a12dfee47a44a7d23d496900`. Android CI #39162120214 is a historical failure with no executed job steps; it does not prove an Android build/test failure.
+- Agent branch remains `feat/cloud-browser-agent-mcp` at `3ee4b676a6be30c288c410ac42c3a170bdfe5a00`; agent PR CI #44527951827 passed. PR #2 remains OPEN / DRAFT and targets the Android branch; keep it separate and do not merge.
+- PASS — current Render service listing on the previously confirmed workspace resolves exact service `nanou-browser`, ID `srv-dbd317jncjis73e3s0pg`, repository `pascalnanousympathie-alt/nanou-browser`, branch `feat/cloud-browser-agent-mcp`, auto-deploy enabled. Deployment `dep-dbvge9flk1mc73dp4qh0` is LIVE on commit `3ee4b676a6be30c288c410ac42c3a170bdfe5a00`. Public domain `https://nanou-browser.onrender.com` is reused from the prior verified service metadata; no URL was guessed.
+- UNVERIFIED — current `/healthz` GET: Opera Browser Connector reports Browser not connected and the web open route cannot access the endpoint. No health JSON was obtained. This is not a service failure or recovery; prior direct health PASS is historical evidence only. No separate Nanou Browser incident alert is warranted.
+- UNVERIFIED — Grok MCP doctor/handshake/tools-list and personal local controller process: authorized Termux/PRoot availability was not established. The last verified Desktop Commander quota was low (10% in the previous status pass); no device command was issued and no quota was spent.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+
+- PASS — latest main Security Audits on 2026-11-24: RamiMada #45296507484, LotoMada #45296479585, DominoMada #45296562781 and PC-Free #45296327940. All four completed successfully on the verified main heads. Existing PRs remain open in their separate repositories; no Android release acceptance is inferred from security scans alone.
+- Nanou Browser and Nanoumada workflows remain separate from these Android repositories. No CircleCI dispatch was made because no connected, authorized CircleCI execution route is available; existing CircleCI PR configuration is not proof of an authorized runner.
+
+### Operational controls
+
+- No merge, production deploy/promotion, DB/OAuth/payment/wallet configuration change, payment initiation, secret access/rotation, security-gate weakening, destructive action, local worktree reset/clean/stash/rebase/pull/overwrite, Railway use, metered TinyFish/browser automation, Desktop Commander process command or noVNC restart.
+- No manual CI rerun was initiated. The new PR #234 workflow is an automatic source-change run; the central status-only commit may also trigger its normal checks, but no CI chase should be started solely for documentation.
+
