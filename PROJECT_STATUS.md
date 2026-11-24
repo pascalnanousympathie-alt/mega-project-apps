@@ -4016,3 +4016,78 @@ Snapshot scope: GitHub repository heads/PRs/workflow jobs, Vercel production dep
 - Nanou Browser PRs #1 and #2 remain OPEN / DRAFT; PR #2 still targets the Android branch and must not be treated as an Android-app change.
 - RamiMada, LotoMada and DominoMada each retain their open Android build/security review PRs; PC-Free PR #2 remains OPEN / DRAFT. Scheduled security audits passed, but those results do not prove Android release acceptance.
 - Next: finish and inspect PR #231 Ramus/UI runs and verify the new EGL/GL marker capture; obtain a secret-redacted Trivy finding summary before deciding whether PR #229 resolves the current main scan; keep Gitleaks review limited to safe fingerprints; coordinate the existing Ludo stacked PR bases without rebasing; obtain separate approval for production DB/OAuth changes. Do not merge or deploy.
+
+## 2026-11-24 08:36 EAT — Daily follow-up
+
+Evidence scope: reread PROJECT_STATUS.md and PARALLEL_ORCHESTRATION_RUNBOOK.md on the existing status branch; verified exact refs and open PRs across the requested repositories; inspected new central ACEP failure logs, LudoMada PR #231 workflow jobs and Ramus artifact; inspected latest companion-project security jobs; queried Vercel production deployment/runtime-error metadata; checked Nanou Browser connector and Desktop Commander availability. No local worktree was opened or changed.
+
+### Central control plane
+
+- Pre-update status branch HEAD: `7501063bcf9e2c059536d27a67353dc1f9f63b6b`; PROJECT_STATUS blob: `056ce92d2553bc8ad96291c4e9b6f887198ce0ab`.
+- Runbook remains unchanged at blob `9363b68a2065573fa72cd100c66103ac2bcc6b64`.
+- Central PR #3 remains OPEN / DRAFT / UNMERGED; base `main` at `3b86e64019dfe2d1945b5d44a09bc25d50f55279`.
+
+### Exact repository refs
+
+| Repository / branch | Verified HEAD |
+|---|---|
+| mega-project-apps / main | `3b86e64019dfe2d1945b5d44a09bc25d50f55279` |
+| LudoMada / main | `158d77d3443564bb3774ee5949b09f1309d1132b` |
+| Nanoumada / main | `7acac6037b574160d60dd7b58fe0de96c7d63578` |
+| Nanou Browser Android / android-alternative | `a504f7fcd18cd190a12dfee47a44a7d23d496900` |
+| Nanou Browser agent / feat/cloud-browser-agent-mcp | `3ee4b676a6be30c288c410ac42c3a170bdfe5a00` |
+| RamiMada / main | `fe3152c0847e5ae87337352d00974a33ed9ec5b3` |
+| LotoMada / main | `03f3ba21753a6a0454270eef983c438e6b8e83bf` |
+| DominoMada / main | `31481559c78c421ace5237b0275d595223981707` |
+| PC-Free / main | `e66dde7383ea93beb20ab398db9ad86f116cb9cc` |
+
+### mega-project-apps
+
+- FAIL — central PR #3 ACEP CI [run #45334013857](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/45334013857), exact head `7501063bcf9e2c059536d27a67353dc1f9f63b6b`. Job `gate` ran on a hosted runner: setup, checkout, Node setup and locked dependency installation passed; first failing step was `Run CI gate`, command `npm run ci:gate` → `npm test`. The log identifies `tests/users.test.js` as the failing child and exits 1; no assertion/stack line is present. Check-run metadata reports two annotations, but the connected fetch route did not permit retrieving their payload. This is an executed test failure, not a pre-runner/billing diagnosis.
+- PASS — central PR #3 Security Audit [run #45334014213](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/45334014213): Gitleaks, Trivy, Semgrep and OSV PR Scan executed and passed; OSV Full Scan was skipped by PR-event policy.
+- Existing PR #7 remains OPEN / DRAFT at `1b828ff9c55191ddc701214ea039f89b89d347e6` and already contains the monotonic `updated_at` fix plus fixed-clock regression test. The current failure repeats the same `tests/users.test.js` signature documented previously; reuse/review PR #7 and do not duplicate the patch.
+- Main Security Audit [run #45296761797](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/45296761797) remains a separate FAIL: Gitleaks failed at `Scan git history for exposed secrets` with one annotation; Trivy, Semgrep and OSV Full Scan passed; OSV PR Scan was skipped. The annotation payload was not opened because it may contain matched secret material. Existing PR #9 remains OPEN / DRAFT; do not broaden its exact-fingerprint fixture allowlist.
+
+### LudoMada — PR #231 Ramus follow-up
+
+- PR #231 remains OPEN / DRAFT at `1f9708bf9f590a2486eae3dc4aaf876daafbbd12`, based on PR #227 head `faf2d627ac2527062933dd3b7688f84f7033cf28`. PRs #226/#227 and #228/#229/#230 remain separate open drafts; no base change or rebase was made.
+- PASS — exact-head Security Audit #45333705758: Gitleaks, Trivy, Semgrep and OSV PR Scan executed and passed; OSV Full Scan skipped by PR policy.
+- PASS — exact-head Android UI Instrumentation #45333705483: Kotlin/JVM tests and instrumentation APK builds passed; connected API 30 and Android 8.1/API 27 UI instrumentation and screenshot preservation passed.
+- PASS — Framebuffer Contract #45333705467 and #45333698231: syntax and framebuffer readback acceptance checks passed.
+- PASS — Android Emulator Automated Tests / Ramus #45333698230 completed gameplay smoke and uploaded APK, screenshots and smoke log. The artifact confirms the PR #231 telemetry-capture change now retains all three required markers: EGL surface dimensions, GL device identity and scene-target dimensions. EGL/view/measured surface and scene target were all `650x1011`; framebuffer status `0x8cd5`; GL error `0x0`.
+- FAIL — performance acceptance remains unmet despite `RAMUS_SMOKE_PASS`: the Ramus renderer is Google SwiftShader on a 60.000004 Hz display; frame pacing reports average 4.20 FPS, p95 frame interval 287.40 ms, p95 GL work 190.58 ms, outside-render average 195.53 ms / p95 271.27 ms, and 120/120 samples above both 120-Hz and 60-Hz budgets. This is software-emulator diagnostic evidence, not Honor 8X/Mali hardware acceptance and not a 120-Hz PASS.
+- UNDIAGNOSED — the UI-vsync probe reports `status=COMPLETE`, 120 intervals, 121 callbacks and 80,000 ms elapsed, but the artifact contains no `PBR_UI_VSYNC samples=` summary (`RAMUS_UI_VSYNC_METRICS=[]`). The smoke script explicitly filters for that summary. Do not infer a renderer root cause or alter the FPS threshold; next diagnostic is to trace the UI-vsync instrumentation/summary emission on this exact branch.
+- The prior 81x108 target-size hypothesis is not reproduced by this run: the captured EGL surface and scene target both match the 650x1011 view. The observed data still does not isolate CPU scheduling versus software-renderer work. No renderer/gameplay patch was made.
+- Main Security Audit [run #45296854136](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/45296854136) remains FAIL on main: Gitleaks and Trivy failed; Semgrep and OSV Full Scan passed; OSV PR Scan skipped. The Trivy finding set remains UNDIAGNOSED until a secret-redacted report is available. Existing PR #184/#229 are the previously reviewed candidates; no duplicate allowlist or dependency patch was added.
+
+### Nanoumada web app
+
+- Main HEAD remains `7acac6037b574160d60dd7b58fe0de96c7d63578`. Latest main workflow #45152350057 is stale-issue maintenance only, not application build/test CI.
+- PR #13 remains OPEN / DRAFT; PR #14 remains OPEN / non-draft.
+- Vercel production deployment `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf` is READY on main; runtime-error groups: 0 / 24h.
+
+### Nanou Browser — Android and browser agent remain separate
+
+- Android branch HEAD remains `a504f7fcd18cd190a12dfee47a44a7d23d496900`; agent branch HEAD remains `3ee4b676a6be30c288c410ac42c3a170bdfe5a00`.
+- Agent CI [run #44527951827](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/44527951827) executed on the exact agent head: ARM64 Python environment setup, dependency installation and `pytest -q agent-service/tests` all passed; test summary `62 passed, 1 warning`.
+- PR #2 remains OPEN / DRAFT and still targets `android-alternative`; its diff removes `.github/workflows/android-ci.yml` and changes Android sources while adding the web-agent service. This remains a repository-boundary blocker. PR #1 remains OPEN / DRAFT on the Android side.
+- Android CI #39162120214 is historical and has no recorded execution steps; it does not establish an Android build/test failure. No new Android CI run exists.
+- Render /healthz is UNVERIFIED for this pass, unchanged from the previous unverified state: Render lists one workspace (`Nanou Sympathie's workspace`, `tea-dbcugko473hc73a9kcn0`) but requires owner confirmation before selecting it; Opera Browser Connector returned `Browser not connected`, and the direct web GET route could not access the endpoint. Last successful direct health response remains 2026-11-23 08:51 EAT (`status=ok`, `api_key_configured=true`, `active_runs=0`). No new failure/recovery transition is asserted.
+- Desktop Commander Nanou48 device metadata reports one `localhost` device online (last seen 2 minutes before the check), but current remote-call quota is only 10%. Termux/PRoot process availability is not proven; no Grok MCP doctor/handshake/tools-list command was issued to preserve quota. Local MCP remains UNVERIFIED/BLOCKED, not failed.
+
+### Mada Commander — public MCP versus personal local controller
+
+- Vercel canonical public MCP deployment `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q`: READY; runtime-error groups 0 / 24h.
+- Auto/fail-closed deployment `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT`: READY on LudoMada main `158d77d3443564bb3774ee5949b09f1309d1132b`; 4 runtime-error groups / 24h, all `/api/router` `google-start` HTTP 503 at `database_ready`, latest sample `2026-11-23T23:47:22Z`. This is not production Google-login readiness; no DB/OAuth configuration was changed.
+- Personal-controller UI deployment `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN`: READY; runtime-error groups 0 / 24h. The local controller process remains UNVERIFIED; UI deployment health is not process health.
+
+### RamiMada, LotoMada, DominoMada and PC-Free
+
+- PASS — latest scheduled main Security Audits on 2026-11-24: RamiMada #45296507484, LotoMada #45296479585, DominoMada #45296562781 and PC-Free #45296327940. Gitleaks, Trivy, Semgrep and OSV Full Scan all executed and passed in each repository; OSV PR Scan was skipped by scheduled-event policy. Main HEADs are unchanged from the refs above.
+- Their existing PR inventories remain separate: RamiMada/LotoMada/DominoMada each have #1–#3 open; PC-Free has #2 open/draft. No source change or new Android release evidence was observed.
+
+### Vercel deployment inventory and controls
+
+- Vercel production deployment IDs and READY states were independently reread with Git source metadata: Mada Commander public MCP `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q`; auto/fail-closed `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT`; Nanoumada `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf`; personal-controller UI `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN`. No new Vercel deployment was triggered. The Nanou Browser agent is a separate Render service, not the Vercel CI-lab project.
+- No CircleCI dispatch route was present in the connected tool inventory. No Desktop Commander process command, TinyFish/browser automation, Railway, or noVNC restart was used.
+- This update changes only `PROJECT_STATUS.md` on the existing status branch. No application source, PR base, merge, production deployment/promotion, payment/wallet/DB/OAuth configuration, secret, security gate, or local worktree was changed. The documentation commit may trigger automatic central PR checks; do not manually rerun or chase CI solely for this status update.
