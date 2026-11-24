@@ -3959,3 +3959,60 @@ Evidence scope: reread this file and PARALLEL_ORCHESTRATION_RUNBOOK.md on ops/ce
 - PASS — response JSON fields: status=ok, api_key_configured=true, active_runs=0. No secret values, tokens, authorization headers or environment-variable contents were retrieved or displayed.
 - The Render service remains nanou-browser (srv-dbd317jncjis73e3s0pg); the previously verified latest deployment remains LIVE on agent commit 3ee4b676a6be30c288c410ac42c3a170bdfe5a00. This supersedes the earlier 08:42 EAT UNVERIFIED health GET note. The earlier state was unverified, not a reported failure, so this is not classified as a recovery incident or a separate alert.
 - Local Grok MCP doctor/handshake/tools-list remains UNVERIFIED because Termux/PRoot availability was not established and the last verified Desktop Commander quota was low; no local process command was issued.
+
+
+## 2026-11-24 — Evidence-first daily coordination
+
+Snapshot scope: GitHub repository heads/PRs/workflow jobs, Vercel production deployment/runtime-error metadata, Render service/deployment metadata, and the latest available Ramus evidence. No production settings, payment/wallet configuration, secrets, or security gates were changed.
+
+### Central control plane
+
+- Existing status branch: `ops/central-project-status-20261020`; pre-update head `4367ae6b2a99769236dbec81cdf6a7e03acaebe0`.
+- `PARALLEL_ORCHESTRATION_RUNBOOK.md` unchanged at SHA `9363b68a2065573fa72cd100c66103ac2bcc6b64`.
+- Central PR #3 remained OPEN / DRAFT / UNMERGED. Exact-head checks on the pre-update status commit passed: ACEP gate and Security Audit; OSV Full Scan was skipped by workflow policy.
+- Main HEADs verified:
+  - mega-project-apps `3b86e64019dfe2d1945b5d44a09bc25d50f55279`
+  - LudoMada `158d77d3443564bb3774ee5949b09f1309d1132b`
+  - Nanoumada web app `7acac6037b574160d60dd7b58fe0de96c7d63578`
+  - Nanou Browser Android `a504f7fcd18cd190a12dfee47a44a7d23d496900`
+  - RamiMada `fe3152c0847e5ae87337352d00974a33ed9ec5b3`
+  - LotoMada `03f3ba21753a6a0454270eef983c438e6b8e83bf`
+  - DominoMada `31481559c78c421ace5237b0275d595223981707`
+  - PC-Free `e66dde7383ea93beb20ab398db9ad86f116cb9cc`
+- Nanou Browser agent remains a separate branch/repository head: `feat/cloud-browser-agent-mcp` at `3ee4b676a6be30c288c410ac42c3a170bdfe5a00`.
+
+### CI findings
+
+- mega-project-apps main Security Audit #45296761797: Gitleaks failed at `Scan git history for exposed secrets` (one annotation); Trivy, Semgrep and OSV Full Scan passed; OSV PR Scan skipped. The workflow invokes the pinned Gitleaks action. Annotation content was not opened because it can disclose matched secret material. Existing PR #9 remains OPEN / DRAFT and is the existing exact-fingerprint fixture allowlist candidate; current annotation-to-fixture equivalence is not reasserted.
+- LudoMada main Security Audit #45296854136: Gitleaks failed at `Scan git history for exposed secrets` (one annotation) and Trivy failed at `Scan dependencies, secrets and configuration` (two annotations); Semgrep and OSV Full Scan passed; OSV PR Scan skipped. Trivy is configured for filesystem scanning with `vuln,secret,misconfig`, severities CRITICAL/HIGH/MEDIUM, and exit code 1. Its report/annotation content was not opened because the scan includes secret findings. The main lockfile remains SHA `6f3559a9b090e4a47f45597c2973367a15a4bae2` with transitive `effect@3.21.0`; existing PR #229 proposes `3.22.1` and has prior passing exact-head checks, but the current Trivy finding set is UNDIAGNOSED until a secret-redacted report proves which findings remain. Existing PR #184 remains the Gitleaks fixture-fix candidate.
+- No current-run evidence attributes either scanner failure to GitHub billing or spending limits.
+- RamiMada Security Audit #45296507484, LotoMada #45296479585, DominoMada #45296562781 and PC-Free #45296327940 all PASS on their current main heads. Gitleaks, Trivy, Semgrep and OSV Full Scan executed successfully; OSV PR Scan was skipped by event policy.
+- Nanoumada latest main workflow #45152350057 passed only the stale-issue maintenance job; it is not an application build/test run.
+- Nanou Browser agent exact-head test run #44527951827 passed. Android run #39162120214 remains a historical failure with no job steps; it did not establish an Android build/test failure.
+
+### LudoMada Ramus evidence and targeted diagnostics fix
+
+- Existing PR #231 remained OPEN / DRAFT on `debug/ramus-surface-dimensions-20261123`, based on `feat/ramus-frame-pacing-telemetry-20261116`.
+- The preceding exact-head Ramus smoke #45328385465 passed gameplay smoke, but its artifact showed a 60.000004 Hz display, 650x1011 scene/backbuffer readbacks, average GL frame pacing 4.37 FPS, p95 frame interval 275.11 ms, p95 GL work 180.32 ms, outside-render average 200.22 ms, and UI Choreographer average 35.82 FPS. This is a performance FAIL, not a 120 Hz acceptance PASS. The captured screenshot still showed Pion 1–4 controls. The expected EGL surface/GL device/scene-target diagnostic lines were not present in that smoke artifact.
+- Reviewed PR #226/#227 history, PR #231 diff, the LudoMada graphics skill, and its required GDS documentation before editing. A root `AGENTS.md` was not present.
+- Added one isolated, reversible follow-up commit to PR #231: `1f9708bf9f590a2486eae3dc4aaf876daafbbd12`. It updates only `scripts/ramus-smoke.mjs`, `scripts/ramus-log-telemetry.mjs`, and `scripts/ramus-log-telemetry.test.mjs` so EGL surface dimensions, GL device, and scene-target dimensions are collected, retained across logcat snapshots, and emitted in the final smoke evidence. A regression test covers all three markers. The branch ref and all three exact file blobs were independently reread after the update.
+- New exact-head Security Audit #45333705758 and Framebuffer Contract #45333705467 passed; the telemetry contract in #45333698231 also passed. Android Emulator/Ramus #45333698230 and UI instrumentation #45333705483 were still IN_PROGRESS at the time of this snapshot. Therefore the new capture fix is committed and unit/contract-tested, but its Ramus end-to-end output remains PENDING until the current smoke run completes.
+- No game rules, economy, auth, wallet, backend, or production code was changed.
+
+### Vercel and Render runtime
+
+- Mada Commander public MCP production deployment `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q`: READY; zero runtime-error groups in the selected 24-hour window.
+- Mada Commander auto production deployment `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT`: READY; four runtime-error groups remain, all `/api/router` `google-start` HTTP 503 at `database_ready`. Latest sample: 2026-11-23T23:47:22Z. Ludo runtime-watch #45291773260 passed the fail-closed health/MCP/OAuth preflight. The lower rolling-window count versus the previous snapshot is not evidence of a code fix.
+- Nanoumada production deployment `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf`: READY; zero runtime-error groups in the selected 24-hour window.
+- Personal controller UI deployment `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN`: READY; zero runtime-error groups. This does not verify the personal local controller process.
+- Render metadata still resolves the separate web agent service `nanou-browser` to `srv-dbd317jncjis73e3s0pg`, domain `https://nanou-browser.onrender.com`, live deployment `dep-dbvge9flk1mc73dp4qh0` at commit `3ee4b676a6be30c288c410ac42c3a170bdfe5a00`. The required direct GET of `/healthz` could not be completed this run: the Opera Browser Connector reported Browser not connected and the web open route could not access the endpoint. The last confirmed health response remains the prior 2026-11-23 PASS; today's health is UNVERIFIED, not failed. No Nanou Browser incident transition is asserted.
+- Grok MCP local doctor/handshake/tools-list and the personal local controller process remain UNVERIFIED because authorized Termux/PRoot availability was not established in this run. No Desktop Commander quota was spent.
+
+### PR inventory and next actions
+
+- mega-project-apps PRs #3, #7 and #9 remain OPEN / DRAFT.
+- LudoMada PRs #184, #228, #229, #230 and #231 remain OPEN / DRAFT; the Effect dependency fix and renderer diagnostics remain unmerged.
+- Nanoumada PR #13 remains OPEN / DRAFT; PR #14 OPEN / non-draft.
+- Nanou Browser PRs #1 and #2 remain OPEN / DRAFT; PR #2 still targets the Android branch and must not be treated as an Android-app change.
+- RamiMada, LotoMada and DominoMada each retain their open Android build/security review PRs; PC-Free PR #2 remains OPEN / DRAFT. Scheduled security audits passed, but those results do not prove Android release acceptance.
+- Next: finish and inspect PR #231 Ramus/UI runs and verify the new EGL/GL marker capture; obtain a secret-redacted Trivy finding summary before deciding whether PR #229 resolves the current main scan; keep Gitleaks review limited to safe fingerprints; coordinate the existing Ludo stacked PR bases without rebasing; obtain separate approval for production DB/OAuth changes. Do not merge or deploy.
