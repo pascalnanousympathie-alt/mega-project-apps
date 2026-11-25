@@ -4244,3 +4244,10 @@ Evidence scope: central status/runbook on the existing status branch; exact defa
 - PASS — no merge, production deploy/promotion, payment/wallet mutation, secret read/rotation, security-gate weakening, destructive action, Railway, TinyFish, CircleCI dispatch, Desktop Commander command or noVNC restart occurred.
 - PASS — no local worktree was opened, reset, cleaned, stashed, rebased, pulled, overwritten or committed by this pass.
 - Next: obtain the Render workspace confirmation for the read-only nanou-browser service check; obtain authorized Termux/PRoot availability before any Grok MCP doctor; keep the Ludo FPS gate blocked pending hardware telemetry; obtain secret-redacted Gitleaks/Trivy summaries before changing scanner policy or claiming the main findings resolved; keep PR #2 isolated from Android before any owner review.
+
+
+### Post-write independent verification — 2026-11-25 08:51 EAT
+
+- PASS — reopened PROJECT_STATUS.md from ops/central-project-status-20261020; blob fd c9187316249d00d1e75a2d741388c70b966c10 was confirmed before this verification note, and the complete 2026-11-25 section is present.
+- PASS — branch ref and GitHub REST PR #3 both now report head 63afd66a496835fb423548d0bfc6479b4a1da217, base main 3b86e64019dfe2d1945b5d44a09bc25d50f55279; PR remains OPEN / DRAFT / UNMERGED. The earlier get_pr_info wrapper response was stale; the direct PR REST response confirmed the current head.
+- PASS — the status update commit is 63afd66a496835fb423548d0bfc6479b4a1da217; no merge or deployment was performed. No status-only CI rerun was requested.
