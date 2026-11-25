@@ -4251,3 +4251,11 @@ Evidence scope: central status/runbook on the existing status branch; exact defa
 - PASS — reopened PROJECT_STATUS.md from ops/central-project-status-20261020; blob fd c9187316249d00d1e75a2d741388c70b966c10 was confirmed before this verification note, and the complete 2026-11-25 section is present.
 - PASS — branch ref and GitHub REST PR #3 both now report head 63afd66a496835fb423548d0bfc6479b4a1da217, base main 3b86e64019dfe2d1945b5d44a09bc25d50f55279; PR remains OPEN / DRAFT / UNMERGED. The earlier get_pr_info wrapper response was stale; the direct PR REST response confirmed the current head.
 - PASS — the status update commit is 63afd66a496835fb423548d0bfc6479b4a1da217; no merge or deployment was performed. No status-only CI rerun was requested.
+
+
+### 2026-11-25 08:57 EAT — post-write CI delta
+
+- UNDIAGNOSED — latest status-only ACEP run #45557075226 on branch head 37ef8e99ab5ee7b2c2c41cb8ffeb2414b5b127d6 executed on a hosted runner and failed at Run CI gate. The exact log shows npm run ci:gate -> npm test -> tests/users.test.js, exit 1; it does not expose the failing assertion or stack. No application source changed in the status update, so this is the same unresolved users.test.js signature as #45335200035, not evidence of a new application regression or a billing/spending-limit failure. Existing PR #7 already contains the monotonic timestamp candidate; no duplicate patch was created.
+- PASS — Security Audit run #45557074658 executed Gitleaks, Trivy, Semgrep and OSV PR scan successfully; OSV Full Scan was skipped by PR-event policy. At the last job read, the Trivy post-scan cleanup was still running, so the overall workflow conclusion remained IN PROGRESS; do not report the whole workflow as completed PASS until GitHub closes it.
+- PASS — intermediate runs #45557038693 (ACEP) and #45557039049 (Security Audit) on superseded status commit 63afd66a496835fb423548d0bfc6479b4a1da217 were cancelled when the branch advanced. These cancellations are not test/scanner failures.
+- PASS — current status branch and PR #3 were independently reread at head 37ef8e99ab5ee7b2c2c41cb8ffeb2414b5b127d6, base main 3b86e64019dfe2d1945b5d44a09bc25d50f55279; PR remains OPEN / DRAFT / UNMERGED.
