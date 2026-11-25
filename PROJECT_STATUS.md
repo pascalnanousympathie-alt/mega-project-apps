@@ -4259,3 +4259,10 @@ Evidence scope: central status/runbook on the existing status branch; exact defa
 - PASS — Security Audit run #45557074658 executed Gitleaks, Trivy, Semgrep and OSV PR scan successfully; OSV Full Scan was skipped by PR-event policy. At the last job read, the Trivy post-scan cleanup was still running, so the overall workflow conclusion remained IN PROGRESS; do not report the whole workflow as completed PASS until GitHub closes it.
 - PASS — intermediate runs #45557038693 (ACEP) and #45557039049 (Security Audit) on superseded status commit 63afd66a496835fb423548d0bfc6479b4a1da217 were cancelled when the branch advanced. These cancellations are not test/scanner failures.
 - PASS — current status branch and PR #3 were independently reread at head 37ef8e99ab5ee7b2c2c41cb8ffeb2414b5b127d6, base main 3b86e64019dfe2d1945b5d44a09bc25d50f55279; PR remains OPEN / DRAFT / UNMERGED.
+
+
+### 2026-11-25 08:58 EAT — final exact-head CI verification
+
+- UNDIAGNOSED — ACEP CI #45557211689 on exact status head c0c419260cabe41195b5588605293998e784eb4b executed checkout, Node setup and locked dependency installation, then failed at Run CI gate: npm run ci:gate -> npm test -> tests/users.test.js, exit 1. The job log again identifies the failing file but does not include the assertion/stack. This repeats the same signature from #45557075226 on the immediately prior documentation-only head; no application source changed. Keep the existing PR #7 monotonic-timestamp candidate as the only known prior fix; do not create a duplicate patch or attribute the failure to billing.
+- PASS — Security Audit #45557212051 on the same exact head completed: Gitleaks, Trivy, Semgrep and OSV PR scan passed; OSV Full Scan was skipped by PR-event policy.
+- PASS — this is the final CI evidence read for the documentation-only status update. Do not start another status-only retry loop; diagnose tests/users.test.js from its assertion/stack only when a new non-documentation source change or a new diagnostic artifact becomes available.
