@@ -4313,3 +4313,66 @@ Evidence scope: central status/runbook on the existing status branch; exact defa
 - PASS — no source-code patch was created because the new mega-project test log still lacks the failing assertion, the Nanou Browser PR job has no steps/logs, and Ludo telemetry still does not isolate the presentation/scheduling gap. Existing fixes and branch boundaries were preserved.
 - Next actions: obtain the exact users.test.js assertion/stack before changing mega-project code; inspect the Nanou Browser PR runner-side failure using a route that returns its exact annotation/log and isolate agent files from Android CI before any owner review; collect a repeatable same-build/same-scene Ramus profile with the new per-pass metrics for 120 FPS acceptance; obtain a supported read-only HTTP GET route for Render /healthz and an authorized Termux/PRoot session before MCP doctor; keep Mada Commander DB/OAuth production readiness blocked until owner-approved configuration evidence exists.
 
+
+
+## 2026-11-27 08:50 EAT — evidence-first daily coordination
+
+### Central control plane and repository refs
+
+- PASS — read `PROJECT_STATUS.md` from existing branch `ops/central-project-status-20261020` at pre-update HEAD `d0229926ac1bc1e5c00681e4c55aa46f2879bbf5`; pre-update blob SHA `11556c885be6bad4eebc1faac3ba58c6f11295e6`.
+- PASS — reread `PARALLEL_ORCHESTRATION_RUNBOOK.md`; blob SHA remains `9363b68a2065573fa72cd100c66103ac2bcc6b64`. No runbook edit was required; its anti-repetition, runner-startup, provider-separation and safety rules remain applicable.
+- PASS — GitHub ref reads confirmed these exact current heads:
+
+| Repository / branch | HEAD |
+|---|---|
+| mega-project-apps / main | `3b86e64019dfe2d1945b5d44a09bc25d50f55279` |
+| mega-project-apps / ops/central-project-status-20261020 | `d0229926ac1bc1e5c00681e4c55aa46f2879bbf5` |
+| LudoMada / main | `158d77d3443564bb3774ee5949b09f1309d1132b` |
+| LudoMada / fix/gles3-frame-telemetry-b26f9c4 | `1c80b86ed989999b120466a6544af4aeb4dbd74e` |
+| Nanoumada / main | `7acac6037b574160d60dd7b58fe0de96c7d63578` |
+| Nanou Browser Android / android-alternative | `a504f7fcd18cd190a12dfee47a44a7d23d496900` |
+| Nanou Browser web agent / feat/cloud-browser-agent-mcp | `b65a2f700eb8cc434ed94f76cefadafa6b67113e` |
+| RamiMada / main | `fe3152c0847e5ae87337352d00974a33ed9ec5b3` |
+| LotoMada / main | `03f3ba21753a6a0454270eef983c438e6b8e83bf` |
+| DominoMada / main | `31481559c78c421ace5237b0275d595223981707` |
+| PC-Free / main | `e66dde7383ea93beb20ab398db9ad86f116cb9cc` |
+
+- PASS — mega-project-apps PR #3 remains OPEN / DRAFT / UNMERGED, base main at `3b86e640`, head status branch at `d0229926`. PRs #2/#3/#4/#5/#7/#8/#9 remain OPEN / DRAFT; #6 remains OPEN / non-draft. PR #7 already contains the monotonic `updated_at` candidate; no duplicate code patch was created.
+- PASS — Nanoumada PR #13 remains OPEN / DRAFT and #14 OPEN / non-draft. Nanou Browser PRs #1/#2 remain OPEN / DRAFT; #2 still targets Android branch `android-alternative`, so Android/agent separation is not resolved. RamiMada, LotoMada and DominoMada each retain their #1/#3 drafts and #2 non-draft PR; PC-Free #2 remains OPEN / DRAFT. LudoMada retains its stacked gameplay/telemetry drafts; no rebase or merge was made.
+
+### GitHub Actions — exact latest relevant runs and failure evidence
+
+- UNDIAGNOSED — mega-project-apps ACEP run [#45765151483](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/45765151483), superseded status head `ac3a297d90e33a9afaedd1151ae9d975cb0ff3e9`, job `139724193162`: runner setup, checkout, Node setup and locked dependency install passed; first failing step was `Run CI gate`. Exact chain in the job log: `npm run ci:gate` → `node scripts/ci-gate.js` → `npm test` → `tests/users.test.js`, child exit 1. The log does not expose a failing assertion or stack.
+- UNDIAGNOSED — mega-project-apps ACEP run [#45765238483](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/45765238483), exact current status head `d0229926`, job `139724465593`: the same setup/install steps passed; `Run CI gate` failed at the same `tests/users.test.js` child exit 1. No application source change separates these documentation-head runs. Existing PR #7 is the known monotonic-timestamp candidate; do not duplicate it.
+- PASS — mega-project-apps Security Audit [#45765239043](https://github.com/pascalnanousympathie-alt/mega-project-apps/actions/runs/45765239043) on exact head `d0229926`: Gitleaks, Trivy, Semgrep and OSV PR scan steps passed; OSV Full Scan was skipped by PR-event policy.
+- UNDIAGNOSED — the GitHub connector rejected the check-suite/check-run annotation read route with HTTP 400 “not an allowed public GitHub repository or search endpoint”. Thus annotations for the exact ACEP run were not available through this route. The exact job logs establish the failing command chain but not the assertion. No fresh annotation/log attributes either failure to Billing & plans or spending limits; no such cause is claimed.
+- PASS — LudoMada main runtime-watch [#45945490240](https://github.com/pascalnanousympathie-alt/LudoMada/actions/runs/45945490240), 2026-11-27T05:23:13Z–05:23:25Z, exact main head `158d77d3`: job `140329112716` completed its production health, MCP protocol/tool-catalog and OAuth-start fail-closed checks. This is a control-plane canary, not gameplay FPS acceptance.
+- BLOCKED — LudoMada has no newer APK/gameplay Ramus run than the 2026-11-25 diagnostic branch run set (#45631563486 build, #45631563371 emulator/Ramus, #45631563332 framebuffer contract), all of which passed their listed steps. The recorded capture remains 56 frames, 11.05322 FPS and frame-interval P95 100.62296 ms; CPU-submit P95 17.997957 ms. The gap is not attributed to GPU execution without GPU timing/presentation evidence. 120 FPS acceptance remains BLOCKED; Ramus remains the sole APK performance test route.
+- PASS — Nanoumada [#45799608191](https://github.com/pascalnanousympathie-alt/nanoumada/actions/runs/45799608191) completed the scheduled “Mark Stale Issues and Pull Requests” job. This is maintenance only, not application build/test CI; no new app-CI PASS is claimed.
+- UNDIAGNOSED — Nanou Browser Agent PR CI [#45757890555](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/45757890555) remains the same previously reported failure on head `b65a2f70`, job `139700738443`: step list is null and prior exact log request returned HTTP 404 `BlobNotFound`; no first failing command is available. Same-head push CI [#45757884441](https://github.com/pascalnanousympathie-alt/nanou-browser/actions/runs/45757884441) passed its ARM64 Python setup, dependencies and safety/API tests. Reuse prior exact-run evidence; this is not a newly verified Render or MCP failure and does not validate Android APK CI.
+- PASS — latest main Security Audits remain RamiMada #45296507484, LotoMada #45296479585, DominoMada #45296562781 and PC-Free #45296327940 (2026-11-24). Their executed Gitleaks/Trivy/Semgrep/OSV full-scan jobs passed; OSV PR scans were skipped on scheduled runs. All four main heads are unchanged, so no unchanged suite was rerun.
+
+### Vercel deployment and runtime metadata
+
+- PASS — authenticated Vercel team metadata resolved team slug `nanou3`, team ID `team_W5tWyzqCr6IKkwDCWUCUT4gH`. Project IDs and deployment lists were read under this exact team scope.
+- BLOCKED — Mada Commander auto/fail-closed production deployment `dpl_4YnMfsrE86PeXjNf1VseZp1ZfgvT` is READY on LudoMada main commit `158d77d3443564bb3774ee5949b09f1309d1132b` (deployment created 2026-11-01T19:47:37Z). Runtime query for the latest 24 hours returned 6 error groups: Google OAuth `google-start` at `/api/router`, stage `database_ready`, HTTP 503; latest sample `2026-11-27T05:23:22Z`. This remains fail-closed DB/OAuth readiness, not deployment-build failure. No production DB/OAuth setting was changed.
+- PASS — canonical Mada Commander public MCP deployment `dpl_8kUAkAshjsGJdx6fvqz3k93oJh4q` is READY; runtime query returned 0 errors in 24h. The deployment's recorded main commit is `f8bf6ad3159a4bb956a44b59e2f0c76d0f7ec246`.
+- PASS — Vercel personal-controller UI deployment `dpl_FzcDcYA9wmXzn5Y2AX9jdAgKnofN` is READY; runtime query returned 0 errors in 24h. This does not verify the separate personal local controller process.
+- PASS — Nanoumada production deployment `dpl_3ARF5uGjmpH356JWQXWXjUbUYAXf` is READY on main `7acac6037b574160d60dd7b58fe0de96c7d63578` (created 2026-10-18T18:38:20Z); runtime query returned 0 errors in 24h.
+- BLOCKED — Vercel project `nanou-browser-ci-lab` has `latestDeployment=null` and no configured domains in current project metadata; it is not evidence for the Render browser-agent service. No deployment was created.
+
+### Nanou Browser web-agent Render and local MCP monitoring
+
+- UNVERIFIED/BLOCKED — Render workspace listing returned “Nanou Sympathie's workspace” (`tea-dbcugko473hc73a9kcn0`), but no workspace is selected in the current session. Render's selected-workspace read reports “no workspace selected”; its tool contract requires owner confirmation before choosing a workspace. Therefore service metadata/deployment state was not refreshed; the previous run's exact service ID/domain are historical metadata only, not a current LIVE claim.
+- UNVERIFIED/BLOCKED — a read-only GET attempt to the previously verified public health URL `https://nanou-browser.onrender.com/healthz` returned “URL is not accessible via this tool”. No JSON health fields (`status`, `api_key_configured`, `active_runs`) were obtained. No restart, environment read, setting change, file edit or redeploy occurred.
+- UNVERIFIED/BLOCKED — Grok MCP doctor/handshake and tool discovery were not run because an authorized Termux/PRoot computer was not established as connected and available in this run. Desktop Commander was not used; no current sufficient quota was verified. Do not classify the local MCP as failed.
+- No new verified Nanou Browser Render-health failure or recovery is established. The known PR-CI log gap remains unchanged; suppress repeat incident notification and keep Android app, web agent and Nanoumada separate.
+
+### Safety and next actions
+
+- PASS — only this central status file is being updated. No source patch, PR merge, production deployment/promotion, payment/wallet/DB/OAuth mutation, secret read/rotation, security-gate weakening, destructive operation, Railway use, TinyFish use, CircleCI dispatch, Desktop Commander command or noVNC restart occurred.
+- PASS — no local worktree was accessed, reset, cleaned, stashed, rebased, pulled, overwritten or committed.
+- Next action — obtain an exact assertion/stack or supported check-run annotation route for mega-project-apps `tests/users.test.js` before any source change; retain PR #7 as the existing candidate.
+- Next action — owner confirmation is required before Render metadata tools can select “Nanou Sympathie's workspace”; then repeat service lookup and GET `/healthz` without reading secret fields. A connected authorized Termux/PRoot session is separately required before Grok MCP doctor/tool discovery.
+- Next action — keep LudoMada FPS acceptance BLOCKED until a repeatable Ramus same-build/same-scene capture isolates presentation/scheduling versus GPU work; do not lower thresholds or patch speculatively.
+- No manual CI rerun was dispatched solely because this documentation append changes the status branch.
