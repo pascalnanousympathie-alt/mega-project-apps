@@ -4402,7 +4402,7 @@ Evidence scope: central status/runbook on the existing status branch; exact defa
 
 - PASS — central PR #3 remains OPEN / DRAFT / UNMERGED, base `main` at `3b86e640`, head `ops/central-project-status-20261020` at `38bed5d6`. Exact-head PR checks below passed. The PR description contains an older Billing & plans statement from October; it is historical only and is not used to diagnose current runs.
 - PASS — mega-project-apps PR #7 (monotonic `updated_at`) and #9 (three exact Gitleaks test-fixture fingerprints) remain OPEN / DRAFT / UNMERGED. #6 remains OPEN / non-draft; #2/#4/#5/#8 remain OPEN / DRAFT. No duplicate code patch was created.
-- PASS — Nanoumada #13 remains OPEN / DRAFT and #14 OPEN / non-draft. Nanou Browser #1/#2 remain OPEN / DRAFT; #2 still targets the Android branch and its existing changed-file inventory crosses the Android/agent boundary. RamiMada, LotoMada and DominoMada retain #1/#3 drafts and #2 non-draft; PC-Free #2 remains OPEN / DRAFT. LudoMada's active performance/capture chain #235–#228 remains draft; #135 is open/non-draft. No PR was merged, rebased or updated.
+- PASS — Nanoumada #13 remains OPEN / DRAFT and #14 OPEN / non-draft. Nanou Browser #1/#2 remain OPEN / DRAFT; #2 still targets the Android branch and its existing changed-file inventory crosses the Android/agent boundary. RamiMada, LotoMada and DominoMada retain #1/#3 drafts and #2 non-draft; PC-Free #2 remains OPEN / DRAFT. LudoMada's active performance/capture chain #235–#228 remains draft; #135 is open/non-draft. No PR was merged or rebased; PR #3's head advanced only because this documentation commit was written to its existing status branch.
 
 ### GitHub Actions — new/changed evidence only
 
